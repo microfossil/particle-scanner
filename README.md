@@ -26,11 +26,60 @@ You will also need some **1.75mm PLA** filament for printing if you do not have 
 | Lighting Power Supply | Any | Any | 24V 1A power supply with 2.1mm DC plug | N/A |
 | Adapter | Any | Any | 2.1mm DC socket to screw terminal | e.g. https://www.amazon.com/Connector-Adapter-JEEUE-Female-Security/dp/B07SVD4PC3 |
 
+### Misc.
+
+* 2 x 10mm M3 bolts
+* 3 x 20mm M3 bolts
+* 5 x M3 washer
+* 1 x 15mm M4 bolt
+* 1 x M4 nut
 You will also need wire capable of 1A and soldering equipment
 
-## 
+## Build Instructions
 
+### 1. Build 3D Printer
 
+Follow the Creality manufacturers instructions to build the 3D printer
+
+Note the following tricks:
+
+* When levelling the bed, make sure the knobs under the bed have about 7mm of thread out the bottom. This is roughly the middle and will give enough room for later adjustments.
+* Check if the bed has some wobble. If it does, tighten the hex nuts that attach it to the rail.
+
+### 2. Build the camera and lighting holders
+
+Print these two parts (located in the components directory)
+
+* LINK TO PART
+* LINK TO PART
+
+### 3. Assemble camera, objective and lighting
+
+VIDEO TO COME
+
+### 4. Attach to 3D Printer
+
+VIDEO TO COME
+
+**DONE**
+
+## Software Installation
+
+Currently the software is written for the **WINDOWS 10** operating system
+
+### 1. Install Basler Pylon
+
+Install the [Basler Pylon Camera Software Suite](https://www.baslerweb.com/en/sales-support/downloads/software-downloads/#type=pylonsoftware;language=all;version=all). If prompted for which driver to install, select USB3.
+
+Confirm the installation has worked by connecting the camera to your computer using the USB3 cable and running **pylon Viewer**
+
+### 2. Install SASHIMI2 software
+
+Install the XXX software from the XXX directory in this repository
+
+## Usage
+
+TO COME
 
 
 
