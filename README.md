@@ -1,2 +1,36 @@
-# particle-scanner
-Particle scanner
+# 3D printer particle scanner
+
+## Parts List
+
+### 3D Printer
+We use the cheap open-source Creality Ender 3 3D printer as the stage
+
+Either the [Creality Ender 3 Pro](https://www.creality3dofficial.com/collections/ender-series/products/creality-ender-3-pro-3d-printer) or Creality Ender 3 V2 (https://www.creality3dofficial.com/collections/ender-series/products/ender-3-v2-3d-printer)
+
+You will also need some **1.75mm PLA** filament for printing if you do not have any already.
+
+| Part | Supplier | Part Number | Description | Link |
+| --- | --- | --- | --- | --- |
+| 3D Printer | Creality | Ender 3 Pro | Cheap 3D printer | https://www.creality3dofficial.com/collections/ender-series/products/creality-ender-3-pro-3d-printer |
+| Filament | Creality | 1kg Ender PLA Filament | Black PLA filament used for 3D printing | https://www.creality3dofficial.com/products/1kg-ender-pla-filament |
+| USB Cable | Any | Any | USB 2.0  cable (A Male to Mini B) for connecting computer to printer | e.g. https://www.amazon.com/AmazonBasics-USB-2-0-Cable-Male/dp/B00NH11N5A |
+
+### Imaging system
+
+| Part | Supplier | Part Number | Description | Link |
+| --- | --- | --- | --- | --- |
+| Camera | Basler | acA2440-35uc | 5MP USB3 colour machine vision camera | https://www.baslerweb.com/en/products/cameras/area-scan-cameras/ace/aca2440-35uc/ |
+| USB Cable | Any | Any | USB 3.0 cable (A Male to Micro B) for communication with camera | e.g. https://www.amazon.com/AmazonBasics-USB-3-0-Cable-Male/dp/B00NH12R1O |
+| Objective | VS Technology | VS-TCH4-65 | 4x magnification telecentric lens | https://vst.co.jp/en/machine-vision-lenses-en/vs-tch-series/ |
+| Lighting | VS Technology | VL-LR2550W | White ring lighting | https://vst.co.jp/en/lighting-en/vl-lr-series/ |
+| Lighting Power Supply | Any | Any | 24V 1A power supply with 2.1mm DC plug | N/A |
+| Adapter | Any | Any | 2.1mm DC socket to screw terminal | e.g. https://www.amazon.com/Connector-Adapter-JEEUE-Female-Security/dp/B07SVD4PC3 |
+
+You will also need wire capable of 1A and soldering equipment
+
+## 
+
+
+
+
+
