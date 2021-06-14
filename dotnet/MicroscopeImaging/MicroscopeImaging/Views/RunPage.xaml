@@ -1,0 +1,39 @@
+﻿<Page x:Class="MicroscopeImaging.Views.RunPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:MicroscopeImaging.Views"
+      xmlns:ui="http://schemas.modernwpf.com/2019"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="RunPage"
+      DataContext="{Binding Source={StaticResource ViewModelLocator}, Path=RunViewModel}">
+    <Grid Margin="8,8,8,8">
+        <ui:SimpleStackPanel Spacing="8">
+            <Button Content="Start Scanning"
+                    Width="300"
+                    Command="{Binding ScannerStartCommand}" />
+            <TextBlock Text="Stack Dimensions"
+                       Style="{StaticResource SubtitleTextBlockStyle}" />
+            <ui:NumberBox Header="Height (um)"
+                          SmallChange="100"
+                          LargeChange="100"
+                          Minimum="100"
+                          Maximum="5000"
+                          SpinButtonPlacementMode="Inline" 
+                          Value="{Binding Scanner.StackHeight, Mode=TwoWay}"/>
+            <ui:NumberBox Header="Step (um)"
+                          SmallChange="20"
+                          LargeChange="20"
+                          Minimum="20"
+                          Maximum="200"
+                          SpinButtonPlacementMode="Inline" 
+                          Value="{Binding Scanner.StackStep, Mode=TwoWay}"/>
+            <TextBlock Text="{Binding Scanner.StackCount, StringFormat=Images in stack: {0}, FallbackValue=0}"/>
+            <TextBlock Text="{Binding Scanner.StackIndex, FallbackValue=0}"></TextBlock>
+            <Button Content="Calibrate Resolution"
+                    Command="{Binding CalibrateResolutionCommand}" />
+        </ui:SimpleStackPanel>
+    </Grid>
+</Page>
