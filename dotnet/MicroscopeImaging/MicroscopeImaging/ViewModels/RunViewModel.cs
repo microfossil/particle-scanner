@@ -26,7 +26,7 @@ namespace MicroscopeImaging.ViewModels
         public IAsyncCommand ScannerStartCommand
         {
             get => scannerStartCommand == null
-                ? new AsyncCommand(() => Scanner.Scan(), p => true)
+                ? new AsyncCommand(() => Scanner.StartScan(), p => true)
                 : scannerStartCommand;
         }
     }

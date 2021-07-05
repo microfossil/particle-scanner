@@ -22,9 +22,9 @@
     </Page.Resources>
     <Grid Margin="8,8,8,8">
         <ui:SimpleStackPanel Spacing="8">
-            <ui:ThemeShadowChrome IsShadowEnabled="True"
-                                  HorizontalAlignment="Left"
-                                  Depth="10">
+            <!-- <ui:ThemeShadowChrome IsShadowEnabled="True" -->
+            <!--                       HorizontalAlignment="Left" -->
+            <!--                       Depth="10"> -->
                 <ui:CommandBar DefaultLabelPosition="Right"
                                HorizontalAlignment="Left">
                     <ui:CommandBar.PrimaryCommands>
@@ -43,8 +43,8 @@
                                          Label="Refresh" />
                     </ui:CommandBar.PrimaryCommands>
                 </ui:CommandBar>
-            </ui:ThemeShadowChrome>
-            <Grid Margin="0,8,0,0">
+            <!-- </ui:ThemeShadowChrome> -->
+            <Grid Margin="0,0,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
@@ -99,8 +99,8 @@
                     <ColumnDefinition Width="30" />
                 </Grid.ColumnDefinitions>
                 <!-- Home Commands -->
-                <Button Grid.Row="12"
-                        Grid.Column="0"
+                <Button Grid.Row="6"
+                        Grid.Column="6"
                         Command="{Binding StageHomeCommand}"
                         Width="30"
                         Height="30"
@@ -109,15 +109,27 @@
                 </Button>
                 <Button Grid.Row="0"
                         Grid.Column="0"
-                        Command="{Binding StageGoToUpperLeftCommand}"
+                        Command="{Binding ScannerGoToTopLeftCommand}"
                         Width="30"
                         Height="30"
                         Padding="0">
                     <ui:FontIcon Glyph="&#xE1AA;" />
                 </Button>
+                <Button Grid.Row="0"
+                        Grid.Column="12"
+                        Command="{Binding ScannerGoToTopRightCommand}"
+                        Width="30"
+                        Height="30"
+                        Padding="0">
+                    <ui:FontIcon Glyph="&#xE1AA;">
+                        <ui:FontIcon.LayoutTransform>
+                            <RotateTransform Angle="90" />
+                        </ui:FontIcon.LayoutTransform>
+                    </ui:FontIcon>
+                </Button>
                 <Button Grid.Row="12"
                         Grid.Column="12"
-                        Command="{Binding StageGoToLowerRightCommand}"
+                        Command="{Binding ScannerGoToBottomRightCommand}"
                         Width="30"
                         Height="30"
                         Padding="0">
@@ -127,14 +139,26 @@
                         </ui:FontIcon.LayoutTransform>
                     </ui:FontIcon>
                 </Button>
-                <Button Grid.Row="6"
-                        Grid.Column="6"
-                        Command="{Binding StageZeroCommand}"
+                <Button Grid.Row="12"
+                        Grid.Column="0"
+                        Command="{Binding ScannerGoToBottomLeftCommand}"
                         Width="30"
                         Height="30"
                         Padding="0">
-                    <ui:FontIcon Glyph="&#xE1C4;" />
+                    <ui:FontIcon Glyph="&#xE1AA;">
+                        <ui:FontIcon.LayoutTransform>
+                            <RotateTransform Angle="270" />
+                        </ui:FontIcon.LayoutTransform>
+                    </ui:FontIcon>
                 </Button>
+                <!-- <Button Grid.Row="6" -->
+                <!--         Grid.Column="6" -->
+                <!--         Command="{Binding StageZeroCommand}" -->
+                <!--         Width="30" -->
+                <!--         Height="30" -->
+                <!--         Padding="0"> -->
+                <!--     <ui:FontIcon Glyph="&#xE1C4;" /> -->
+                <!-- </Button> -->
                 <!-- Move Up Commands -->
                 <Button Grid.Row="0"
                         Grid.Column="6"

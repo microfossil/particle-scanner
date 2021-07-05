@@ -17,7 +17,7 @@ namespace MicroscopeImaging.Models
         public override int LimitNegX { get; set; } = 0;
         public override int LimitNegY { get; set; } = 0;
 
-        public override int micrometersPerUnit { get; set; } = 1;
+        public override int MicrometersPerUnit { get; set; } = 1;
 
 
         public override int BaudRate { get; set; } = 115200;

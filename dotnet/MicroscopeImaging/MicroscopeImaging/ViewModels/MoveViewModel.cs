@@ -205,7 +205,7 @@ namespace MicroscopeImaging.ViewModels
         }
 
         private ICommand scannerGoToTopRightCommand;
-        public ICommand SannerGoToLowerRightCommand
+        public ICommand ScannerGoToTopRightCommand
         {
             get
             {

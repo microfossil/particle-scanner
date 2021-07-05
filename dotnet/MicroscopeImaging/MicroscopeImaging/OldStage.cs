@@ -16,7 +16,7 @@ namespace MicroscopeImaging
         public override int LimitPosY { get; set; } = 50000;
         public override int LimitNegX { get; set; } = 75000;
         public override int LimitNegY { get; set; } = 50000;
-        public override int micrometersPerUnit { get; set; } = 100;
+        public override int MicrometersPerUnit { get; set; } = 100;
         public override int BaudRate { get; set; } = 9600;
         
         

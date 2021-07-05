@@ -11,18 +11,8 @@ namespace MicroscopeImaging.Models
 {
     public class Scanner : ObservableBase
     {
-        // Camera configurations
-        public const int FOCUS_STEP = 150;
-
         private StageBase stage;
-
-        private volatile bool scanningFlag = false;
-
-        public Func<bool> IsParticlePresent;
-        public Func<bool> IsStillSaving;
-
-        public event EventHandler<(int, int, int)> ReadyForAcquisitionEvent = delegate { };
-        public event EventHandler<int> ReadyForStackingEvent = delegate { };
+        private volatile bool stopScan = false;
 
         #region Properties
 
@@ -74,7 +64,6 @@ namespace MicroscopeImaging.Models
 
         //Floor position of stack (units)
         private int stackFloor;
-
         public int StackFloor
         {
             get => stackFloor;
@@ -83,7 +72,6 @@ namespace MicroscopeImaging.Models
 
         // Height of stack (micrometers)
         private int stackHeight;
-
         public int StackHeight
         {
             get => stackHeight;
@@ -92,7 +80,6 @@ namespace MicroscopeImaging.Models
 
         // Stack step (micrometers)
         private int stackStep = 100;
-
         public int StackStep
         {
             get => stackStep;
@@ -106,7 +93,6 @@ namespace MicroscopeImaging.Models
 
         // Current index in stack
         private int stackIndex = 0;
-
         public int StackIndex
         {
             get => stackIndex;
@@ -115,7 +101,6 @@ namespace MicroscopeImaging.Models
 
         // Stack count
         private int stackCount = 0;
-
         public int StackCount
         {
             get => stackCount;
@@ -124,7 +109,6 @@ namespace MicroscopeImaging.Models
 
         // Size of the image grid to process
         private Vector gridSize;
-
         public Vector GridSize
         {
             get => gridSize;
@@ -133,7 +117,6 @@ namespace MicroscopeImaging.Models
 
         // How much to step between them (micrometers)
         private Vector gridStep;
-
         public Vector GridStep
         {
             get => gridStep;
@@ -142,7 +125,6 @@ namespace MicroscopeImaging.Models
 
         // How much overlap (this will affect gridStep and gridSize
         private double gridOverlap = 0.25;
-
         public double GridOverlap
         {
             get => gridOverlap;
@@ -154,7 +136,6 @@ namespace MicroscopeImaging.Models
         }
 
         private bool isScanning = false;
-
         public bool IsScanning
         {
             get => isScanning;
@@ -164,7 +145,6 @@ namespace MicroscopeImaging.Models
                 NotifyPropertyChanged();
             }
         }
-
         #endregion
 
         private BaslerCamera camera;
@@ -175,17 +155,6 @@ namespace MicroscopeImaging.Models
             camera = ModelLocator.Instance.Camera;
             Calculate();
         }
-        
-        // public Scanner(StageBase stage, Func<bool> isStillSaving, Func<bool> isParticlePresent)
-        // {
-        //     this.stage = stage;
-        //     this.IsParticlePresent = isParticlePresent;
-        //     this.IsStillSaving = isStillSaving;
-        //     CalculateImageSize();
-        // }
-
-
-
 
         public void SetBottomLeft()
         {
@@ -229,13 +198,18 @@ namespace MicroscopeImaging.Models
             stage.MoveZ(StackFloor);
         }
 
+        public void StopScan()
+        {
+            stopScan = true;
+        }
+
         public void Calculate()
         {
             // Size of the image in units
             var imageXUnits = BaslerCamera.PixelWidth * BaslerCamera.Width / Magnification * MagnificationFactor /
-                              stage.micrometersPerUnit;
+                              stage.MicrometersPerUnit;
             var imageYUnits = BaslerCamera.PixelWidth * BaslerCamera.Height / Magnification * MagnificationFactor /
-                              stage.micrometersPerUnit;
+                              stage.MicrometersPerUnit;
             var scanningSize = topRight - bottomLeft;
 
             // Size of the grid
@@ -251,11 +225,11 @@ namespace MicroscopeImaging.Models
             StackCount = count + 2;
         }
 
-        public async Task Scan()
+        public async Task StartScan()
         {
             bool nextLine = false;
             bool nextStack = false;
-            scanningFlag = true;
+            stopScan = false;
             IsScanning = true;
 
             int dirX = (TopRight.X - BottomLeft.X) > 0 ? 1 : -1;
@@ -280,6 +254,7 @@ namespace MicroscopeImaging.Models
                 {
                     for (int z = 0; z < StackCount; z++)
                     {
+                        if (stopScan) goto Finish;
                         StackIndex = z;
                         string filename = $@"{baseDirectory}\\{stage.VirtualY-baseY:D6}\\{stage.VirtualY-baseY:D6}_{stage.VirtualX-baseX:D6}\\{stage.VirtualZ-baseZ:D6}.tiff";
                         Debug.WriteLine(filename);
@@ -288,7 +263,7 @@ namespace MicroscopeImaging.Models
                         await saver.SaveMat(mat, filename);
                         if (z < StackCount - 1)
                         {
-                            stage.MoveRelative("z", true, (int)(dirZ * StackStep / stage.micrometersPerUnit));
+                            stage.MoveRelative("z", true, (int)(dirZ * StackStep / stage.MicrometersPerUnit));
                             await Task.Delay(100);
                         }
                     }
@@ -306,89 +281,9 @@ namespace MicroscopeImaging.Models
                     await Task.Delay(300);
                 }
             }
-
-            saver.Stop();
-
-            // for (int yi = 0; yi < countY; yi++)
-            // {
-            //     while (nextLine == false)
-            //     {
-            //         //IsParticlePresentCommunication.Send(false);
-            //         //bool success = IsParticlePresent();
-            //         //if (success == false) return;
-            //         if (IsParticlePresent() == true)
-            //         {
-            //             Console.WriteLine("Particle present... taking stack");
-            //         }
-            //         else
-            //         {
-            //             Console.WriteLine("No particle... moving on");
-            //             nextStack = true;
-            //             if (scanningFlag == false) return;
-            //         }
-            //
-            //         int sequence = 0;
-            //         while (nextStack == false)
-            //         {
-            //             if (scanningFlag == false) return;
-            //             String name = String.Format("X{0:D3}_Y{1:D3}_Z{2:D3}", xi, yi, zi);
-            //             //String name = String.Format("{0:D3}_{1:D3}_{2:D3}", stage.VirtualX, stage.VirtualY, stage.VirtualZ);
-            //             Console.WriteLine(name);
-            //
-            //             ReadyForAcquisitionEvent(this, sequence);
-            //             sequence++;
-            //             await Task.Delay(50);
-            //
-            //             //Move Z
-            //             zi += dirZ;
-            //             if (zi >= countZ || zi < 0)
-            //             {
-            //                 dirZ *= -1;
-            //                 zi += dirZ;
-            //                 ReadyForStackingEvent(this, stackIndex);
-            //                 nextStack = true;
-            //             }
-            //             else
-            //             {
-            //                 stage.MoveRelative("z", dirZ == 1, stepZ);
-            //                 await Task.Delay(500);
-            //             }
-            //         }
-            //
-            //         StackIndex++;
-            //
-            //         while (IsStillSaving()) await Task.Delay(50);
-            //         nextStack = false;
-            //
-            //         // Move X
-            //         xi += dirX;
-            //         if (xi >= countX || xi < 0)
-            //         {
-            //             dirX *= -1;
-            //             xi += dirX;
-            //             nextLine = true;
-            //         }
-            //         else
-            //         {
-            //             stage.MoveRelative("x", dirX == 1, stepX);
-            //             await Task.Delay(1500);
-            //         }
-            //     }
-            //
-            //     nextLine = false;
-            //
-            //     // Move Y
-            //     stage.MoveRelative("y", dirY == 1, stepY);
-            //     await Task.Delay(1500);
-            // }
-            //
-            // IsScanning = false;
-        }
-
-        public void Stop()
-        {
-            scanningFlag = false;
+            Finish:
             IsScanning = false;
+            saver.Stop();
         }
     }
 }

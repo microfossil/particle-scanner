@@ -22,7 +22,7 @@ namespace MicroscopeImaging.Models
         public abstract int LimitPosY { get; set; }
         public abstract int LimitNegX { get; set; }
         public abstract int LimitNegY { get; set; }
-        public abstract int micrometersPerUnit { get; set; }
+        public abstract int MicrometersPerUnit { get; set; }
 
         //Connection
         public abstract int BaudRate { get; set; }

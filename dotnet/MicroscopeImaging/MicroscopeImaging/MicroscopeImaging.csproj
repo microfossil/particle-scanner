@@ -90,8 +90,10 @@
     <Compile Include="Models\EnderStage.cs" />
     <Compile Include="Models\ModelLocator.cs" />
     <Compile Include="Models\Scanner.cs" />
+    <Compile Include="Models\ScannerImage.cs" />
     <Compile Include="OldStage.cs" />
     <Compile Include="Models\StageBase.cs" />
+    <Compile Include="Services\ProcessingDataflow.cs" />
     <Compile Include="ViewModels\CameraViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\MoveViewModel.cs" />
@@ -260,6 +262,5 @@
       <Version>2.0.20011.1</Version>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
