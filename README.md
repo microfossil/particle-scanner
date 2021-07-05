@@ -33,7 +33,9 @@ You will also need some **1.75mm PLA** filament for printing if you do not have 
 * 5 x M3 washer
 * 1 x 15mm M4 bolt
 * 1 x M4 nut
-You will also need wire capable of 1A and soldering equipment
+* Wire capable of 1A
+* Soldering equipment
+* Power board with individual switches
 
 ## Build Instructions
 
