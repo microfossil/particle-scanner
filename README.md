@@ -43,10 +43,14 @@ You will also need some **1.75mm PLA** filament for printing if you do not have 
 
 Follow the Creality manufacturers instructions to build the 3D printer
 
+This youtube video shows the overall process. Pay attention from 10:00 onwards to how to adjust the nuts to tighten up the bed wobble.
+
+https://www.youtube.com/watch?v=gokN9xNG94U
+
 Note the following tricks:
 
 * When levelling the bed, make sure the knobs under the bed have about 7mm of thread out the bottom. This is roughly the middle and will give enough room for later adjustments.
-* Check if the bed has some wobble. If it does, tighten the hex nuts that attach it to the rail.
+* Check if the bed has some wobble. If it does, tighten the hex nuts that attach it to the rail (see video above)
 
 ### 2. Build the camera and lighting holders
 
