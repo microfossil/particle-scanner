@@ -13,6 +13,8 @@ class Controller(object):
         self.quit_requested = False
         self.show_help = False
         self.take_stack_requested = False
+        self.scan_requested = False
+        self.time_remaining = None
 
         if keyboard == "en":
             self.HOME = 'h'
@@ -30,6 +32,8 @@ class Controller(object):
             self.XRIGHT = 'D'
             self.XUP = 'Q'
             self.XDOWN = 'E'
+
+            self.SCAN = "P"
 
             self.HELP1 = '?'
             self.HELP2 = '/'
@@ -125,6 +129,14 @@ class Controller(object):
                 self.scanner.stack_height = 10000
             self.scanner.update_stack_count()
 
+        # Scan area
+        elif key == ord('J'):
+            self.scanner.scan_front_left = [self.stage.x, self.stage.y, self.stage.z]
+        elif key == ord('I'):
+            self.scanner.scan_back_right = [self.stage.x, self.stage.y, self.stage.z]
+        elif key == ord(self.SCAN):
+            self.scan_requested = True
+
         # Commands
         elif key == ord(self.TAKE_STACK1) or key == ord(self.TAKE_STACK2):
             self.take_stack_requested = True
@@ -148,6 +160,7 @@ class Controller(object):
         text = []
         text.append(f"X: {self.stage.x}, Y: {self.stage.y}, Z: {self.stage.z}")
         text.append(f"H: {self.scanner.stack_height}, S: {self.scanner.stack_step}")
+        text.append(f"FL: {self.scanner.scan_front_left}, BR: {self.scanner.scan_back_right}")
 
         if self.show_help:
             text.append("w,a,s,d,q,e: forward, left, back, right, up, down")
