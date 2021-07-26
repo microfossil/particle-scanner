@@ -152,6 +152,9 @@ def get_fused_base(images, kernel_size):
     best_d = np.argmax(deviations, axis=0)
     fused = np.zeros(images.shape[1:], dtype=np.float64)
 
+    plt.matshow(best_e), plt.show()
+    plt.matshow(best_d), plt.show()
+
     for layer in range(layers):
         fused += np.where(best_e[:, :, np.newaxis] == layer, images[layer], 0)
         fused += np.where(best_d[:, :, np.newaxis] == layer, images[layer], 0)
@@ -176,6 +179,7 @@ def get_fused_laplacian(laplacians):
         region_energies[layer] = region_energy(gray_lap)
 
     best_re = np.argmax(region_energies, axis=0)
+    plt.matshow(best_re), plt.show()
     fused = np.zeros(laplacians.shape[1:], dtype=laplacians.dtype)
 
     for layer in range(layers):
@@ -200,45 +204,68 @@ def get_pyramid_fusion(images, min_size=32):
 
 def phase_correction(images):
     offsets = []
-    for i in range(len(images-1)):
+    for i in range(len(images)-1):
         im1 = images[i][..., 1].astype(np.float32) / 255# Green
         im2 = images[i+1][..., 1].astype(np.float32) / 255 # Green
         f1 = np.fft.fft2(im1)
         f2 = np.fft.fft2(im2)
         f = f1 * np.conj(f2)
         imp = np.real(np.fft.ifft2(f))
-        plt.imshow(imp)
-        plt.show()
+        # plt.imshow(imp)
+        # plt.show()
         minV, maxV, minLoc, maxLoc = cv2.minMaxLoc(imp)
         maxLoc = np.asarray(maxLoc)
         if maxLoc[0] > im1.shape[1] / 2:
             maxLoc[0] -= im1.shape[1]
         if maxLoc[1] > im1.shape[0] / 2:
             maxLoc[1] -= im1.shape[0]
-        plt.matshow(images[i])
-        plt.show()
-        plt.matshow(images[i+1])
-        plt.show()
-        M = np.asarray([[1, 0, -maxLoc[0]], [0, 1, -maxLoc[1]]], dtype=np.float32)
-        images[i+1] = cv2.warpAffine(images[i+1].astype(np.float32), M, dsize=images[i+1].shape[:2][::-1])
-        plt.matshow(images[i + 1] / 255)
-        plt.show()
+        offsets.append(maxLoc)
+
+    cox = 0
+    coy = 0
+    fixed_images = []
+    # plt.matshow(images[0] / 255)
+    # plt.show()
+    offsets = np.asarray(offsets)
+    print(offsets)
+    cum_offsets = np.cumsum(offsets, axis=0)
+    cmin = np.min(cum_offsets, axis=0)
+    cmin[cmin > 0] = 0
+    cmax = np.max(cum_offsets, axis=0)
+    cmax[cmax < 0] = 0
+    for i, offset in enumerate(offsets):
+        cox += offset[0]
+        coy += offset[1]
+        M = np.asarray([[1, 0, cox], [0, 1, coy]], dtype=np.float32)
+        im = cv2.warpAffine(images[i+1].astype(np.float32), M, dsize=images[i+1].shape[:2][::-1])
+        fixed_images.append(im)
+        # plt.matshow(images[i + 1] / 255)
+        # plt.show()
+        # plt.matshow(im / 255)
+        # plt.show()
+    fixed_images = np.asarray(fixed_images)
+
+    return fixed_images[:,
+           cmax[1]:fixed_images.shape[1] + cmin[1],
+           cmax[0]:fixed_images.shape[2] + cmin[0],
+           :]
+
 
 if __name__ == "__main__":
     from glob import glob
     import skimage.io as skio
     import matplotlib.pyplot as plt
 
-    fns = sorted(glob("images/X001000_Y060000_Z002000/*.jpg"))
+    fns = sorted(glob("images/X135000_Y055000_Z000960/*.jpg"))
     images = []
     for fn in fns:
         im = skio.imread(fn, False)
         images.append(im)
     images = np.asarray(images)
 
-    phase_correction(images)
+    fixed_images = phase_correction(images)
 
-    fusion = get_pyramid_fusion(images)
+    fusion = get_pyramid_fusion(np.asarray(fixed_images))
 
     plt.matshow(fusion / 255)
     plt.show()
