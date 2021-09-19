@@ -10,6 +10,9 @@ import numpy as np
 from scipy import ndimage
 import cv2
 
+import skimage.transform as skt
+import skimage.util as sku
+
 
 def generating_kernel(a):
     kernel = np.array([0.25 - a / 2.0, 0.25, a, 0.25, 0.25 - a / 2.0])
@@ -152,6 +155,7 @@ def get_fused_base(images, kernel_size):
     best_d = np.argmax(deviations, axis=0)
     fused = np.zeros(images.shape[1:], dtype=np.float64)
 
+    print("get_fused_base")
     plt.matshow(best_e), plt.show()
     plt.matshow(best_d), plt.show()
 
@@ -164,8 +168,33 @@ def get_fused_base(images, kernel_size):
 
 def fuse_pyramids(pyramids, kernel_size):
     fused = [get_fused_base(pyramids[-1], kernel_size)]
+    energies = []
     for layer in range(len(pyramids) - 2, -1, -1):
-        fused.append(get_fused_laplacian(pyramids[layer]))
+        f, en = get_fused_laplacian(pyramids[layer])
+        fused.append(f)
+        energies.append(en)
+
+    # en = energies[::-1]
+
+    en_best = np.argmax(energies[-2], axis=0)
+    en_best = ndimage.median_filter(en_best, [15,15]).astype(np.uint8)
+    m = sku.img_as_ubyte(skt.resize(en_best, energies[-1].shape[1:3]))
+
+    # up_en = []
+    # for i, e in enumerate(en):
+    #     if i == 0:
+    #         base = e
+    #         up_en.append(base)
+    #     else:
+    #         up = skt.resize(e, base.shape)
+    #         up_en.append(up)
+    # up_en = np.asarray(up_en)
+    #
+    # s = np.sum(up_en, axis=0)
+    # m = np.argmax(s, axis=0)
+    plt.matshow(m), plt.show()
+
+
 
     return fused[::-1]
 
@@ -179,13 +208,15 @@ def get_fused_laplacian(laplacians):
         region_energies[layer] = region_energy(gray_lap)
 
     best_re = np.argmax(region_energies, axis=0)
-    plt.matshow(best_re), plt.show()
+    print("get_fused_laplacian")
+    plt.matshow(best_re), plt.colorbar(), plt.show()
+    plt.matshow(np.log(np.max(region_energies, axis=0))), plt.colorbar(), plt.show()
     fused = np.zeros(laplacians.shape[1:], dtype=laplacians.dtype)
 
     for layer in range(layers):
         fused += np.where(best_re[:, :, np.newaxis] == layer, laplacians[layer], 0)
 
-    return fused
+    return fused, region_energies
 
 
 def region_energy(laplacian):
