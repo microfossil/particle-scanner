@@ -17,24 +17,23 @@ You will also need some **1.75mm PLA** filament for printing if you do not have 
 
 ### Imaging system
 
-| Part | Supplier | Part Number | Description | Link |
-| --- | --- | --- | --- | --- |
+| Part | Supplier | Part Number | Description | Link | Image |
+| --- | --- | --- | --- | --- | --- |
 | Camera | Basler | acA2440-35uc | 5MP USB3 colour machine vision camera | https://www.baslerweb.com/en/products/cameras/area-scan-cameras/ace/aca2440-35uc/ |
 | USB Cable | Any | Any | USB 3.0 cable (A Male to Micro B) for communication with camera | e.g. https://www.amazon.com/AmazonBasics-USB-3-0-Cable-Male/dp/B00NH12R1O |
 | Objective | VS Technology | VS-TCH4-65 | 4x magnification telecentric lens | https://vst.co.jp/en/machine-vision-lenses-en/vs-tch-series/ |
 | Lighting | VS Technology | VL-LR2550W | White ring lighting | https://vst.co.jp/en/lighting-en/vl-lr-series/ |
-| Lighting Power Supply | Any | Any | 24V 1A power supply with 2.1mm DC plug | N/A |
-| Adapter | Any | Any | 2.1mm DC socket to screw terminal | e.g. https://www.amazon.com/Connector-Adapter-JEEUE-Female-Security/dp/B07SVD4PC3 |
+| Lighting Power Supply | Any | Any | 24V 1A power supply with 2.1mm DC plug | e.g https://www.amazon.fr/gp/product/B09CPDTMV9?ref=ppx_pt2_dt_b_prod_image | ![24 V PS](docs/images/24vPS.png) |
+| Adapter | Any | Any | 2.1mm DC socket to screw terminal | e.g. https://www.amazon.com/Connector-Adapter-JEEUE-Female-Security/dp/B07SVD4PC3 | ![24 V PS](docs/images/adaptor.png) |
+| Wire to 3 pin JST | Any | Any | 2.1mm DC socket to screw terminal | e.g. https://www.amazon.com/Connector-Adapter-JEEUE-Female-Security/dp/B07SVD4PC3 | ![24 V PS](docs/images/JST.png) |
 
 ### Misc.
 
-* 2 x 10mm M3 bolts
-* 3 x 20mm M3 bolts
-* 5 x M3 washer
+* 4 x 10mm M3 bolts
+* 2 x 20mm M3 bolts
+* 6 x M3 washer
 * 1 x 15mm M4 bolt
 * 1 x M4 nut
-* Wire capable of 1A
-* Soldering equipment
 * Power board with individual switches
 
 ## Build Instructions
@@ -59,33 +58,92 @@ Print these two parts (located in the components directory)
 * LINK TO PART
 * LINK TO PART
 
-### 3. Assemble camera, objective and lighting
+### 3. Assemble lighting
 
-VIDEO TO COME
+Attach the lighting to the lighting holder using 2 x 10mm M3 bolts and nuts:
 
-### 4. Attach to 3D Printer
+![24 V PS](docs/images/IMG_4667.jpg) ![24 V PS](docs/images/IMG_4669.jpg)
 
-VIDEO TO COME
+Attach the lighting holder to the camera holder using 1 x 15 mm M4 bolt and nut. The nut is on the front:
 
-**DONE**
+![24 V PS](docs/images/IMG_4670.jpg) ![24 V PS](docs/images/IMG_4671.jpg)
 
-## Software Installation
+Screw the wires from the female JST plug into the adaptor, ensuring that the polarity is correct. Plug the adaptor into the 24V power supply and the JST into the lighting. Turn on the power supply to make sure the lights come on.
 
-Currently the software is written for the **WINDOWS 10** operating system
+![24 V PS](docs/images/IMG_4686.jpg) ![24 V PS](docs/images/IMG_4692.jpg)
 
-### 1. Install Basler Pylon
+### 4. Assemble camera
+
+Attach the camera to the camera holder using 2 x 10mm M3 bolts and nuts. **It is difficult to line up the angles perfectly, DO NOT FORCE IT! The bolts will screw in easily if correct.** Hint: try to do both at the same time, rather than one at a time. Once both are in, screw in all the way with fingers, then use a screwdriver for the final tighten.
+
+![24 V PS](docs/images/IMG_4672.jpg) ![24 V PS](docs/images/IMG_4673.jpg)
+
+### 5. Attach to 3D Printer
+
+Lower the Z-stop sensor all the way to the bottom:
+
+![24 V PS](docs/images/IMG_4681.jpg)
+
+Remove the printer head. Attach the camera holder to the printer using 2 x 10mm M3 bolts and nuts:
+
+![24 V PS](docs/images/IMG_4675.jpg) ![24 V PS](docs/images/IMG_4676.jpg)
+
+Plug the USB3 cable into the camera. Using some cable ties or wire twists, join the camera USB cable and the lighting cable together for about 50cm. Using a rubber band or tape, secure the two cables tightly to the upper-right of the frame, so that the cables make an arc. This is to reduce pressure on the camera when it moves.
+
+![24 V PS](docs/images/IMG_4685.jpg) ![24 V PS](docs/images/IMG_4691.jpg)
+
+### 6. Adjust printer
+
+Place the glass plate on the bed. The glass plate is needed because it is very flat. Adjust the screws under each corner so there is approximately 8-9 mm of thread at the bottom. 
+
+![24 V PS](docs/images/IMG_4678.jpg)
+
+If the bed is wobbly, adjust the nuts at the bottom (turning the nuts moves the wheels closer / further from the rail). Don't over tighten, the bed should still move freely on the y axis.
+
+![24 V PS](docs/images/IMG_4694.jpg)
+
+Connect the printer power supply and USB communication cable to the computer.
+
+![24 V PS](docs/images/IMG_4684.jpg)
+
+## Driver Installation
 
 Install the [Basler Pylon Camera Software Suite](https://www.baslerweb.com/en/sales-support/downloads/software-downloads/#type=pylonsoftware;language=all;version=all). If prompted for which driver to install, select USB3.
 
 Confirm the installation has worked by connecting the camera to your computer using the USB3 cable and running **pylon Viewer**
 
-### 2. Install SASHIMI2 software
+## Software Installation (Python)
 
-Install the XXX software from the XXX directory in this repository
+### 1. Install Python
 
-## Usage
+The software needs python 3.7 or later. The easiest way to install python is to use Anaconda.
 
-TO COME
+### 2. Install Sashimi
+
+Download this repository either using git or as a zip file.
+
+Open a terminal inside the `python` directory of this repository.
+
+Run `pip install -e .`. Using `-e` means this will install this software as a linked package inside your python installation. Whenever you update the software in this repository, the changes will automatically be available.
+
+## Usage (Python)
+
+### 1. Start the printer
+
+Turn on the printer and lighting power.
+
+### 2. Launch software
+
+From a terminal in your python environment, run 
+
+`python -m sashimi.cli scan --output DIRECTORY/TO/SAVE/IMAGES --port PORT`
+
+- `--output` is the directory to save images in
+- `--port` is the serial port that the 3D printer is connected to
+
+The printer will move the camera to the home location and the following window will be displayed:
+
+![24 V PS](docs/images/startup.png)
 
 
 

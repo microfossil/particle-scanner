@@ -1,32 +1,25 @@
 import os
 from pathlib import Path
-
-import cv2
-from camera import Camera
-from controller import Controller
-from focus_stack import focus_stack
-from stage import Stage
-
 import skimage.io as skio
-
 import numpy as np
 
 
 class Scanner(object):
-    def __init__(self, save_dir):
+    def __init__(self, controller, save_dir):
         self.save_dir = save_dir
         self.stack_height = 1000
         self.stack_step = 60
         self.stack_count = None
         self.update_stack_count()
 
-        self.stage = Stage('COM3')
-        self.controller = Controller(self, self.stage)
-        self.camera = Camera(self.controller)
+        self.controller = controller
+        self.stage = self.controller.stage
+        self.camera = self.controller.camera
 
         self.scan_front_left = [0, 40000, 2000]
         self.scan_back_right = [160000, 200000, 2000]
-
+        self.current_stack = 0
+        self.total_stacks = 0
         self.is_scanning = False
 
     def update_stack_count(self):
@@ -41,12 +34,16 @@ class Scanner(object):
         x_steps = (self.scan_back_right[0] - self.scan_front_left[0]) // 1000
         y_steps = (self.scan_back_right[1] - self.scan_front_left[1]) // 1000
         self.is_scanning = True
+        self.total_stacks = (x_steps + 1) * (y_steps + 1)
         for yi in range(y_steps + 1):
             for xi in range(x_steps + 1):
+                self.current_stack += 1
                 self.stage.goto_x(self.scan_front_left[0] + 1000 * xi)
                 self.stage.goto_y(self.scan_front_left[1] + 1000 * yi)
                 self.stage.wait_until_position(1000)
                 self.take_stack()
+                if self.is_scanning is False:
+                    return
         self.is_scanning = False
 
     def take_stack(self):
@@ -57,10 +54,10 @@ class Scanner(object):
         for i in range(self.stack_count):
             img = self.camera.latest_image()
             images.append(img)
+            self.show_image(img)
             image_save_path = stack_save_path.joinpath(f"X{self.stage.x:06d}_Y{self.stage.y:06d}_Z{self.stage.z:06d}_{i:02d}.jpg")
             skio.imsave(str(image_save_path), img[..., ::-1], check_contrast=False, quality=90)
             self.stage.move_z(self.stack_step)
-            self.show_image(img)
             self.wait_ms_check_input(100)
         img = self.camera.latest_image()
         self.show_image(img)
@@ -102,32 +99,5 @@ class Scanner(object):
     def show_image(self, img):
         if img is None:
             return
-        display_img = self.controller.display(img)
-        cv2.imshow("im", display_img)
+        self.controller.display(img)
 
-    def start(self):
-        self.stage.start()
-        self.camera.start()
-
-        # Control loop
-        while not self.controller.quit_requested:
-            img = self.camera.latest_image()
-
-            # Display the image
-            self.show_image(img)
-
-            # Process any key commands
-            self.controller.check_for_command(50)
-
-            # Process any requests
-            if self.controller.take_stack_requested:
-                self.controller.take_stack_requested = False
-                self.take_stack()
-
-            if self.controller.scan_requested:
-                self.scan()
-
-        # Clean up
-        cv2.destroyAllWindows()
-        self.stage.stop()
-        self.camera.stop()

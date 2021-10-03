@@ -1,16 +1,17 @@
 import threading
+
 import cv2
 from pypylon import pylon
-from controller import Controller
 
 
 capture_lock = threading.Lock()
+
 
 class CaptureThread(threading.Thread):
     def __init__(self,
                  camera: pylon.InstantCamera,
                  converter: pylon.ImageFormatConverter,
-                 controller: Controller,
+                 controller,
                  group=None,
                  target=None,
                  name=None,
@@ -29,19 +30,20 @@ class CaptureThread(threading.Thread):
         self.camera.StartGrabbing()
         while self.camera.IsGrabbing():
             grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
-            if grabResult.GrabSucceeded():
-                with capture_lock:
-                    self.image = self.converter.Convert(grabResult).Array
-                # Check if quit
-                if self.controller.quit_requested:
-                    grabResult.Release()
-                    break
-            grabResult.Release()
+            if grabResult is not False:
+                if grabResult.GrabSucceeded():
+                    with capture_lock:
+                        self.image = cv2.rotate(self.converter.Convert(grabResult).Array, cv2.ROTATE_180)
+                    # Check if quit
+                    if self.controller.quit_requested:
+                        grabResult.Release()
+                        break
+                grabResult.Release()
         return
 
 
 class Camera(object):
-    def __init__(self, controller: Controller):
+    def __init__(self, controller):
         self.image = None
         self.camera = None
         self.controller = controller
