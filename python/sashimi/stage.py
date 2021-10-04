@@ -18,7 +18,6 @@ class Stage(object):
         self.x_limits = (0, 200000)
         self.y_limits = (0, 200000)
         self.z_limits = (0, 10000)
-        self.home_offset = (10000, 50000, 2000)
 
         self.buffer = []
 
@@ -28,15 +27,19 @@ class Stage(object):
     def stop(self):
         self.serial.close()
 
-    def move_home(self):
+    @property
+    def position(self):
+        return [self.x, self.y, self.z]
+
+    def move_home(self, offset):
         self.send_command("G28 R X Y Z")
         self.x = 0
         self.y = 0
         self.z = 0
-        self.move_x(self.home_offset[0])
-        self.move_y(self.home_offset[1])
-        self.goto_z(self.home_offset[2] + 1000)
-        self.goto_z(self.home_offset[2])
+        self.move_x(offset[0])
+        self.move_y(offset[1])
+        self.goto_z(offset[2] + 1000)
+        self.goto_z(offset[2])
         self.wait_until_position(20000)
 
     def move_x(self, distance):
@@ -71,6 +74,11 @@ class Stage(object):
         if self.z > self.z_limits[1]:
             self.z = self.z_limits[1]
         self.send_command(f"G1 Z {self.z / 1000:3f} F100")
+
+    def goto(self, position):
+        self.goto_x(position[0])
+        self.goto_y(position[1])
+        self.goto_z(position[2])
 
     def poll(self):
         dummy = self.read()

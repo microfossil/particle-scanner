@@ -2,44 +2,46 @@ import os
 from pathlib import Path
 import skimage.io as skio
 import numpy as np
+from sashimi.configuration import Configuration
 
 
 class Scanner(object):
     def __init__(self, controller, save_dir):
         self.save_dir = save_dir
-        self.stack_height = 1000
-        self.stack_step = 60
+
+        self.config = controller.config
+
         self.stack_count = None
+        self.current_stack = 0
+        self.total_stacks = 0
+        self.is_scanning = False
+
         self.update_stack_count()
 
         self.controller = controller
         self.stage = self.controller.stage
         self.camera = self.controller.camera
 
-        self.scan_front_left = [0, 40000, 2000]
-        self.scan_back_right = [160000, 200000, 2000]
-        self.current_stack = 0
-        self.total_stacks = 0
-        self.is_scanning = False
 
     def update_stack_count(self):
-        self.stack_count = self.stack_height // self.stack_step
+        self.stack_count = self.config.stack_height // self.config.stack_step
 
     def scan(self):
+        self.current_stack = 0
         os.makedirs(self.save_dir, exist_ok=True)
-        self.stage.goto_x(self.scan_front_left[0])
-        self.stage.goto_y(self.scan_front_left[1])
-        self.stage.goto_z(self.scan_front_left[2])
+        self.stage.goto_x(self.config.scan_front_left[0])
+        self.stage.goto_y(self.config.scan_front_left[1])
+        self.stage.goto_z(self.config.scan_front_left[2])
         self.stage.wait_until_position(10000)
-        x_steps = (self.scan_back_right[0] - self.scan_front_left[0]) // 1000
-        y_steps = (self.scan_back_right[1] - self.scan_front_left[1]) // 1000
+        x_steps = (self.config.scan_back_right[0] - self.config.scan_front_left[0]) // 1000
+        y_steps = (self.config.scan_back_right[1] - self.config.scan_front_left[1]) // 1000
         self.is_scanning = True
         self.total_stacks = (x_steps + 1) * (y_steps + 1)
         for yi in range(y_steps + 1):
             for xi in range(x_steps + 1):
                 self.current_stack += 1
-                self.stage.goto_x(self.scan_front_left[0] + 1000 * xi)
-                self.stage.goto_y(self.scan_front_left[1] + 1000 * yi)
+                self.stage.goto_x(self.config.scan_front_left[0] + 1000 * xi)
+                self.stage.goto_y(self.config.scan_front_left[1] + 1000 * yi)
                 self.stage.wait_until_position(1000)
                 self.take_stack()
                 if self.is_scanning is False:
@@ -57,8 +59,10 @@ class Scanner(object):
             self.show_image(img)
             image_save_path = stack_save_path.joinpath(f"X{self.stage.x:06d}_Y{self.stage.y:06d}_Z{self.stage.z:06d}_{i:02d}.jpg")
             skio.imsave(str(image_save_path), img[..., ::-1], check_contrast=False, quality=90)
-            self.stage.move_z(self.stack_step)
+            self.stage.move_z(self.config.stack_step)
             self.wait_ms_check_input(100)
+            if self.is_scanning is False:
+                return
         img = self.camera.latest_image()
         self.show_image(img)
         self.wait_ms_check_input(100)

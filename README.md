@@ -55,8 +55,8 @@ Note the following tricks:
 
 Print these two parts (located in the components directory)
 
-* LINK TO PART
-* LINK TO PART
+- CameraObjectiveHolder.stl
+- LightingHolder.stl
 
 ### 3. Assemble lighting
 
@@ -74,7 +74,7 @@ Screw the wires from the female JST plug into the adaptor, ensuring that the pol
 
 ### 4. Assemble camera
 
-Attach the camera to the camera holder using 2 x 10mm M3 bolts and nuts. **It is difficult to line up the angles perfectly, DO NOT FORCE IT! The bolts will screw in easily if correct.** Hint: try to do both at the same time, rather than one at a time. Once both are in, screw in all the way with fingers, then use a screwdriver for the final tighten.
+Attach the camera to the camera holder using 2 x 10mm M3 bolts and nuts. **It is difficult to line up the angles perfectly, DO NOT FORCE IT! The bolts will screw in easily if correct.** Hint: try to do both at the same time, rather than one at a time. Once both are in, screw in all the way with fingers, then use a screwdriver for the final tighten. Secure the bottom of the lens to the holder with a rubber band or tie. 
 
 ![24 V PS](docs/images/IMG_4672.jpg) ![24 V PS](docs/images/IMG_4673.jpg)
 
@@ -136,14 +136,56 @@ Turn on the printer and lighting power.
 
 From a terminal in your python environment, run 
 
-`python -m sashimi.cli scan --output DIRECTORY/TO/SAVE/IMAGES --port PORT`
+`python -m sashimi.cli scan --dir DIRECTORY/TO/SAVE/IMAGES --port PORT --lang en`
 
-- `--output` is the directory to save images in
+- `--dir` is the directory to save images in
 - `--port` is the serial port that the 3D printer is connected to
+- `--lang` is the language / keyboard of the interface. Only english (US keyboard) (en) and french (fr) are supported. 
 
 The printer will move the camera to the home location and the following window will be displayed:
 
 ![24 V PS](docs/images/startup.png)
+
+
+### 3. Calibrate
+
+Calibration normally only needs to be done infrequently.
+
+1. Move the camera to the front-left of the base plate. Normally this is the position after start up. 
+2. Move the camera up or down so that the base plate is in focus.
+   - en: `q`/`e`
+   - fr: `a`/`e`
+3. (Optional) Press the `h` key to set the home position. The scanner will start at this position from now on.
+4. Move the camera to the front-right of the base plate. Adjust the screw wheel under the plate so that the image is in focus.
+5. Repeat for the back-right and back-left positions
+
+### 4. Set scan parameters
+
+1. Move the camera to the front-left of the area to scan. Press `j` to save the position.
+2. Move the camera to the back-right of the area to scan. Press `i` to save the position.
+3. Use `[` and `]` to set the height of the stack. It is good to add a bit extra.
+4. USe `{` and `}` to set the height step of the stack. 60um is recommended for the VS-TCH4-65 lens.
+
+### 5. Start scan
+
+Press `l` to start the scan. The progress will be displayed on screen.
+
+### 6. Fuse images (laplacian pyramid)
+
+Once scanning is complete, from a terminal in your python environment, run 
+
+`python -m sashimi.cli stack --dir DIRECTORY/OF/STACKED/IMAGES`
+ 
+where `--dir` is the directory containing the individual directories for each stack. 
+
+### 6. Fuse images (helicon)
+
+Alternatively, if you have Helicon Focus installed, you can run the following command to use that stacker instead.
+
+`python -m sashimi.cli helicon-stack --dir DIRECTORY/OF/STACKED/IMAGES`
+
+
+
 
 
 
