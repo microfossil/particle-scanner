@@ -56,7 +56,7 @@ class Controller(object):
         self.MOVE_SCAN_BL = ord('U')
         self.MOVE_SCAN_BR = ord('I')
         self.MOVE_SCAN_FR = ord('K')
-        self.SCAN = ord('l')
+        self.SCAN = ord('p')
 
         self.HELP1 = ord('?')
         self.HELP2 = ord('/')
@@ -263,8 +263,13 @@ class Controller(object):
                 "COMMANDS",
                 f"{scan_command}",
                 "",
-                ""
-                f"Progress: {self.scanner.current_stack} / {self.scanner.total_stacks}"
+                "",
+                f"Progress: {self.scanner.current_stack} / {self.scanner.total_stacks}",
+                "",
+                "",
+                "",
+                "",
+                "quit"
             ]
         elif self.lang == "fr":
             text_status = [
@@ -285,8 +290,13 @@ class Controller(object):
                 "DEMANDES",
                 f"{scan_command}",
                 "",
-                ""
-                f"Course: {self.scanner.current_stack} / {self.scanner.total_stacks}"
+                "",
+                f"Course: {self.scanner.current_stack} / {self.scanner.total_stacks}",
+                "",
+                "",
+                "",
+                "",
+                "quitter"
             ]
 
         for i, t in enumerate(text_status):
@@ -310,7 +320,15 @@ class Controller(object):
                 "i",
                 "",
                 "",
-                "l",
+                "p",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "esc"
             ]
         elif self.lang == "fr":
             text_button = [
@@ -329,7 +347,15 @@ class Controller(object):
                 "i",
                 "",
                 "",
-                "l",
+                "p",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "esc"
             ]
         for i, t in enumerate(text_button):
             cv2.putText(im, t, (10, i * 20 + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (120, 255, 255), 1, cv2.LINE_AA)
@@ -346,7 +372,7 @@ class Controller(object):
                     "j/J: set/goto scan front left",
                     "i/I: set/goto scan back right",
                     "enter: take stack",
-                    "l: start/stop scan",
+                    "p: start/stop scan",
                     "esc: quit",
                     "?: close help",
                 ]
@@ -360,7 +386,7 @@ class Controller(object):
                     "j/J: fixer/aller a l'avant-gauche de la zone de scan",
                     "i/I: fixer/aller a l'arriere droit de la zone de scan",
                     "entree: faire une pile",
-                    "l:  demarrer/arreter un scan",
+                    "p:  demarrer/arreter un scan",
                     "esc: quitter",
                     "?: se fermer",
                 ]

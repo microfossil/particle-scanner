@@ -168,7 +168,7 @@ Calibration normally only needs to be done infrequently.
 
 ### 5. Start scan
 
-Press `l` to start the scan. The progress will be displayed on screen.
+Press `p` to start the scan. The progress will be displayed on screen.
 
 ### 6. Fuse images (laplacian pyramid)
 
