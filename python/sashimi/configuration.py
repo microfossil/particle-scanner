@@ -10,6 +10,7 @@ class Configuration(object):
         self.scan_back_right = [60000, 125000, 2000]
         self.stack_height = 1000
         self.stack_step = 60
+        self.exposure_time = 3000
 
     def save(self):
         config_file = os.path.join(os.path.expanduser("~"), ".sashimi", "config.json")

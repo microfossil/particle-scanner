@@ -164,7 +164,8 @@ Calibration normally only needs to be done infrequently.
 1. Move the camera to the front-left of the area to scan. Press `j` to save the position.
 2. Move the camera to the back-right of the area to scan. Press `i` to save the position.
 3. Use `[` and `]` to set the height of the stack. It is good to add a bit extra.
-4. USe `{` and `}` to set the height step of the stack. 60um is recommended for the VS-TCH4-65 lens.
+4. Use `{` and `}` to set the height step of the stack. 60um is recommended for the VS-TCH4-65 lens.
+6. Use `g` and `t` to adjust the camera exposure.
 
 ### 5. Start scan
 

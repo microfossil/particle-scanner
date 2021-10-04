@@ -69,3 +69,10 @@ class Camera(object):
                 img = self.capture_thread.image.copy()
         return img
 
+    def set_exposure(self, value):
+        self.camera.ExposureTime.SetValue(value)
+
+    def set_gain(self, value):
+        self.camera.Gain.SetValue(value)
+
+

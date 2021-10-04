@@ -50,6 +50,9 @@ class Controller(object):
         self.XUP = ord('Q')
         self.XDOWN = ord('E')
 
+        self.EXPOSUREUP = ord('t')
+        self.EXPOSUREDOWN = ord('g')
+
         self.SCAN_FL = ord('j')
         self.SCAN_BR = ord('i')
         self.MOVE_SCAN_FL = ord('J')
@@ -214,6 +217,18 @@ class Controller(object):
             else:
                 self.scanner.scan()
 
+        # Exposure
+        elif key == self.EXPOSUREUP:
+            self.config.exposure_time += 100
+            if (self.config.exposure_time) > 50000:
+                self.config.exposure_time = 50000
+            self.camera.set_exposure(self.config.exposure_time)
+        elif key == self.EXPOSUREDOWN:
+            self.config.exposure_time -= 100
+            if (self.config.exposure_time) < 100:
+                self.config.exposure_time = 100
+            self.camera.set_exposure(self.config.exposure_time)
+
         # Help
         elif key == self.HELP1 or key == self.HELP2:
             self.show_help = ~self.show_help
@@ -252,6 +267,9 @@ class Controller(object):
                 f"Z: {self.stage.z}",
                 f"Home: {self.config.home_offset}",
                 "- - - - - - - - - - - -",
+                "CAMERA",
+                f"Exposure: {self.config.exposure_time}us",
+                "- - - - - - - - - - - -",
                 "STACK",
                 f"Height: {self.config.stack_height}um",
                 f"Step: {self.config.stack_step}um",
@@ -267,8 +285,6 @@ class Controller(object):
                 f"Progress: {self.scanner.current_stack} / {self.scanner.total_stacks}",
                 "",
                 "",
-                "",
-                "",
                 "quit"
             ]
         elif self.lang == "fr":
@@ -278,6 +294,9 @@ class Controller(object):
                 f"Y: {self.stage.y}",
                 f"Z: {self.stage.z}",
                 f"Origine: {self.config.home_offset}",
+                "- - - - - - - - - - - -",
+                "CAMERA",
+                f"Exposure: {self.config.exposure_time}us",
                 "- - - - - - - - - - - -",
                 "PILE",
                 f"Hauteur: {self.config.stack_height}um",
@@ -292,8 +311,6 @@ class Controller(object):
                 "",
                 "",
                 f"Course: {self.scanner.current_stack} / {self.scanner.total_stacks}",
-                "",
-                "",
                 "",
                 "",
                 "quitter"
@@ -312,6 +329,9 @@ class Controller(object):
                 "h",
                 "",
                 "",
+                "g t",
+                "",
+                "",
                 "[ ]",
                 "{ }",
                 "",
@@ -321,8 +341,6 @@ class Controller(object):
                 "",
                 "",
                 "p",
-                "",
-                "",
                 "",
                 "",
                 "",
@@ -339,6 +357,9 @@ class Controller(object):
                 "h",
                 "",
                 "",
+                "g t",
+                "",
+                "",
                 "[ ]",
                 "{ }",
                 "",
@@ -348,8 +369,6 @@ class Controller(object):
                 "",
                 "",
                 "p",
-                "",
-                "",
                 "",
                 "",
                 "",
@@ -404,6 +423,7 @@ class Controller(object):
     def start(self):
         self.stage.start()
         self.camera.start()
+        self.camera.set_exposure(self.config.exposure_time)
         self.stage.move_home(self.config.home_offset)
 
         # Control loop
