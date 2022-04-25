@@ -13,7 +13,7 @@ setup(
         'scikit-image',
         'scipy',
         'pypylon',
-        'cv2',
-        'serial'
+        'opencv-python',
+        'pyserial'
     ]
 )
