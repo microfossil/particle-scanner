@@ -48,7 +48,7 @@ class Scanner(object):
                 self.stage.goto_x(self.config.scan_front_left[0] + self.X_STEP * xi)
                 self.stage.goto_y(self.config.scan_front_left[1] + self.Y_STEP * yi)
                 self.stage.wait_until_position(1000)
-                self.wait_ms_check_input(100)
+                self.wait_ms_check_input(300)
                 self.take_stack(xi, yi)
                 if self.is_scanning is False:
                     return
@@ -57,7 +57,7 @@ class Scanner(object):
     def take_stack(self, xi, yi):
         images = []
         # Create directory to save stack
-        stack_save_path = Path(self.save_dir).joinpath(f"X{xi:04d}-{self.stage.x:06d}um_Y{yi:04d}-{self.stage.y:06d}um")
+        stack_save_path = Path(self.save_dir).joinpath(f"X{self.stage.x:06d}_Y{self.stage.y:06d}")
         os.makedirs(stack_save_path, exist_ok=True)
         # Take the stack
         z_orig = self.stage.z
@@ -68,7 +68,7 @@ class Scanner(object):
             # Show image on screen
             self.show_image(img)
             # Save image
-            image_save_path = stack_save_path.joinpath(f"X{xi:04d}-{self.stage.x:06d}um_Y{yi:04d}-{self.stage.y:06d}um_Z{i:04d}-{self.stage.z:06d}um.jpg")
+            image_save_path = stack_save_path.joinpath(f"X{self.stage.x:06d}_Y{self.stage.y:06d}_Z{self.stage.z:06d}.jpg")
             skio.imsave(str(image_save_path), img[..., ::-1], check_contrast=False, quality=90)
             # Move up
             self.stage.move_z(self.config.stack_step)
