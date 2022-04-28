@@ -171,7 +171,7 @@ Calibration normally only needs to be done infrequently.
 
 Press `p` to start the scan. The progress will be displayed on screen.
 
-### 6. Fuse images (laplacian pyramid)
+### 6. Fuse images (laplacian pyramid) 
 
 Once scanning is complete, from a terminal in your python environment, run 
 
@@ -179,7 +179,7 @@ Once scanning is complete, from a terminal in your python environment, run
  
 where `--dir` is the directory containing the individual directories for each stack. 
 
-### 6. Fuse images (helicon)
+### 6. Fuse images (helicon) RECOMMENDED
 
 Alternatively, if you have Helicon Focus installed, you can run the following command to use that stacker instead.
 
