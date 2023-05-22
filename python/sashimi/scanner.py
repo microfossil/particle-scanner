@@ -6,6 +6,16 @@ import numpy as np
 # from sashimi.helicon_stack import stack_from_to, stack_for_multiple_exp
 
 
+# TODO: fix the bug crashing the program if a multi scan of 1 scan ends
+# TODO: add the "take stack from min_height of the scan area" option (Failsafe in case of very annoying code)
+
+# TODO: add an update_total_stacks_nbr() function
+# TODO: measure the time needed to :
+#  - take all the pictures of a stack
+#  - stack these pictures together with Helicon Focus
+# TODO: make an ETA function
+
+
 def measure_sharpness(img):
     img = img[::4, ::4, ...]
     sharpness = []

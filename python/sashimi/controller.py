@@ -7,6 +7,9 @@ from sashimi.stage import Stage
 from sashimi.configuration import Configuration
 
 
+# TODO: fix offset in UI
+# TODO: Add save/load config files
+
 class Controller(object):
     def __init__(self, save_dir, com_port, reposition_offset=1000, photo_test=False, lang="en"):
         self.config = Configuration.load()
@@ -259,7 +262,7 @@ class Controller(object):
             self.scans.append(self.selected_scan())
         elif key == self.DEL_ZONE:  # delete currently selected zone
             if len(self.scans) > 1:
-                if self.selected_scan_number == len(self.scans + 1):
+                if self.selected_scan_number == len(self.scans) + 1:
                     self.scans.pop(self.selected_scan_number - 1)
                     self.selected_scan_number -= 1
                 else:
