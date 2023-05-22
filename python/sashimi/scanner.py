@@ -6,7 +6,10 @@ import numpy as np
 from sashimi.helicon_stack import stack_from_to, stack_for_multiple_exp
 
 # TODO: fix the bug crashing the program if a multi scan of 1 scan ends
-# TODO: add the "take stack from min_height of the scan area" option (Failsafe in case of very annoying code)
+
+# TODO: fix lowest_corner
+
+# TODO: auto z_correction
 
 # TODO: add an update_total_stacks_nbr() function
 # TODO: measure the time needed to :
@@ -56,10 +59,25 @@ class Scanner(object):
         self.X_STEP = 1700
         self.Y_STEP = 1700
 
+    def lowest_corner(self) -> int:
+        current_scan = self.selected_scan()
+        fl = current_scan['FL']
+        br = current_scan['BR']
+        blz = current_scan['BR_Z']
+        flz = fl[2]
+        brz = br[2]
+        frz = flz - brz + blz
+        mini = min(blz, brz, flz, frz)
+        
+        if mini < 0:
+            mini = 0
+        
+        return mini
+    
     def update_stack_count(self):
         self.stack_count = self.config.stack_height // self.config.stack_step
     
-    def step_nbr_xy(self):
+    def step_nbr_xy(self) -> (int, int):
         zone = self.selected_scan()
         x_steps = (zone['BR'][0] - zone['FL'][0]) // self.X_STEP
         y_steps = (zone['BR'][1] - zone['FL'][1]) // self.Y_STEP
@@ -118,12 +136,8 @@ class Scanner(object):
             self.stage.goto(self.selected_scan()['FL'])
             self.wait_ms_check_input(5000)
 
-            if len(self.scans) == 1:
-                self.scan_dir = self.save_dir
-                scan_fs_dir = self.fs_folder
-            else:
-                self.scan_dir = Path(self.save_dir).joinpath(scan_name)
-                scan_fs_dir = self.fs_folder.joinpath(scan_name)
+            self.scan_dir = Path(self.save_dir).joinpath(scan_name)
+            scan_fs_dir = self.fs_folder.joinpath(scan_name)
 
             self.scan()
             if self.photo_test is None:
@@ -134,7 +148,7 @@ class Scanner(object):
 
         self.is_multi_scanning = False
 
-    def test_expo_settings(self):
+    def test_expo_settings(self):  # TODO: rename to "scan_and_quit" or something
         self.multi_scan()
 
         # in case of user interruption:
@@ -154,14 +168,17 @@ class Scanner(object):
         if self.photo_test:
             for exp in self.photo_test:
                 os.makedirs(stack_folder.joinpath(f"E{exp}"), exist_ok=True)
-                
-        dz_dx, dz_dy = self.selected_scan()['Z_corrections']
 
         z_orig = self.stage.z
-
-        z_correction = int(dz_dx * dx + dz_dy * dy)
-        self.stage.move_z(z_correction)
-        self.wait_ms_check_input(100)
+        
+        if self.controller.lowest_z:  # Dumb-but-works correction
+            self.stage.goto_z(self.lowest_corner())
+            self.wait_ms_check_input(100)
+        else:  # Smart correction
+            dz_dx, dz_dy = self.selected_scan()['Z_corrections']
+            z_correction = int(dz_dx * dx + dz_dy * dy)
+            self.stage.move_z(z_correction)
+            self.wait_ms_check_input(100)
         
         # Take the stack
         print(z_orig)
@@ -206,7 +223,6 @@ class Scanner(object):
                                                             f"Z{self.stage.z:06d}.jpg")
 
                 skio.imsave(str(image_save_path), img[..., ::-1], check_contrast=False, quality=90)
-
 
             # Move down instead of up if top_down is True
             if self.config.top_down:

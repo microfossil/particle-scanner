@@ -9,12 +9,15 @@ from sashimi.configuration import Configuration
 # TODO: fix offset in UI
 # TODO: Add save/load config files
 
+
 class Controller(object):
-    def __init__(self, save_dir, com_port, reposition_offset=1000, photo_test=False, lang="en"):
+    def __init__(self, save_dir, com_port, reposition_offset=1000, photo_test=False, lang="en", lowest_z=False):
         self.config = Configuration.load()
         self.img_mode = 1
         self.reposition_offset = reposition_offset
         self.photo_test = photo_test
+        
+        self.lowest_z = lowest_z
 
         self.interrupt_flag = False
         self.selected_scan_number = 1
