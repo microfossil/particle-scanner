@@ -2,7 +2,7 @@ import click
 from sashimi import focus_stack
 from sashimi import helicon_stack as helicon_stacker
 from sashimi.controller import Controller
-from sashimi.multi_exp import dialog_for_path_and_value
+from sashimi.multi_exp import dialog_for_path_and_values
 
 
 @click.group()
@@ -73,8 +73,8 @@ def scan(dir_, port, lang, autoquit, offset, lowest):
               flag_value=True,
               default=False,
               help='simplifies z correction')
-def multiple_exp(lang, autoquit, offset, lowest):
-    user_path, exp_values = dialog_for_path_and_value()
+def multiple_exp(port, lang, autoquit, offset, lowest):
+    user_path, exp_values = dialog_for_path_and_values()
     print("Input collection finished, the scanning program will start.")
     controller = Controller(user_path,
                             port,
