@@ -109,21 +109,21 @@ def multiple_exp(port, lang, layout, skipfs, autoquit, offset, lowest):
 
 
 @cli.command()
-@click.option('--dir',
+@click.option(dcls=[None, '--dir', '-d', 'dir_'],
               type=str,
               prompt='Directory containing stacks',
               help='Directory containing subdirectories of image stacks')
-def stack(dir):
-    focus_stack.stack(dir)
+def stack(dir_):
+    focus_stack.stack(dir_)
 
 
 @cli.command()
-@click.option('--dir',
+@click.option(dcls=[None, '--dir', '-d', 'dir_'],
               type=str,
               prompt='Directory containing stacks',
               help='Directory containing subdirectories of image stacks')
-def helicon_stack(dir):
-    helicon_stacker.stack(dir)
+def helicon_stack(dir_):
+    helicon_stacker.stack(dir_)
 
 
 if __name__ == "__main__":
