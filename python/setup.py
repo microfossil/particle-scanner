@@ -11,6 +11,7 @@ setup(
     description='3D printer stacking software',
     install_requires=[
         'scikit-image',
+        'numpy',
         'scipy',
         'pypylon',
         'opencv-python',
