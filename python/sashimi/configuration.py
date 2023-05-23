@@ -14,7 +14,7 @@ class Configuration(object):
                        'BL_Z':2000,
                        'Z_corrections':[0, 0]}]
         self.top_down = False
-
+    
     def update_z_correction_terms(self, index, blz=None):
         # supposes the scan surface is flat and non-vertical
         fl, br = self.scans[index]['FL'], self.scans[index]['BR']

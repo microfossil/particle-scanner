@@ -37,6 +37,7 @@ class Scanner(object):
         self.config = self.controller.config
         
         self.auto_f_stack = self.controller.auto_f_stack
+        
         self.auto_quit = self.controller.auto_quit
         self.save_dir = self.controller.save_dir
         self.scan_dir = self.save_dir
@@ -99,6 +100,7 @@ class Scanner(object):
         # Calculate the number of steps needed
         x_steps, y_steps = self.step_nbr_xy()
         self.total_stacks = (x_steps + 1) * (y_steps + 1)
+        
         # Start scanning
         self.is_scanning = True
         for yi in range(y_steps + 1):
@@ -141,12 +143,7 @@ class Scanner(object):
             self.scan()
             
             if self.auto_f_stack:
-                scan_fs_dir = self.fs_folder.joinpath(scan_name)
-                
-                if self.multi_exp is None:
-                    stack_from_to(self.scan_dir, scan_fs_dir)
-                else:
-                    stack_for_multiple_exp(self.scan_dir, self.fs_folder, self.multi_exp)
+                self.focus_stack(scan_name)
 
         self.is_multi_scanning = False
         
@@ -158,6 +155,16 @@ class Scanner(object):
     
             self.controller.quit_requested = True
             return
+
+    def focus_stack(self, scan_name):
+        if not self.is_multi_scanning:
+            return
+        scan_fs_dir = self.fs_folder.joinpath(scan_name)
+
+        if self.multi_exp is None:
+            stack_from_to(self.scan_dir, scan_fs_dir)
+        else:
+            stack_for_multiple_exp(self.scan_dir, self.fs_folder, self.multi_exp)
 
     def take_stack(self, dx, dy):
         images = []

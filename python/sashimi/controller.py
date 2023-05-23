@@ -191,13 +191,9 @@ class Controller(object):
     def menu_commands(self, key):
         # Scan
         if key == self.SCAN:
-            if self.multi_exp is None:
-                print("begin scanning")
-                self.scanner.is_multi_scanning = True
-                self.scanner.multi_scan()
-            else:
-                print("beginning benchmark")
-                self.scanner.test_expo_settings()
+            print("begin scanning")
+            self.scanner.is_multi_scanning = True
+            self.scanner.multi_scan()
 
         # Home
         elif key == self.HOME:
