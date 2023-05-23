@@ -11,10 +11,19 @@ from sashimi.configuration import Configuration
 
 
 class Controller(object):
-    def __init__(self, save_dir, com_port, reposition_offset=1000, photo_test=False, lang="en", lowest_z=False):
+    def __init__(self,
+                 save_dir,
+                 com_port,
+                 lang="en",
+                 reposition_offset=1000,
+                 auto_quit=False,
+                 photo_test=False,
+                 lowest_z=False):
+        
         self.config = Configuration.load()
         self.img_mode = 1
         self.reposition_offset = reposition_offset
+        self.auto_quit = auto_quit
         self.photo_test = photo_test
         
         self.lowest_z = lowest_z
