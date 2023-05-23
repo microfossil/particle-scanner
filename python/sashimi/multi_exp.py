@@ -94,20 +94,24 @@ def ask_for_step_nbr(valid_bounds):
     return steps
 
 
-if __name__ == "__main__":
-    user_path = ask_for_path()
+def dialog_for_path_and_values() -> (Path, list[int]):
+    u_path = ask_for_path()
     interval = ask_for_interval()
     step_nbr = ask_for_step_nbr(interval)
-
     step_size = (interval[1] - interval[0]) // (step_nbr - 1)
-    exposition_values = [interval[0] + i * step_size for i in range(step_nbr)]
-    print("Input collection finished, the scanning program will start.")
+    exp_val = [interval[0] + i * step_size for i in range(step_nbr)]
 
+    return u_path, exp_val
+    
+
+if __name__ == "__main__":
+    user_path, exposition_values = dialog_for_path_and_values()
+    print("Input collection finished, the scanning program will start.")
     controller = Controller(user_path,
                             'COM5',
+                            lang='fr',
                             auto_quit=True,
                             multi_exp=exposition_values,
-                            lang='fr',
                             lowest_z=True)
     # On pressing [p], the program will scan repeatedly with different settings of camera exposition.
     # function returns automatically after scanning
