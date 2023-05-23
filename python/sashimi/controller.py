@@ -381,7 +381,8 @@ class Controller(object):
                     "CAMERA",
                     f"Exposure: {self.config.exposure_time}us",
                     "- - - - - - - - - - - -",
-                    "STACK: " + direction + f" | {self.scanner.current_stack} / {self.scanner.total_stacks}",
+                    "STACK: " + direction
+                    + f" | {self.scanner.current_pic_count}/{self.scanner.total_pic_count} pics",
                     f"Height: {self.config.stack_height}um",
                     f"Step: {self.config.stack_step}um",
                     "- - - - - - - - - - - -",
@@ -438,7 +439,7 @@ class Controller(object):
                     "CAMERA",
                     f"Exposure: {self.config.exposure_time}us",
                     "- - - - - - - - - - - -",
-                    "PILE: " + direction + f" | {self.scanner.current_stack} / {self.scanner.total_stacks}",
+                    "PILE: " + direction + f" | {self.scanner.current_pic_count}/{self.scanner.total_pic_count} pictures taken",
                     f"Hauteur: {self.config.stack_height}um",
                     f"Etape: {self.config.stack_step}um",
                     "- - - - - - - - - - - -",

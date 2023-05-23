@@ -36,6 +36,9 @@ class Scanner(object):
         self.camera = self.controller.camera
         self.config = self.controller.config
         
+        self.X_STEP = 1700
+        self.Y_STEP = 1700
+        
         self.auto_f_stack = self.controller.auto_f_stack
         
         self.auto_quit = self.controller.auto_quit
@@ -45,8 +48,11 @@ class Scanner(object):
         
         self.selected_scan = self.controller.selected_scan
         self.stack_count = None
+        
         self.current_stack = 0
         self.total_stacks = 0
+        self.current_pic_count = 0
+        self.total_pic_count = 0
         
         self.is_scanning = False
         self.is_multi_scanning = False
@@ -54,12 +60,11 @@ class Scanner(object):
         self.fs_folder = self.save_dir.joinpath("f_stacks")
         
         self.fs_exp_folders = [self.fs_folder.joinpath(f"E{exp}") for exp in self.multi_exp]
-        self.update_stack_count()
         self.reposition_offset = self.controller.reposition_offset
 
-        self.X_STEP = 1700
-        self.Y_STEP = 1700
-
+        self.update_stack_count()
+        self.update_total_pic_count()
+        
     def lowest_corner(self) -> int:
         current_scan = self.selected_scan()
         fl = current_scan['FL']
@@ -69,14 +74,29 @@ class Scanner(object):
         brz = br[2]
         frz = flz - brz + blz
         mini = min(blz, brz, flz, frz)
-        
         if mini < 0:
             mini = 0
-        
         return mini
     
     def update_stack_count(self):
         self.stack_count = self.config.stack_height // self.config.stack_step
+
+    def update_total_pic_count(self):
+        if self.multi_exp is not None:
+            pps = self.stack_count * len(self.multi_exp)
+        else:
+            pps = self.stack_count
+        
+        cfg = self.config
+        total_stacks = 0
+        for scan in cfg.scans:
+            del_x = scan['BR'][0] - scan['FL'][0]
+            del_y = scan['BR'][1] - scan['FL'][1]
+            x_steps = 1 + del_x // self.X_STEP
+            y_steps = 1 + del_y // self.Y_STEP
+            total_stacks += x_steps * y_steps
+        
+        self.total_pic_count = pps * total_stacks
     
     def step_nbr_xy(self) -> (int, int):
         zone = self.selected_scan()
@@ -87,12 +107,9 @@ class Scanner(object):
     def scan(self):
         # Reset the stack
         self.current_stack = 0
-        
         # Create directory to store images
         os.makedirs(self.scan_dir, exist_ok=True)
-
         selected_scan = self.controller.selected_scan()
-        
         # Move to the starting position
         self.stage.goto(selected_scan['FL'])
         self.stage.wait_until_position(10000)
@@ -124,6 +141,9 @@ class Scanner(object):
     def multi_scan(self):
         self.is_multi_scanning = True
         self.controller.selected_scan_number = 1
+        self.current_pic_count = 0
+        self.update_total_pic_count()
+        
         os.makedirs(self.save_dir, exist_ok=True)
         # os.makedirs(self.fs_folder, exist_ok=True)
         # for folder in self.fs_exp_folders:
@@ -219,6 +239,7 @@ class Scanner(object):
                 img = self.camera.latest_image()
                 images.append(img)
                 self.show_image(img)
+                self.current_pic_count += 1
 
                 if self.multi_exp:
                     image_save_path = stack_folder.joinpath(f"E{exp}", f"X{self.stage.x:06d}_"
