@@ -52,9 +52,7 @@ class Scanner(object):
         self.fs_folder = self.save_dir.joinpath("f_stacks")
         
         self.fs_exp_folders = [self.fs_folder.joinpath(f"E{exp}") for exp in self.multi_exp]
-
         self.update_stack_count()
-
         self.reposition_offset = self.controller.reposition_offset
 
         self.X_STEP = 1700
@@ -144,7 +142,6 @@ class Scanner(object):
             if self.multi_exp is None:
                 stack_from_to(self.scan_dir, scan_fs_dir)
             else:
-                print(self.scan_dir, self.fs_folder, self.multi_exp)
                 stack_for_multiple_exp(self.scan_dir, self.fs_folder, self.multi_exp)
 
         self.is_multi_scanning = False
