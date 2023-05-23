@@ -269,7 +269,7 @@ class Controller(object):
                                'Z_corrections':[0, 0]})
         elif key == self.DEL_ZONE:  # delete currently selected zone
             if len(self.scans) > 1:
-                if self.selected_scan_number == len(self.scans + 1):
+                if self.selected_scan_number == len(self.scans):
                     self.scans.pop(self.selected_scan_number - 1)
                     self.selected_scan_number -= 1
                 else:

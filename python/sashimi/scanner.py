@@ -63,7 +63,7 @@ class Scanner(object):
         current_scan = self.selected_scan()
         fl = current_scan['FL']
         br = current_scan['BR']
-        blz = current_scan['BR_Z']
+        blz = current_scan['BL_Z']
         flz = fl[2]
         brz = br[2]
         frz = flz - brz + blz
