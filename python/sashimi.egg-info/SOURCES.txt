@@ -8,7 +8,7 @@ sashimi/focus_stack.py
 sashimi/helicon_stack.py
 sashimi/iterate_radii.py
 sashimi/main.py
-sashimi/photo_test.py
+sashimi/multi_exp.py
 sashimi/scanner.py
 sashimi/segmentation.py
 sashimi/stage.py
