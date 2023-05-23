@@ -4,6 +4,7 @@ from sashimi.camera import Camera
 from sashimi.scanner import Scanner
 from sashimi.stage import Stage
 from sashimi.configuration import Configuration
+from sashimi.keyboard import Keyboard
 
 # TODO: fix offset in UI
 # TODO: Add save/load config files
@@ -14,6 +15,7 @@ class Controller(object):
                  save_dir,
                  com_port,
                  lang="en",
+                 layout='QWERTY',
                  reposition_offset=1000,
                  auto_f_stack=True,
                  auto_quit=False,
@@ -22,6 +24,8 @@ class Controller(object):
         
         self.config = Configuration.load()
         self.img_mode = 1
+        self.lang = lang
+        self.layout = layout
         self.reposition_offset = reposition_offset
         self.auto_f_stack = auto_f_stack
         self.auto_quit = auto_quit
@@ -37,8 +41,7 @@ class Controller(object):
         self.stage = Stage(self, com_port)
         self.camera = Camera(self)
         self.scanner = Scanner(self)
-
-        self.lang = lang
+        self.keyboard = Keyboard(self.layout)
 
         self.quit_requested = False
         self.show_help = False
@@ -47,79 +50,12 @@ class Controller(object):
         self.stop_scan_requested = False
         self.time_remaining = None
 
-        self.HOME = ord('H')
-        self.SET_HOME = ord('h')
-
-        self.FORWARD = ord('w')
-        self.BACK = ord('s')
-        self.LEFT = ord('a')
-        self.RIGHT = ord('d')
-        self.UP = ord('q')
-        self.DOWN = ord('e')
-
-        self.X_FORWARD = ord('W')
-        self.X_BACK = ord('S')
-        self.X_LEFT = ord('A')
-        self.X_RIGHT = ord('D')
-        self.X_UP = ord('Q')
-        self.X_DOWN = ord('E')
-
-        self.EXPOSURE_UP = ord('t')
-        self.EXPOSURE_DOWN = ord('g')
-
-        self.SCAN_FL = ord('j')
-        self.SCAN_BR = ord('i')
-        self.SET_Z_COR = ord('u')
-        
-        self.MOVE_SCAN_FL = ord('J')
-        self.MOVE_SCAN_BL = ord('U')
-        self.MOVE_SCAN_BR = ord('I')
-        self.MOVE_SCAN_FR = ord('K')
-        self.SCAN = ord('p')
-
-        self.HELP1 = ord('?')
-        self.HELP2 = ord('/')
-
-        self.PREV_SCAN = ord('z')
-        self.NEXT_SCAN = ord('x')
-        self.ADD_ZONE = ord('v')
-        self.DEL_ZONE = ord('B')
-        self.DEL_ALL_ZONES = ord('N')
-
-        self.TAKE_STACK1 = ord('\n')
-        self.TAKE_STACK2 = ord('\r')
-
-        self.FLIP_STACK_ORDER = ord('f')
-
-        self.SAVE_TO_CFG1 = ord('5')
-        self.SAVE_TO_CFG2 = ord('6')
-        self.SAVE_TO_CFG3 = ord('7')
-
-        self.LOAD_CFG1 = ord('8')
-        self.LOAD_CFG2 = ord('9')
-        self.LOAD_CFG3 = ord('0')
-
-        if self.lang == "fr":
-            self.FORWARD = ord('z')
-            self.BACK = ord('s')
-            self.LEFT = ord('q')
-            self.RIGHT = ord('d')
-            self.UP = ord('a')
-            self.DOWN = ord('e')
-
-            self.X_FORWARD = ord('Z')
-            self.X_BACK = ord('S')
-            self.X_LEFT = ord('Q')
-            self.X_RIGHT = ord('D')
-            self.X_UP = ord('A')
-            self.X_DOWN = ord('E')
-
-            self.PREV_SCAN = ord('w')
-
     def selected_scan(self):
         return self.scans[self.selected_scan_number - 1]
 
     def permanent_commands(self, key):
+        kb = self.keyboard
+        
         # Image display modes
         if key == ord('1'):
             self.img_mode = 1
@@ -160,24 +96,22 @@ class Controller(object):
             self.scanner.update_stack_count()
             self.config.save()
 
-        elif key == self.FLIP_STACK_ORDER:
+        elif key == kb.FLIP_STACK_ORDER:
             self.config.top_down = ~self.config.top_down
             print("Stack will be taken from the " + ("top down." if self.config.top_down else "bottom up."))
-
         # Exposure
-        elif key == self.EXPOSURE_UP:
+        elif key == kb.EXPOSURE_UP:
             self.config.exposure_time += 100
             if self.config.exposure_time > 50000:
                 self.config.exposure_time = 50000
             self.camera.set_exposure(self.config.exposure_time)
-        elif key == self.EXPOSURE_DOWN:
+        elif key == kb.EXPOSURE_DOWN:
             self.config.exposure_time -= 100
             if self.config.exposure_time < 100:
                 self.config.exposure_time = 100
             self.camera.set_exposure(self.config.exposure_time)
-
         # Help
-        elif key == self.HELP1 or key == self.HELP2:
+        elif key == kb.HELP1 or key == kb.HELP2:
             self.show_help = ~self.show_help
 
         # Quit
@@ -189,71 +123,72 @@ class Controller(object):
             self.quit_requested = True
 
     def menu_commands(self, key):
+        kb = self.keyboard
         # Scan
-        if key == self.SCAN:
+        if key == kb.SCAN:
             print("begin scanning")
             self.scanner.is_multi_scanning = True
             self.scanner.multi_scan()
 
         # Home
-        elif key == self.HOME:
+        elif key == kb.HOME:
             self.stage.move_home(self.config.home_offset)
             print("Stage: move home")
-        elif key == self.SET_HOME:
+        elif key == kb.SET_HOME:
             self.config.home_offset = self.stage.position
             print("Stage: set current position to home offset")
 
-        # elif key == self.SAVE_TO_CFG1:
+        # elif key == kb.SAVE_TO_CFG1:
         #     self.config.save("config_1")
-        # elif key == self.SAVE_TO_CFG2:
+        # elif key == kb.SAVE_TO_CFG2:
         #     self.config.save("config_2")
-        # elif key == self.SAVE_TO_CFG3:
+        # elif key == kb.SAVE_TO_CFG3:
         #     self.config.save("config_3")
         #
-        # elif key == self.LOAD_CFG1:
+        # elif key == kb.LOAD_CFG1:
         #     self.config.load("config_1")
-        # elif key == self.LOAD_CFG2:
+        # elif key == kb.LOAD_CFG2:
         #     self.config.load("config_2")
-        # elif key == self.LOAD_CFG3:
+        # elif key == kb.LOAD_CFG3:
         #     self.config.load("config_3")
 
         # Move stage
-        elif key == self.FORWARD:
+        elif key == kb.FORWARD:
             self.stage.move_y(1000)
             print("Stage: move y 1mm")
-        elif key == self.BACK:
+        elif key == kb.BACK:
             self.stage.move_y(-1000)
             print("Stage: move y -1mm")
-        elif key == self.LEFT:
+        elif key == kb.LEFT:
             self.stage.move_x(-1000)
             print("Stage: move x -1mm")
-        elif key == self.RIGHT:
+        elif key == kb.RIGHT:
             self.stage.move_x(1000)
             print("Stage: move x 1mm")
 
-        elif key == self.X_FORWARD:
+        elif key == kb.X_FORWARD:
             self.stage.move_y(10000)
             print("Stage: move y 10mm")
-        elif key == self.X_BACK:
+        elif key == kb.X_BACK:
             self.stage.move_y(-10000)
             print("Stage: move y -10mm")
-        elif key == self.X_LEFT:
+        elif key == kb.X_LEFT:
             self.stage.move_x(-10000)
             print("Stage: move x -10mm")
-        elif key == self.X_RIGHT:
+        elif key == kb.X_RIGHT:
             self.stage.move_x(10000)
             print("Stage: move 10mm")
 
-        elif key == self.UP:
+        elif key == kb.UP:
             self.stage.move_z(20)
             print("Stage: move z 20um")
-        elif key == self.DOWN:
+        elif key == kb.DOWN:
             self.stage.move_z(-20)
             print("Stage: move z -20um")
-        elif key == self.X_UP:
+        elif key == kb.X_UP:
             self.stage.move_z(200)
             print("Stage: move z 200um")
-        elif key == self.X_DOWN:
+        elif key == kb.X_DOWN:
             self.stage.move_z(-200)
             print("Stage: move z -200um")
 
@@ -262,61 +197,60 @@ class Controller(object):
             print("Stage: poll position")
 
             # Scan scans edition
-        elif key == self.PREV_SCAN:  # Select previous scan zone
+        elif key == kb.PREV_SCAN:  # Select previous scan zone
             if self.selected_scan_number > 1:
                 self.selected_scan_number -= 1
-        elif key == self.NEXT_SCAN:  # Select next scan zone
+        elif key == kb.NEXT_SCAN:  # Select next scan zone
             if self.selected_scan_number < len(self.scans):
                 self.selected_scan_number += 1
-        elif key == self.ADD_ZONE:  # add a new zone
+        elif key == kb.ADD_ZONE:  # add a new zone
             self.scans.append({'FL': [10000, 50000, 2000],
                                'BR': [11000, 51000, 2000],
                                'BL_Z': 2000,
                                'Z_corrections': [0, 0]})
-        elif key == self.DEL_ZONE:  # delete currently selected zone
+        
+        elif key == kb.DEL_ZONE:  # delete currently selected zone
             if len(self.scans) > 1:
                 if self.selected_scan_number == len(self.scans):
                     self.scans.pop(self.selected_scan_number - 1)
                     self.selected_scan_number -= 1
                 else:
                     self.scans.pop(self.selected_scan_number - 1)
-
-        elif key == self.DEL_ALL_ZONES:  # delete all scans
+        elif key == kb.DEL_ALL_ZONES:  # delete all scans
             self.selected_scan_number = 1
             self.scans = [{'FL': [10000, 50000, 2000],
                            'BR': [11000, 51000, 2000],
                            'BL_Z': 2000,
                            'Z_corrections': [0, 0]}]
-
-        elif key == self.SCAN_FL:
+        elif key == kb.SCAN_FL:
             self.selected_scan()['FL'] = [self.stage.x, self.stage.y, self.stage.z]
             self.config.update_z_correction_terms(self.selected_scan_number - 1)
             self.config.save()
-        elif key == self.SCAN_BR:
+        elif key == kb.SCAN_BR:
             self.selected_scan()['BR'] = [self.stage.x, self.stage.y, self.stage.z]
             self.config.update_z_correction_terms(self.selected_scan_number - 1)
             self.config.save()
-        
-        elif key == self.SET_Z_COR:
+       
+        elif key == kb.SET_Z_COR:
             self.config.update_z_correction_terms(self.selected_scan_number - 1, self.stage.z)
             self.config.save()
 
         # Move to scan area
-        elif key == self.MOVE_SCAN_FL:
+        elif key == kb.MOVE_SCAN_FL:
             self.stage.goto(self.selected_scan()['FL'])
-        elif key == self.MOVE_SCAN_BR:
+        elif key == kb.MOVE_SCAN_BR:
             self.stage.goto(self.selected_scan()['BR'])
-        elif key == self.MOVE_SCAN_BL:
+        elif key == kb.MOVE_SCAN_BL:
             fl = self.selected_scan()['FL']
             br = self.selected_scan()['BR']
             self.stage.goto([fl[0], br[1], fl[2]])
-        elif key == self.MOVE_SCAN_FR:
+        elif key == kb.MOVE_SCAN_FR:
             fl = self.selected_scan()['FL']
             br = self.selected_scan()['BR']
             self.stage.goto([br[0], fl[1], br[2]])
 
         # One-off take stack
-        elif key == self.TAKE_STACK1 or key == self.TAKE_STACK2:
+        elif key == kb.TAKE_STACK1 or key == kb.TAKE_STACK2:
             self.take_stack_requested = True
 
         # Find floor
@@ -324,7 +258,7 @@ class Controller(object):
             self.scanner.find_floor()
 
     def scanning_commands(self, key):
-        if key == self.SCAN:
+        if key == self.keyboard.SCAN:
             self.scanner.is_scanning = False
             self.scanner.is_multi_scanning = False
             self.interrupt_flag = True
@@ -347,6 +281,7 @@ class Controller(object):
             self.menu_commands(key)
 
     def display(self, im: np.array):
+        kb = self.keyboard
         # Reduce size of image
         im = im[::4, ::4, :].astype(np.uint8)
 
@@ -370,6 +305,34 @@ class Controller(object):
         # Define the UI text to be displayed
 
         if self.scanner.is_multi_scanning:
+            text_button = [
+                "",
+                "",
+                "",
+                "",
+                "",
+                "g t",
+                "",
+                "f",
+                "[ ]",
+                "{ }",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "p",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "esc"
+            ]
+            
             if self.lang == "en":
                 scan_command = "Stop scanning"
                 direction = "top down" if self.config.top_down else "bottom up"
@@ -401,33 +364,6 @@ class Controller(object):
                     "",
                     "quit"
                 ]
-                text_button = [
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "g t",
-                    "",
-                    "f",
-                    "[ ]",
-                    "{ }",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "p",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "esc"
-                ]
             if self.lang == "fr":
                 scan_command = "Arreter le scan"
                 direction = "de haut en bas" if self.config.top_down else "de bas en haut"
@@ -458,34 +394,34 @@ class Controller(object):
                     "",
                     "quitter"
                 ]
-                text_button = [
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "g t",
-                    "",
-                    "f",
-                    "[ ]",
-                    "{ }",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "p",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "esc"
-                ]
         else:
+            text_button = [
+                f"{chr(kb.FORWARD)} {chr(kb.BACK)} {chr(kb.LEFT)}",
+                f"{chr(kb.RIGHT)} {chr(kb.UP)} {chr(kb.DOWN)}",
+                "h",
+                "",
+                "",
+                "g t",
+                "",
+                "f",
+                "[ ]",
+                "{ }",
+                "",
+                f"{chr(kb.PREV_SCAN)} {chr(kb.NEXT_SCAN)}",
+                "i",
+                "j",
+                "u",
+                "",
+                "",
+                "p",
+                "v",
+                "B",
+                "N",
+                "",
+                "",
+                "esc"
+            ]
+            
             if self.lang == "en":
                 scan_command = "Start Scanning"
                 direction = "top down" if self.config.top_down else "bottom up"
@@ -516,32 +452,6 @@ class Controller(object):
                     "",
                     "quit"
                 ]
-                text_button = [
-                    "w s a",
-                    "d q e",
-                    "h",
-                    "",
-                    "",
-                    "g t",
-                    "",
-                    "f",
-                    "[ ]",
-                    "{ }",
-                    "",
-                    "z x",
-                    "i",
-                    "j",
-                    "u",
-                    "",
-                    "",
-                    "p",
-                    "v",
-                    "B",
-                    "N",
-                    "",
-                    "",
-                    "esc"
-                ]
             if self.lang == "fr":
                 scan_command = "Demarrer le scan"
                 direction = "de haut en bas" if self.config.top_down else "de bas en haut"
@@ -571,33 +481,7 @@ class Controller(object):
                     "",
                     "quitter"
                 ]
-                text_button = [
-                    "z s q",
-                    "d a e",
-                    "h",
-                    "",
-                    "",
-                    "g t",
-                    "",
-                    "f",
-                    "[ ]",
-                    "{ }",
-                    "",
-                    "w x",
-                    "i",
-                    "j",
-                    "u",
-                    "",
-                    "",
-                    "p",
-                    "v",
-                    "B",
-                    "N",
-                    "",
-                    "",
-                    "esc"
-                ]
-
+        
         # Define the help text to be displayed
         if self.show_help:
             if self.lang == "en":
