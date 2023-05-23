@@ -20,11 +20,11 @@ class Configuration(object):
         fl, br = self.scans[index]['FL'], self.scans[index]['BR']
         x, y, z = 0, 1, 2
         
-        if blz is None:
-            blz = (fl[z] + br[z])//2
-        
         assert (br[x] != fl[x])
         assert (br[y] != fl[y])
+        
+        if blz is None:
+            blz = (fl[z] + br[z])//2
         
         dz_dx = (blz - fl[z]) / (br[x] - fl[x])
         dz_dy = (br[z] - blz) / (br[y] - fl[y])

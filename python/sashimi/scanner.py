@@ -1,5 +1,6 @@
 import os
 import time
+from shutil import rmtree
 from pathlib import Path
 import skimage.io as skio
 import numpy as np
@@ -29,6 +30,15 @@ def measure_sharpness(img):
     return sharpness
 
 
+def remove_folder(folder):
+    for files in os.listdir(folder):
+        path = os.path.join(folder, files)
+        try:
+            rmtree(path)
+        except OSError:
+            os.remove(path)
+
+
 class Scanner(object):
     def __init__(self, controller):
         self.controller = controller
@@ -40,6 +50,7 @@ class Scanner(object):
         self.Y_STEP = 1700
         
         self.auto_f_stack = self.controller.auto_f_stack
+        self.remove_pics = self.controller.remove_pics
         
         self.auto_quit = self.controller.auto_quit
         self.save_dir = self.controller.save_dir
@@ -164,6 +175,9 @@ class Scanner(object):
             
             if self.auto_f_stack:
                 self.focus_stack(scan_name)
+                
+                if self.remove_pics:
+                    remove_folder(self.scan_dir)
 
         self.is_multi_scanning = False
         

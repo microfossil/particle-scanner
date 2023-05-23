@@ -16,6 +16,7 @@ class Controller(object):
                  com_port,
                  lang="en",
                  layout='QWERTY',
+                 remove_pics=False,
                  reposition_offset=1000,
                  auto_f_stack=True,
                  auto_quit=False,
@@ -26,6 +27,7 @@ class Controller(object):
         self.img_mode = 1
         self.lang = lang
         self.layout = layout
+        self.remove_pics = remove_pics
         self.reposition_offset = reposition_offset
         self.auto_f_stack = auto_f_stack
         self.auto_quit = auto_quit
