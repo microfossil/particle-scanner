@@ -1,4 +1,3 @@
-import time
 import cv2
 import numpy as np
 from sashimi.camera import Camera
@@ -17,14 +16,14 @@ class Controller(object):
                  lang="en",
                  reposition_offset=1000,
                  auto_quit=False,
-                 photo_test=False,
+                 multi_exp=False,
                  lowest_z=False):
         
         self.config = Configuration.load()
         self.img_mode = 1
         self.reposition_offset = reposition_offset
         self.auto_quit = auto_quit
-        self.photo_test = photo_test
+        self.multi_exp = multi_exp
         
         self.lowest_z = lowest_z
 
@@ -190,7 +189,7 @@ class Controller(object):
     def menu_commands(self, key):
         # Scan
         if key == self.SCAN:
-            if self.photo_test is None:
+            if self.multi_exp is None:
                 print("begin scanning")
                 self.scanner.is_multi_scanning = True
                 self.scanner.multi_scan()
@@ -273,9 +272,9 @@ class Controller(object):
                 self.selected_scan_number += 1
         elif key == self.ADD_ZONE:  # add a new zone
             self.scans.append({'FL': [10000, 50000, 2000],
-                               'BR':[11000, 51000, 2000],
-                               'BL_Z':2000,
-                               'Z_corrections':[0, 0]})
+                               'BR': [11000, 51000, 2000],
+                               'BL_Z': 2000,
+                               'Z_corrections': [0, 0]})
         elif key == self.DEL_ZONE:  # delete currently selected zone
             if len(self.scans) > 1:
                 if self.selected_scan_number == len(self.scans):
@@ -287,9 +286,9 @@ class Controller(object):
         elif key == self.DEL_ALL_ZONES:  # delete all scans
             self.selected_scan_number = 1
             self.scans = [{'FL': [10000, 50000, 2000],
-                           'BR':[11000, 51000, 2000],
-                           'BL_Z':2000,
-                           'Z_corrections':[0, 0]}]
+                           'BR': [11000, 51000, 2000],
+                           'BL_Z': 2000,
+                           'Z_corrections': [0, 0]}]
 
         elif key == self.SCAN_FL:
             self.selected_scan()['FL'] = [self.stage.x, self.stage.y, self.stage.z]

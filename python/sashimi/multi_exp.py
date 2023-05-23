@@ -103,7 +103,12 @@ if __name__ == "__main__":
     exposition_values = [interval[0] + i * step_size for i in range(step_nbr)]
     print("Input collection finished, the scanning program will start.")
 
-    controller = Controller(user_path, 'COM5', photo_test=exposition_values, lang='fr', lowest_z=True)
+    controller = Controller(user_path,
+                            'COM5',
+                            auto_quit=True,
+                            multi_exp=exposition_values,
+                            lang='fr',
+                            lowest_z=True)
     # On pressing [p], the program will scan repeatedly with different settings of camera exposition.
     # function returns automatically after scanning
     interrupt_flag = controller.start()

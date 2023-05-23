@@ -35,22 +35,23 @@ class Scanner(object):
         self.stage = self.controller.stage
         self.camera = self.controller.camera
         self.config = self.controller.config
-
+        
+        self.auto_quit = self.controller.auto_quit
         self.save_dir = self.controller.save_dir
         self.scan_dir = self.save_dir
-        
         self.scans = self.config.scans
-        self.selected_scan = self.controller.selected_scan
         
+        self.selected_scan = self.controller.selected_scan
         self.stack_count = None
         self.current_stack = 0
         self.total_stacks = 0
+        
         self.is_scanning = False
         self.is_multi_scanning = False
-
-        self.photo_test = self.controller.photo_test
+        self.multi_exp = self.controller.multi_exp
         self.fs_folder = self.save_dir.joinpath("f_stacks")
-        self.fs_exp_folders = [self.fs_folder.joinpath(f"E{exp}") for exp in self.photo_test]
+        
+        self.fs_exp_folders = [self.fs_folder.joinpath(f"E{exp}") for exp in self.multi_exp]
 
         self.update_stack_count()
 
@@ -140,24 +141,22 @@ class Scanner(object):
             scan_fs_dir = self.fs_folder.joinpath(scan_name)
 
             self.scan()
-            if self.photo_test is None:
+            if self.multi_exp is None:
                 stack_from_to(self.scan_dir, scan_fs_dir)
             else:
-                print(self.scan_dir, self.fs_folder, self.photo_test)
-                stack_for_multiple_exp(self.scan_dir, self.fs_folder, self.photo_test)
+                print(self.scan_dir, self.fs_folder, self.multi_exp)
+                stack_for_multiple_exp(self.scan_dir, self.fs_folder, self.multi_exp)
 
         self.is_multi_scanning = False
-
-    def test_expo_settings(self):  # TODO: rename to "scan_and_quit" or something
-        self.multi_scan()
-
-        # in case of user interruption:
-        if self.controller.quit_requested:
-            self.controller.interrupt_flag = True
+        
+        if self.auto_quit:
+            # in case of user interruption:
+            if self.controller.quit_requested:
+                self.controller.interrupt_flag = True
+                return
+    
+            self.controller.quit_requested = True
             return
-
-        self.controller.quit_requested = True
-        return
 
     def take_stack(self, dx, dy):
         images = []
@@ -165,8 +164,8 @@ class Scanner(object):
         stack_folder = Path(self.scan_dir).joinpath(f"X{self.stage.x:06d}_Y{self.stage.y:06d}")
         os.makedirs(stack_folder, exist_ok=True)
 
-        if self.photo_test:
-            for exp in self.photo_test:
+        if self.multi_exp:
+            for exp in self.multi_exp:
                 os.makedirs(stack_folder.joinpath(f"E{exp}"), exist_ok=True)
 
         z_orig = self.stage.z
@@ -187,8 +186,8 @@ class Scanner(object):
             self.stage.move_z(self.config.stack_height + self.reposition_offset)
             self.stage.move_z(-self.reposition_offset)
         
-        if self.photo_test:
-            exp_values = self.photo_test
+        if self.multi_exp:
+            exp_values = self.multi_exp
         else:
             exp_values = (self.config.exposure_time,)
 
@@ -200,7 +199,7 @@ class Scanner(object):
                     print("escape ! ! !")
                     self.is_scanning = False
                     self.is_multi_scanning = False
-                    if self.photo_test is not None:
+                    if self.multi_exp is not None:
                         self.controller.quit_requested = True
                     return
 
@@ -213,7 +212,7 @@ class Scanner(object):
                 images.append(img)
                 self.show_image(img)
 
-                if self.photo_test:
+                if self.multi_exp:
                     image_save_path = stack_folder.joinpath(f"E{exp}", f"X{self.stage.x:06d}_"
                                                                        f"Y{self.stage.y:06d}_"
                                                                        f"Z{self.stage.z:06d}.jpg")
