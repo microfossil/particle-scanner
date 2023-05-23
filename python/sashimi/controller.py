@@ -15,6 +15,7 @@ class Controller(object):
                  com_port,
                  lang="en",
                  reposition_offset=1000,
+                 auto_f_stack=True,
                  auto_quit=False,
                  multi_exp=False,
                  lowest_z=False):
@@ -22,6 +23,7 @@ class Controller(object):
         self.config = Configuration.load()
         self.img_mode = 1
         self.reposition_offset = reposition_offset
+        self.auto_f_stack = auto_f_stack
         self.auto_quit = auto_quit
         self.multi_exp = multi_exp
         

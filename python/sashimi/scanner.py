@@ -36,6 +36,7 @@ class Scanner(object):
         self.camera = self.controller.camera
         self.config = self.controller.config
         
+        self.auto_f_stack = self.controller.auto_f_stack
         self.auto_quit = self.controller.auto_quit
         self.save_dir = self.controller.save_dir
         self.scan_dir = self.save_dir
@@ -136,13 +137,16 @@ class Scanner(object):
             self.wait_ms_check_input(5000)
 
             self.scan_dir = Path(self.save_dir).joinpath(scan_name)
-            scan_fs_dir = self.fs_folder.joinpath(scan_name)
 
             self.scan()
-            if self.multi_exp is None:
-                stack_from_to(self.scan_dir, scan_fs_dir)
-            else:
-                stack_for_multiple_exp(self.scan_dir, self.fs_folder, self.multi_exp)
+            
+            if self.auto_f_stack:
+                scan_fs_dir = self.fs_folder.joinpath(scan_name)
+                
+                if self.multi_exp is None:
+                    stack_from_to(self.scan_dir, scan_fs_dir)
+                else:
+                    stack_for_multiple_exp(self.scan_dir, self.fs_folder, self.multi_exp)
 
         self.is_multi_scanning = False
         

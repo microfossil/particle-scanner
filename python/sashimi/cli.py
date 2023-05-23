@@ -21,6 +21,11 @@ def cli():
                 default='COM5',
                 prompt='COM port of printer',
                 help='COM port of the 3D printer')
+@click.option(dcls=["--skipfs", "-s"],
+              is_flag=True,
+              flag_value=True,
+              default=False,
+              help='disable the automatic focus-stacking of pictures after a scan')
 @click.option(dcls=['--lang', '-l'],
               type=str,
               default="en",
@@ -39,10 +44,11 @@ def cli():
               flag_value=True,
               default=False,
               help='simplifies z correction')
-def scan(dir_, port, lang, autoquit, offset, lowest):
+def scan(dir_, port, lang, skipfs, autoquit, offset, lowest):
     controller = Controller(dir_,
                             port,
                             lang=lang,
+                            auto_f_stack=not skipfs,
                             auto_quit=autoquit,
                             reposition_offset=offset,
                             lowest_z=lowest)
@@ -59,6 +65,11 @@ def scan(dir_, port, lang, autoquit, offset, lowest):
               type=str,
               default="en",
               help='Language of the interface (en/fr)')
+@click.option(dcls=["--skipfs", "-s"],
+              is_flag=True,
+              flag_value=True,
+              default=False,
+              help='disable the automatic focus-stacking of pictures after a scan')
 @click.option(dcls=['--autoquit', '-q'],
               is_flag=True,
               flag_value=True,
@@ -73,13 +84,14 @@ def scan(dir_, port, lang, autoquit, offset, lowest):
               flag_value=True,
               default=False,
               help='simplifies z correction')
-def multiple_exp(port, lang, autoquit, offset, lowest):
+def multiple_exp(port, lang, skipfs, autoquit, offset, lowest):
     user_path, exp_values = dialog_for_path_and_values()
     print("Input collection finished, the scanning program will start.")
     controller = Controller(user_path,
                             port,
                             lang=lang,
                             multi_exp=exp_values,
+                            auto_f_stack=not skipfs,
                             auto_quit=autoquit,
                             reposition_offset=offset,
                             lowest_z=lowest)
