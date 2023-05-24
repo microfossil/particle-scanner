@@ -1,6 +1,7 @@
 python/sashimi/.idea
+python/build
+python/sashimi/__pycache__
 python/sashimi.egg-info
-python/dist
 python/MANIFEST
-
 python/sashimi/test UI.py
+venv
