@@ -145,7 +145,6 @@ class Scanner(object):
                 self.stage.goto_y(selected_scan['FL'][1] + dy)
                 self.stage.wait_until_position(1000)
                 self.wait_ms_check_input(300)
-                
                 self.take_stack(dx, dy)
         self.is_scanning = False
 
@@ -154,11 +153,7 @@ class Scanner(object):
         self.controller.selected_scan_number = 1
         self.current_pic_count = 0
         self.update_total_pic_count()
-        
         os.makedirs(self.save_dir, exist_ok=True)
-        # os.makedirs(self.fs_folder, exist_ok=True)
-        # for folder in self.fs_exp_folders:
-        #     os.makedirs(folder, exist_ok=True)
 
         for n, path in enumerate(self.scans):
             scan_name = f"scan{n + 1}"
@@ -168,14 +163,11 @@ class Scanner(object):
             self.controller.selected_scan_number = n + 1
             self.stage.goto(self.selected_scan()['FL'])
             self.wait_ms_check_input(5000)
-
             self.scan_dir = Path(self.save_dir).joinpath(scan_name)
-
             self.scan()
             
             if self.auto_f_stack:
                 self.focus_stack(scan_name)
-                
                 if self.remove_pics:
                     remove_folder(self.scan_dir)
 
@@ -186,7 +178,6 @@ class Scanner(object):
             if self.controller.quit_requested:
                 self.controller.interrupt_flag = True
                 return
-    
             self.controller.quit_requested = True
             return
 
@@ -201,7 +192,6 @@ class Scanner(object):
             stack_for_multiple_exp(self.scan_dir, self.fs_folder, self.multi_exp)
 
     def take_stack(self, dx, dy):
-        images = []
         # Create directory to save stack
         stack_folder = Path(self.scan_dir).joinpath(f"X{self.stage.x:06d}_Y{self.stage.y:06d}")
         os.makedirs(stack_folder, exist_ok=True)
@@ -209,13 +199,13 @@ class Scanner(object):
         if self.multi_exp:
             for exp in self.multi_exp:
                 os.makedirs(stack_folder.joinpath(f"E{exp}"), exist_ok=True)
-
-        z_orig = self.stage.z
         
-        if self.controller.lowest_z:  # Dumb-but-works correction
+        # TODO: make this block its own function
+        z_orig = self.stage.z
+        if self.controller.lowest_z:  # 'Dumb-but-works' correction
             self.stage.goto_z(self.lowest_corner())
             self.wait_ms_check_input(100)
-        else:  # Smart correction
+        else:  # 'Smart' correction
             dz_dx, dz_dy = self.selected_scan()['Z_corrections']
             z_correction = int(dz_dx * dx + dz_dy * dy)
             self.stage.move_z(z_correction)
@@ -228,10 +218,7 @@ class Scanner(object):
             self.stage.move_z(self.config.stack_height + self.reposition_offset)
             self.stage.move_z(-self.reposition_offset)
         
-        if self.multi_exp:
-            exp_values = self.multi_exp
-        else:
-            exp_values = (self.config.exposure_time,)
+        exp_values = self.multi_exp if self.multi_exp else (self.config.exposure_time,)
 
         for i in range(self.stack_count):
             # Grab image and add to list
@@ -246,12 +233,8 @@ class Scanner(object):
                     return
 
                 self.camera.set_exposure(exp)
-                chrono = -time.perf_counter()
                 self.wait_ms_check_input(300)
-                chrono += time.perf_counter()
-                print(chrono)
                 img = self.camera.latest_image()
-                images.append(img)
                 self.show_image(img)
                 self.current_pic_count += 1
 
