@@ -1,5 +1,7 @@
 scikit-image
+numpy
 scipy
 pypylon
 opencv-python
 pyserial
+click

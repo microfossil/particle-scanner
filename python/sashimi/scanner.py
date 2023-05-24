@@ -84,7 +84,7 @@ class Scanner(object):
         flz = fl[2]
         brz = br[2]
         frz = flz - brz + blz
-        mini = min(blz, brz, flz, frz)
+        mini = min((blz, brz, flz, frz))
         if mini < 0:
             mini = 0
         return mini
@@ -246,10 +246,8 @@ class Scanner(object):
                     return
 
                 self.camera.set_exposure(exp)
-                chrono = -time.perf_counter()
                 self.wait_ms_check_input(300)
-                chrono += time.perf_counter()
-                print(chrono)
+
                 img = self.camera.latest_image()
                 images.append(img)
                 self.show_image(img)

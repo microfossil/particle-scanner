@@ -6,7 +6,7 @@ sashimi/configuration.py
 sashimi/controller.py
 sashimi/focus_stack.py
 sashimi/helicon_stack.py
-sashimi/iterate_radii.py
+sashimi/keyboard.py
 sashimi/main.py
 sashimi/multi_exp.py
 sashimi/scanner.py
