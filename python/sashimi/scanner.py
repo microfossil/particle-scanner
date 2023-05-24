@@ -85,7 +85,7 @@ class Scanner(object):
             mini = 0
         return mini
     
-    def get_corrected_z(self):
+    def get_corrected_z(self, dx, dy):
         if self.controller.lowest_z:
             # 'Dumb-but-works' correction
             new_z = self.lowest_corner()
@@ -189,7 +189,7 @@ class Scanner(object):
                 os.makedirs(stack_folder.joinpath(f"E{exp}"), exist_ok=True)
         
         z_orig = self.stage.z
-        self.stage.goto_z(self.get_corrected_z())
+        self.stage.goto_z(self.get_corrected_z(dx, dy))
         self.wait_ms_check_input(100)
         stack_order = +1
         if self.config.top_down:  # Reposition the camera with downward travel to reduce the tilting of the camera
