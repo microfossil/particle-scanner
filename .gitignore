@@ -1,7 +1,7 @@
-python/sashimi/.idea
-python/build
-python/sashimi/__pycache__
-python/sashimi.egg-info
+python/sashimi/.idea/*
+python/build/*
+python/sashimi/__pycache__/*
+python/sashimi.egg-info/*
 python/MANIFEST
 python/sashimi/test UI.py
-venv
+venv/*
