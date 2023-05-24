@@ -3,3 +3,4 @@ python/sashimi.egg-info
 python/dist
 python/MANIFEST
 
+python/sashimi/test UI.py
