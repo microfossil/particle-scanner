@@ -539,6 +539,7 @@ class Controller(object):
 
     def start(self):
         self.stage.start()
+        self.stage.send_command('M107')  # turns off the extruder fan
         self.camera.start()
         self.camera.set_exposure(self.config.exposure_time)
         self.stage.move_home(self.config.home_offset)
