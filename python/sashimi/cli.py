@@ -34,6 +34,9 @@ def cli():
               type=str,
               default='QWERTY',
               help='Layout of the keyboard (QWERTY/AZERTY)')
+@click.option(dcls=["--mult-exp", "-e"],
+              is_flag=True,
+              help="Allows to use multiple Exposures")
 @click.option(dcls=["--remove-pics", "-r"],
               is_flag=True,
               help='Removes the non-stacked pictures after finishing stacking')
@@ -50,60 +53,20 @@ def cli():
 @click.option(dcls=['--lowest', '-z'],
               is_flag=True,
               help='simplifies z correction')
-def scan(dir_, port, lang, layout, remove_pics, skip_fs, auto_quit, offset, lowest):
-    controller = Controller(dir_,
-                            port,
-                            lang=lang,
-                            layout=layout,
-                            remove_pics=remove_pics,
-                            auto_f_stack=not skip_fs,
-                            auto_quit=auto_quit,
-                            reposition_offset=offset,
-                            lowest_z=lowest)
-    controller.start()
-
-
-@cli.command()
-@click.argument(dcls=[None, '--port', '-p'],
-                type=str,
-                default='COM5',
-                prompt='COM port of printer',
-                help='COM port of the 3D printer')
-@click.option(dcls=['--lang', '-l'],
-              type=str,
-              default="en",
-              prompt="Language",
-              help='Language of the interface (en/fr)')
-@click.option('--layout',
-              type=str,
-              default='QWERTY',
-              prompt=True,
-              help='Layout of the keyboard (QWERTY/AZERTY)')
-@click.option(dcls=["--remove-pics", "-r"],
-              is_flag=True,
-              help='Removes the non-stacked pictures after finishing stacking')
-@click.option(dcls=["--skip-fs", "-s"],
-              is_flag=True,
-              help='disable the automatic focus-stacking of pictures after a scan')
-@click.option(dcls=['--auto-quit', '-q'],
-              is_flag=True,
-              help='sashimi quits automatically after scanning')
-@click.option(dcls=['--offset', '-o'],
-              type=int,
-              default=1000,
-              help='z offset in top-down mode')
-@click.option(dcls=['--lowest', '-z'],
-              is_flag=True,
-              help='simplifies z correction')
-def multiple_exp(port, lang, layout, remove_pics, skip_fs, auto_quit, offset, lowest):
-    user_path, exp_values = dialog_for_path_and_values()
-    print("Input collection finished, the scanning program will start.")
+def scan(dir_, port, lang, layout, mult_exp, remove_pics, skip_fs, auto_quit, offset, lowest):
+    if mult_exp:
+        user_path, exp_values = dialog_for_path_and_values()
+        print("Input collection finished, the scanning program will start.")
+    else:
+        user_path = dir_
+        exp_values = None
+        
     controller = Controller(user_path,
                             port,
                             lang=lang,
                             layout=layout,
-                            remove_pics=remove_pics,
                             multi_exp=exp_values,
+                            remove_pics=remove_pics,
                             auto_f_stack=not skip_fs,
                             auto_quit=auto_quit,
                             reposition_offset=offset,
