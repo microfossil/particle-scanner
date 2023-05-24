@@ -12,6 +12,7 @@ sashimi/multi_exp.py
 sashimi/scanner.py
 sashimi/segmentation.py
 sashimi/stage.py
+sashimi/test UI.py
 sashimi.egg-info/PKG-INFO
 sashimi.egg-info/SOURCES.txt
 sashimi.egg-info/dependency_links.txt
