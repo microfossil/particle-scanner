@@ -1,5 +1,6 @@
 import click
 from os import path
+from pathlib import Path
 from sashimi import focus_stack
 from sashimi import helicon_stack as helicon_stacker
 from sashimi.controller import Controller
@@ -88,8 +89,19 @@ def stack(dir_):
               type=str,
               # prompt='Directory containing stacks',
               help='Directory containing subdirectories of image stacks')
-def helicon_stack(dir_):
-    helicon_stacker.stack(dir_)
+@click.option('--multi-exp', '--mx',
+              type=int,
+              nargs=-1,
+              default=False,
+              help="Allows to stack with folders containing exposure sub-folders.\n"
+                   "The inputted values are the different exposures you wish to process")
+def helicon_stack(dir_, mx):
+    dir_ = Path(dir_).resolve()
+    if mx:
+        to_ = dir_.joinpath('f_stacks')
+        helicon_stacker.stack_for_multiple_exp(dir_, to_, exp_values=mx)
+    else:
+        helicon_stacker.stack(dir_)
 
 
 if __name__ == "__main__":
