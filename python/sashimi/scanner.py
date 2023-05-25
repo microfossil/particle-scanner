@@ -1,5 +1,4 @@
 import os
-import time
 from shutil import rmtree
 from pathlib import Path
 import skimage.io as skio
@@ -131,7 +130,7 @@ class Scanner(object):
 
             self.controller.selected_scan_number = n + 1
             self.stage.goto(self.selected_scan()['FL'])
-            self.wait_ms_check_input(5000)
+            self.stage.wait_until_position(5000)
             self.scan_dir = Path(self.save_dir).joinpath(scan_name)
             self.scan()
             
@@ -176,7 +175,6 @@ class Scanner(object):
                 self.stage.goto_x(selected_scan['FL'][0] + dx)
                 self.stage.goto_y(selected_scan['FL'][1] + dy)
                 self.stage.wait_until_position(1000)
-                self.wait_ms_check_input(300)
                 self.take_stack(dx, dy)
         self.is_scanning = False
 
@@ -190,7 +188,7 @@ class Scanner(object):
         
         z_orig = self.stage.z
         self.stage.goto_z(self.get_corrected_z(dx, dy))
-        self.wait_ms_check_input(100)
+        self.stage.wait_until_position(100)
         stack_order = +1
         if self.config.top_down:  # Reposition the camera with downward travel to reduce the tilting of the camera
             self.stage.move_z(self.config.stack_height + self.reposition_offset)
@@ -225,7 +223,7 @@ class Scanner(object):
         self.show_image(img)
         self.wait_ms_check_input(100)
         self.stage.goto_z(z_orig)
-        self.wait_ms_check_input(50 * self.stack_count)
+        self.stage.wait_until_position(50 * self.stack_count)
 
     def focus_stack(self, scan_name):
         if not self.is_multi_scanning:
@@ -239,7 +237,7 @@ class Scanner(object):
     def find_floor(self):
         z_orig = self.stage.z
         self.stage.goto_z(100)
-        self.wait_ms_check_input(500)
+        self.stage.wait_until_position(500)
         sharpness = []
         for i in range(100):
             img = self.camera.latest_image()
@@ -248,7 +246,7 @@ class Scanner(object):
             sharpness.append(sh)
             print(sh)
             self.stage.move_z(20)
-            self.wait_ms_check_input(200)
+            self.stage.wait_until_position(200)
         sharpness = np.asarray(sharpness)
         print(np.max(sharpness, axis=0))
         print(np.argmax(sharpness, axis=0) * 20 + 100)

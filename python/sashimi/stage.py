@@ -103,13 +103,16 @@ class Stage(object):
                 self.reported_z = int(float(sub_parts[1]) * 1000)
 
     def wait_until_position(self, ms):
-        i = 0
-        while i < (ms / 100):
-            self.poll()
-            if (self.x == self.reported_x) and (self.y == self.reported_y) and (self.z == self.reported_z):
-                # print(f"Position attained in {i*100}ms")
-                return
-            i += 1
+        # tells the printer to finish it's planned movements before executing any other g-code
+        self.send_command('M400')
+        self.send_command("M118 'Ready'")
+        for i in range(ms//33):
+            self.controller.check_for_command(33)
+            messages = self.read()
+            for message in messages:
+                if message.startswith('Ready'):
+                    return
+        
         print(f"!!! ERROR: position not attained after {ms}ms ")
 
     def send_command(self, command):
