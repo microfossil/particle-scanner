@@ -27,7 +27,7 @@ def stack(_dir):
                    "-silent",
                    f"{d}",
                    "-dmap",
-                   "-rp:6"]
+                   "-rp:4"]
         print(command)
         subprocess.run(command)
 
@@ -92,7 +92,7 @@ def stack_from_to(stacks_dir, save_dir):
                    "-silent",
                    f"{d}",
                    "-mp:0",
-                   "-rp:6",
+                   "-rp:4",
                    f"-save:{save_subdir}.jpg"]
         print(command)
         subprocess.run(command)
@@ -120,7 +120,7 @@ def stack_for_multiple_exp(_from: Path, _to: Path, exp_values: list):
                 "-silent",
                 f"{dd}",
                 "-mp:0",
-                "-rp:6",
+                "-rp:4",
                 f"-save:{save_name}.jpg"
             ]
             print(command)

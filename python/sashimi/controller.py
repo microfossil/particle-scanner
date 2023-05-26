@@ -20,7 +20,7 @@ class Controller(object):
                  reposition_offset=1000,
                  auto_f_stack=True,
                  auto_quit=False,
-                 multi_exp=False,
+                 multi_exp=None,
                  lowest_z=False):
         
         self.config = Configuration.load()
@@ -412,8 +412,8 @@ class Controller(object):
                 "",
                 "",
                 f"{chr(kb.PREV_SCAN)} {chr(kb.NEXT_SCAN)}",
-                "i",
                 "j",
+                "i",
                 "u",
                 "",
                 "",
@@ -539,11 +539,10 @@ class Controller(object):
 
     def start(self):
         self.stage.start()
-        self.stage.send_command('M107')  # turns off the extruder fan
         self.camera.start()
         self.camera.set_exposure(self.config.exposure_time)
         self.stage.move_home(self.config.home_offset)
-
+        self.stage.send_command('M107')  # turns off the extruder fan
         # Control loop
         while not self.quit_requested:
             img = self.camera.latest_image()
