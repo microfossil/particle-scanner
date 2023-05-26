@@ -89,19 +89,18 @@ def stack(dir_):
               type=str,
               # prompt='Directory containing stacks',
               help='Directory containing subdirectories of image stacks')
-@click.option('--multi-exp', '--mx',
-              type=int,
-              nargs=-1,
-              default=False,
-              help="Allows to stack with folders containing exposure sub-folders.\n"
-                   "The inputted values are the different exposures you wish to process")
-def helicon_stack(dir_, mx):
+# @click.option('--multi-exp', '--mx',
+#               type=int,
+#               default=False,
+#               help="Allows to stack with folders containing exposure sub-folders.\n"
+#                    "The inputted values are the different exposures you wish to process")
+def helicon_stack(dir_):
     dir_ = Path(dir_).resolve()
-    if mx:
-        to_ = dir_.joinpath('f_stacks')
-        helicon_stacker.stack_for_multiple_exp(dir_, to_, exp_values=mx)
-    else:
-        helicon_stacker.stack(dir_)
+    # if mx:
+    #     to_ = dir_.joinpath('f_stacks')
+    #     helicon_stacker.stack_for_multiple_exp(dir_, to_, exp_values=mx)
+    # else:
+    helicon_stacker.stack(dir_)
 
 
 if __name__ == "__main__":

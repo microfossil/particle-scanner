@@ -127,5 +127,5 @@ class Stage(object):
                     print(line)
                     lines.append(line)
                     self.buffer = []
-        # print(lines)
+        print(lines)
         return lines

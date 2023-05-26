@@ -65,8 +65,9 @@ class Scanner(object):
         self.is_multi_scanning = False
         self.multi_exp = self.controller.multi_exp
         self.fs_folder = self.save_dir.joinpath("f_stacks")
-        
-        self.fs_exp_folders = [self.fs_folder.joinpath(f"E{exp}") for exp in self.multi_exp]
+
+        if self.multi_exp:
+            self.fs_exp_folders = [self.fs_folder.joinpath(f"E{exp}") for exp in self.multi_exp]
         self.reposition_offset = self.controller.reposition_offset
 
         self.update_stack_count()
@@ -93,7 +94,7 @@ class Scanner(object):
             # 'Smart' correction
             dz_dx, dz_dy = self.selected_scan()['Z_corrections']
             z_correction = int(dz_dx * dx + dz_dy * dy)
-            new_z = self.selected_scan['FL'][2] + z_correction
+            new_z = self.selected_scan()['FL'][2] + z_correction
         return new_z
         
     def update_stack_count(self):
@@ -130,15 +131,25 @@ class Scanner(object):
                 return
 
             self.controller.selected_scan_number = n + 1
-            self.stage.goto(self.selected_scan()['FL'])
+            fl = self.selected_scan()['BR']
+            br = self.selected_scan()['BR']
+            assert (br[0] > fl[0])
+            assert (br[1] > fl[1])
+            self.stage.goto(fl)
             self.wait_ms_check_input(5000)
             self.scan_dir = Path(self.save_dir).joinpath(scan_name)
+            print(scan_name)
+
             self.scan()
             
             if self.auto_f_stack:
                 self.focus_stack(scan_name)
                 if self.remove_pics:
                     remove_folder(self.scan_dir)
+            else:
+                print('skip stacking')
+
+        print("finished multi-scanning")
 
         self.is_multi_scanning = False
         if self.auto_quit:
@@ -161,7 +172,6 @@ class Scanner(object):
         # Calculate the number of steps needed
         x_steps, y_steps = self.step_nbr_xy(self.selected_scan())
         self.total_stacks = (x_steps + 1) * (y_steps + 1)
-        
         # Start scanning
         self.is_scanning = True
         for yi in range(y_steps):
@@ -204,7 +214,6 @@ class Scanner(object):
                 if self.check_for_escape():
                     print('escaping take_stack()')
                     return
-                
                 # set exposure and take a picture
                 self.camera.set_exposure(exp)
                 self.wait_ms_check_input(300)
