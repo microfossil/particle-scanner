@@ -105,7 +105,7 @@ class Stage(object):
     def wait_until_position(self, ms):
         # tells the printer to finish it's planned movements before executing any other g-code
         self.send_command('M400')
-        self.send_command("M118 'Ready'")
+        self.send_command("M118 Ready")
         for i in range(ms//33):
             self.controller.check_for_command(33)
             messages = self.read()
@@ -130,5 +130,5 @@ class Stage(object):
                     print(line)
                     lines.append(line)
                     self.buffer = []
-        print(lines)
+        # print(lines)
         return lines
