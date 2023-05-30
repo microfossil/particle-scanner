@@ -44,7 +44,7 @@ class Keyboard(object):
 		self.TAKE_STACK1 = ord('\n')
 		self.TAKE_STACK2 = ord('\r')
 		
-		self.FLIP_STACK_ORDER = ord('f')
+		self.FLIP_STACK_ORDER = ord('f')  # TODO: deprecated feature
 		
 		self.SAVE_TO_CFG1 = ord('5')
 		self.SAVE_TO_CFG2 = ord('6')

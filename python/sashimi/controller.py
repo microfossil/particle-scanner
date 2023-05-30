@@ -28,7 +28,7 @@ class Controller(object):
         self.lang = lang
         self.layout = layout
         self.remove_pics = remove_pics
-        self.reposition_offset = reposition_offset
+        self.reposition_offset = reposition_offset  # TODO: deprecated feature, delete all traces of it
         self.auto_f_stack = auto_f_stack
         self.auto_quit = auto_quit
         self.multi_exp = multi_exp
@@ -98,7 +98,7 @@ class Controller(object):
             self.scanner.update_stack_count()
             self.config.save()
 
-        elif key == kb.FLIP_STACK_ORDER:
+        elif key == kb.FLIP_STACK_ORDER:  # TODO: deprecated feature
             self.config.top_down = ~self.config.top_down
             print("Stack will be taken from the " + ("top down." if self.config.top_down else "bottom up."))
         # Exposure
@@ -266,10 +266,7 @@ class Controller(object):
             self.interrupt_flag = True
 
     def check_for_command(self, wait_time=20):
-        # chrono = - time.perf_counter_ns()
         key = cv2.waitKey(wait_time)
-        # chrono += time.perf_counter_ns()
-        # print(chrono)
         
         if key == -1:
             return
@@ -301,7 +298,6 @@ class Controller(object):
         blz = self.selected_scan()['BL_Z']
         
         text_status = []
-        text_button = []
         text_help = []
 
         # Define the UI text to be displayed
@@ -315,7 +311,7 @@ class Controller(object):
                 "",
                 "g t",
                 "",
-                "f",
+                "f",  # TODO: deprecated feature
                 "[ ]",
                 "{ }",
                 "",
@@ -337,7 +333,7 @@ class Controller(object):
             
             if self.lang == "en":
                 scan_command = "Stop scanning"
-                direction = "top down" if self.config.top_down else "bottom up"
+                direction = "top down" if self.config.top_down else "bottom up"  # TODO: deprecated feature
                 text_status = [
                     "POSITION",
                     f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
@@ -346,7 +342,7 @@ class Controller(object):
                     "CAMERA",
                     f"Exposure: {self.config.exposure_time}us",
                     "- - - - - - - - - - - -",
-                    "STACK: " + direction
+                    "STACK: " + direction  # TODO: deprecated feature
                     + f" | {self.scanner.current_pic_count}/{self.scanner.total_pic_count} pics",
                     f"Height: {self.config.stack_height}um",
                     f"Step: {self.config.stack_step}um",
@@ -368,7 +364,7 @@ class Controller(object):
                 ]
             if self.lang == "fr":
                 scan_command = "Arreter le scan"
-                direction = "de haut en bas" if self.config.top_down else "de bas en haut"
+                direction = "de haut en bas" if self.config.top_down else "de bas en haut"  # TODO: deprecated feature
                 text_status = [
                     "POSITION",
                     f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
@@ -377,7 +373,7 @@ class Controller(object):
                     "CAMERA",
                     f"Exposure: {self.config.exposure_time}us",
                     "- - - - - - - - - - - -",
-                    "PILE: " + direction
+                    "PILE: " + direction  # TODO: deprecated feature
                     + f" | {self.scanner.current_pic_count}/{self.scanner.total_pic_count} pictures taken",
                     f"Hauteur: {self.config.stack_height}um",
                     f"Etape: {self.config.stack_step}um",
@@ -406,7 +402,7 @@ class Controller(object):
                 "",
                 "g t",
                 "",
-                "f",
+                "f",  # TODO: deprecated feature
                 "[ ]",
                 "{ }",
                 "",
@@ -428,7 +424,7 @@ class Controller(object):
             
             if self.lang == "en":
                 scan_command = "Start Scanning"
-                direction = "top down" if self.config.top_down else "bottom up"
+                direction = "top down" if self.config.top_down else "bottom up"  # TODO: deprecated feature
                 text_status = [
                     "POSITION",
                     f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
@@ -437,7 +433,7 @@ class Controller(object):
                     "CAMERA",
                     f"Exposure: {self.config.exposure_time}us",
                     "- - - - - - - - - - - -",
-                    "STACK: " + direction,
+                    "STACK: " + direction,  # TODO: deprecated feature
                     f"Height: {self.config.stack_height}um",
                     f"Step: {self.config.stack_step}um",
                     "- - - - - - - - - - - -",
@@ -458,7 +454,7 @@ class Controller(object):
                 ]
             if self.lang == "fr":
                 scan_command = "Demarrer le scan"
-                direction = "de haut en bas" if self.config.top_down else "de bas en haut"
+                direction = "de haut en bas" if self.config.top_down else "de bas en haut"  # TODO: deprecated feature
                 text_status = [
                     "POSITION",
                     f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
@@ -467,7 +463,7 @@ class Controller(object):
                     "CAMERA",
                     f"Exposure: {self.config.exposure_time}us",
                     "- - - - - - - - - - - -",
-                    "PILE: " + direction,
+                    "PILE: " + direction,  # TODO: deprecated feature
                     f"Hauteur: {self.config.stack_height}um",
                     f"Etape: {self.config.stack_step}um",
                     "- - - - - - - - - - - -",

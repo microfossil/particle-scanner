@@ -159,20 +159,17 @@ class Scanner(object):
             self.controller.quit_requested = True
 
     def scan(self):
-        # Reset the stack
         self.current_stack = 0
         
-        # Create directory to store images
         os.makedirs(self.scan_dir, exist_ok=True)
         selected_scan = self.controller.selected_scan()
         
-        # Move to the starting position
         self.stage.goto(selected_scan['FL'])
         self.stage.wait_until_position(10000)
         
-        # Calculate the number of steps needed
         x_steps, y_steps = self.step_nbr_xy(self.selected_scan())
-        self.total_stacks = (x_steps + 1) * (y_steps + 1)
+        self.total_stacks = x_steps * y_steps
+        
         # Start scanning
         self.is_scanning = True
         for yi in range(y_steps):
@@ -200,14 +197,18 @@ class Scanner(object):
         
         z_orig = self.stage.z
         self.stage.goto_z(self.get_corrected_z(dx, dy))
-        self.stage.wait_until_position(100)
         stack_order = +1
+        
+        # TODO: deprecated feature, delete all traces of it
         if self.config.top_down:  # Reposition the camera with downward travel to reduce the tilting of the camera
-            self.stage.move_z(self.config.stack_height + self.reposition_offset)
-            self.stage.move_z(-self.reposition_offset)
+            self.stage.move_z((self.stack_count - 1) * self.config.stack_step + self.reposition_offset)
+            self.stage.wait_until_position(1000)
+            self.stage.move_z(- self.reposition_offset)
             stack_order = -1
+        self.stage.wait_until_position(1000)
         
         exp_values = self.multi_exp if self.multi_exp else (self.config.exposure_time,)
+        
         for i in range(self.stack_count):
             for exp in exp_values:
                 self.current_pic_count += 1
@@ -227,11 +228,12 @@ class Scanner(object):
                                                   f"Y{self.stage.y:06d}_"
                                                   f"Z{self.stage.z:06d}.jpg")
                 skio.imsave(str(save_path), img[..., ::-1], check_contrast=False, quality=90)
-            self.stage.move_z(self.config.stack_step * stack_order)
+            self.stage.move_z(self.config.stack_step * stack_order)  # TODO: deprecated feature...
 
         # Return to base Z coordinate
         img = self.camera.latest_image()
         self.show_image(img)
+        self.camera.set_exposure(exp_values[0])
         self.wait_ms_check_input(100)
         self.stage.goto_z(z_orig)
         self.stage.wait_until_position(50 * self.stack_count)
