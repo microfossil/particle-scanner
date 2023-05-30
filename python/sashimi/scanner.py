@@ -44,6 +44,8 @@ class Scanner(object):
         self.X_STEP = 1700
         self.Y_STEP = 1700
         
+        self.frame_duration_ms = self.controller.frame_duration_ms
+        
         self.auto_f_stack = self.controller.auto_f_stack
         self.remove_pics = self.controller.remove_pics
         
@@ -136,7 +138,7 @@ class Scanner(object):
             assert (br[0] > fl[0])
             assert (br[1] > fl[1])
             self.stage.goto(fl)
-            self.wait_ms_check_input(5000)
+            self.stage.wait_until_position(5000)
 
             self.scan_dir = Path(self.save_dir).joinpath(scan_name)
             print(scan_name)
@@ -217,8 +219,7 @@ class Scanner(object):
                     return
                 # set exposure and take a picture
                 self.camera.set_exposure(exp)
-                self.wait_ms_check_input(300)
-                img = self.camera.latest_image()
+                img = self.wait_until_exposure(exp, 300)
                 self.show_image(img)
                 
                 # save the picture
@@ -229,12 +230,12 @@ class Scanner(object):
                                                   f"Z{self.stage.z:06d}.jpg")
                 skio.imsave(str(save_path), img[..., ::-1], check_contrast=False, quality=90)
             self.stage.move_z(self.config.stack_step * stack_order)  # TODO: deprecated feature...
+            self.stage.wait_until_position(100)
 
         # Return to base Z coordinate
-        img = self.camera.latest_image()
-        self.show_image(img)
+        # img = self.camera.latest_image()
+        # self.show_image(img)
         self.camera.set_exposure(exp_values[0])
-        self.wait_ms_check_input(100)
         self.stage.goto_z(z_orig)
         self.stage.wait_until_position(50 * self.stack_count)
 
@@ -254,7 +255,7 @@ class Scanner(object):
         sharpness = []
         for i in range(100):
             img = self.camera.latest_image()
-            self.show_image(img)
+            # self.show_image(img)
             sh = measure_sharpness(img)
             sharpness.append(sh)
             print(sh)
@@ -264,9 +265,19 @@ class Scanner(object):
         print(np.max(sharpness, axis=0))
         print(np.argmax(sharpness, axis=0) * 20 + 100)
         self.stage.goto_z(z_orig)
-
-    def wait_ms_check_input(self, ms):
-        self.controller.check_for_command(ms)
+    
+    def wait_until_exposure(self, exp, ms):
+        img = None
+        for i in range(ms//self.frame_duration_ms):
+            img, img_exp = self.camera.latest_image(with_exposure=True)
+            if exp == img_exp:
+                
+                return img
+            else:
+                self.controller.display(img)
+                self.controller.wait(display=False)
+        print(f'desired exposure was not reached in {ms}ms')
+        return img
 
     def show_image(self, img):
         if img is None:

@@ -6,8 +6,8 @@ from sashimi.stage import Stage
 from sashimi.configuration import Configuration
 from sashimi.keyboard import Keyboard
 
-# TODO: fix offset in UI
 # TODO: Add save/load config files
+# TODO: remove reposition offset feature as it is deprecated
 
 
 class Controller(object):
@@ -17,7 +17,7 @@ class Controller(object):
                  lang="en",
                  layout='QWERTY',
                  remove_pics=False,
-                 reposition_offset=1000,
+                 reposition_offset=1000,  # TODO: deprecated feature
                  auto_f_stack=True,
                  auto_quit=False,
                  multi_exp=None,
@@ -34,6 +34,8 @@ class Controller(object):
         self.multi_exp = multi_exp
         
         self.lowest_z = lowest_z
+        
+        self.frame_duration_ms = 50
 
         self.interrupt_flag = False
         self.selected_scan_number = 1
@@ -270,20 +272,19 @@ class Controller(object):
             self.scanner.is_scanning = False
             self.scanner.is_multi_scanning = False
             self.interrupt_flag = True
-
-    def check_for_command(self, wait_time=20):
+    
+    def check_for_command(self, wait_time=50):
         key = cv2.waitKey(wait_time)
-        
         if key == -1:
-            return
-
-        print(key)
-
+            return False
+        # print(key)
+        
         self.permanent_commands(key)
         if self.scanner.is_multi_scanning:
             self.scanning_commands(key)
         else:
             self.menu_commands(key)
+        return True
 
     def display(self, im: np.array):
         kb = self.keyboard
@@ -538,6 +539,13 @@ class Controller(object):
 
         # Show the image in the UI using open CV
         cv2.imshow("im", im)
+    
+    def wait(self, ms=50, display=True):
+        for frame in range(ms//self.frame_duration_ms):
+            if self.check_for_command():
+                return
+            if display:
+                self.display(self.camera.latest_image())
 
     def start(self):
         self.stage.start()
@@ -547,13 +555,7 @@ class Controller(object):
         self.stage.send_command('M107')  # turns off the extruder fan
         # Control loop
         while not self.quit_requested:
-            img = self.camera.latest_image()
-            # Display the image
-            if img is not None:
-                self.display(img)
-
-            # Process any key commands
-            self.check_for_command(50)
+            self.wait()
 
         # Clean up
         cv2.destroyAllWindows()

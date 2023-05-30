@@ -90,7 +90,7 @@ class Stage(object):
     def poll(self):
         dummy = self.read()
         self.send_command("M114 R")
-        self.controller.check_for_command(100)
+        self.controller.wait(100)
         responses = self.read()
         for response in responses:
             if response.startswith("X:"):
@@ -106,8 +106,8 @@ class Stage(object):
         # tells the printer to finish it's planned movements before executing any other g-code
         self.send_command('M400')
         self.send_command("M118 Ready")
-        for i in range(ms//33):
-            self.controller.check_for_command(33)
+        for i in range(ms//self.controller.frame_duration_ms):
+            self.controller.wait()
             messages = self.read()
             for message in messages:
                 if message.startswith('Ready'):
