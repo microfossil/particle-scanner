@@ -19,10 +19,11 @@ class Configuration(object):
         # supposes the scan surface is flat and non-vertical
         fl, br = self.scans[index]['FL'], self.scans[index]['BR']
         x, y, z = 0, 1, 2
-        
-        assert (br[x] > fl[x])
-        assert (br[y] > fl[y])
-        
+
+        if br[x] != fl[x] or br[y] != fl[y]:
+            print("brx == flx or bry == fly !!!")
+            return
+
         if blz is None:
             blz = (fl[z] + br[z])//2
         

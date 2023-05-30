@@ -131,7 +131,7 @@ class Scanner(object):
 
             self.controller.selected_scan_number = n + 1
 
-            fl = self.selected_scan()['BR']
+            fl = self.selected_scan()['FL']
             br = self.selected_scan()['BR']
             assert (br[0] > fl[0])
             assert (br[1] > fl[1])

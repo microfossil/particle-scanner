@@ -14,5 +14,5 @@ for files in os.listdir(my_dir):
     except OSError:
         os.remove(path)
 
-controller = Controller(my_dir, "COM5", lang="en", layout='AZERTY', auto_f_stack=True)
+controller = Controller(my_dir, "COM5", lang="en", layout='AZERTY', auto_f_stack=True, lowest_z=True)
 controller.start()

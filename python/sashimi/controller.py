@@ -225,10 +225,16 @@ class Controller(object):
                            'BL_Z': 2000,
                            'Z_corrections': [0, 0]}]
         elif key == kb.SCAN_FL:
+            scan = self.selected_scan()
+            if self.stage.x == scan['BR'][0] or self.stage.y == scan['BR'][1]:
+                return
             self.selected_scan()['FL'] = [self.stage.x, self.stage.y, self.stage.z]
             self.config.update_z_correction_terms(self.selected_scan_number - 1)
             self.config.save()
         elif key == kb.SCAN_BR:
+            scan = self.selected_scan()
+            if self.stage.x == scan['FL'][0] or self.stage.y == scan['FL'][1]:
+                return
             self.selected_scan()['BR'] = [self.stage.x, self.stage.y, self.stage.z]
             self.config.update_z_correction_terms(self.selected_scan_number - 1)
             self.config.save()
