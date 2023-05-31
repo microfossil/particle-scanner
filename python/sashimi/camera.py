@@ -29,21 +29,22 @@ class CaptureThread(threading.Thread):
         self.image = None
         self.exposure = None
 
+    # noinspection PyUnresolvedReferences
     def run(self):
         self.camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
         while self.camera.IsGrabbing():
-            grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
-            if grabResult is False:
+            grab_result = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+            if grab_result is False:
                 continue
-            if grabResult.GrabSucceeded():
+            if grab_result.GrabSucceeded():
                 with capture_lock:
-                    self.image = cv2.rotate(self.converter.Convert(grabResult.GetArray()).Array, cv2.ROTATE_180)
-                    self.exposure = grabResult.ChunkExposureTime.Value
+                    self.image = cv2.rotate(self.converter.Convert(grab_result).Array, cv2.ROTATE_180)
+                    self.exposure = grab_result.ChunkExposureTime.Value
                 # Check if quit
                 if self.controller.quit_requested:
-                    grabResult.Release()
+                    grab_result.Release()
                     break
-            grabResult.Release()
+            grab_result.Release()
         return
 
 
@@ -60,7 +61,8 @@ class Camera(object):
         # Open camera
         self.camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
         self.camera.Open()
-        
+        node_map = self.camera.GetNodeMap()
+        node_map.GetNode("ExposureMode").SetValue("Timed")
         self.camera.StaticChunkNodeMapPoolSize = self.camera.MaxNumBuffer.GetValue()
         self.camera.ChunkModeActive = True
         self.camera.ChunkSelector = "ExposureTime"

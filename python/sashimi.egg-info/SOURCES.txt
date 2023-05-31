@@ -9,6 +9,7 @@ sashimi/helicon_stack.py
 sashimi/keyboard.py
 sashimi/main.py
 sashimi/multi_exp.py
+sashimi/re_process_stuff.py
 sashimi/scanner.py
 sashimi/segmentation.py
 sashimi/stage.py
