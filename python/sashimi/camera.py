@@ -72,8 +72,8 @@ class Camera(object):
         self.capture_thread.start()
 
     def stop(self):
-        self.camera.ChunkModeActive = False
         self.camera.StopGrabbing()
+        self.camera.ChunkModeActive = False
         self.camera.Close()
 
     def latest_image(self, with_exposure=False):

@@ -62,16 +62,8 @@ def scan(dir_, port, lang, layout, mult_exp, remove_pics, skip_fs, auto_quit, of
         user_path = dir_
         exp_values = None
         
-    controller = Controller(user_path,
-                            port,
-                            lang=lang,
-                            layout=layout,
-                            multi_exp=exp_values,
-                            remove_pics=remove_pics,
-                            auto_f_stack=not skip_fs,
-                            auto_quit=auto_quit,
-                            reposition_offset=offset,
-                            lowest_z=lowest)
+    controller = Controller(user_path, port, lang=lang, layout=layout, remove_pics=remove_pics,
+                            auto_f_stack=not skip_fs, auto_quit=auto_quit, multi_exp=exp_values, lowest_z=lowest)
     controller.start()
 
 

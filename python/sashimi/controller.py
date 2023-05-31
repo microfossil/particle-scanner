@@ -7,7 +7,6 @@ from sashimi.configuration import Configuration
 from sashimi.keyboard import Keyboard
 
 # TODO: Add save/load config files
-# TODO: remove reposition offset feature as it is deprecated
 
 
 class Controller(object):
@@ -17,26 +16,22 @@ class Controller(object):
                  lang="en",
                  layout='QWERTY',
                  remove_pics=False,
-                 reposition_offset=1000,  # TODO: deprecated feature
                  auto_f_stack=True,
                  auto_quit=False,
                  multi_exp=None,
                  lowest_z=False):
         
         self.config = Configuration.load()
-        self.img_mode = 1
         self.lang = lang
         self.layout = layout
         self.remove_pics = remove_pics
-        self.reposition_offset = reposition_offset  # TODO: deprecated feature, delete all traces of it
         self.auto_f_stack = auto_f_stack
         self.auto_quit = auto_quit
         self.multi_exp = multi_exp
-        
         self.lowest_z = lowest_z
-        
-        self.frame_duration_ms = 50
 
+        self.img_mode = 1
+        self.frame_duration_ms = 50
         self.interrupt_flag = False
         self.selected_scan_number = 1
         self.scans = self.config.scans
@@ -100,9 +95,6 @@ class Controller(object):
             self.scanner.update_stack_count()
             self.config.save()
 
-        elif key == kb.FLIP_STACK_ORDER:  # TODO: deprecated feature
-            self.config.top_down = ~self.config.top_down
-            print("Stack will be taken from the " + ("top down." if self.config.top_down else "bottom up."))
         # Exposure
         elif key == kb.EXPOSURE_UP:
             self.config.exposure_time += 100
@@ -318,7 +310,7 @@ class Controller(object):
                 "",
                 "g t",
                 "",
-                "f",  # TODO: deprecated feature
+                "",
                 "[ ]",
                 "{ }",
                 "",
@@ -340,7 +332,6 @@ class Controller(object):
             
             if self.lang == "en":
                 scan_command = "Stop scanning"
-                direction = "top down" if self.config.top_down else "bottom up"  # TODO: deprecated feature
                 text_status = [
                     "POSITION",
                     f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
@@ -349,8 +340,7 @@ class Controller(object):
                     "CAMERA",
                     f"Exposure: {self.config.exposure_time}us",
                     "- - - - - - - - - - - -",
-                    "STACK: " + direction  # TODO: deprecated feature
-                    + f" | {self.scanner.current_pic_count}/{self.scanner.total_pic_count} pics",
+                    f"STACK: {self.scanner.current_pic_count}/{self.scanner.total_pic_count} pics",
                     f"Height: {self.config.stack_height}um",
                     f"Step: {self.config.stack_step}um",
                     "- - - - - - - - - - - -",
@@ -371,7 +361,6 @@ class Controller(object):
                 ]
             if self.lang == "fr":
                 scan_command = "Arreter le scan"
-                direction = "de haut en bas" if self.config.top_down else "de bas en haut"  # TODO: deprecated feature
                 text_status = [
                     "POSITION",
                     f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
@@ -380,8 +369,7 @@ class Controller(object):
                     "CAMERA",
                     f"Exposure: {self.config.exposure_time}us",
                     "- - - - - - - - - - - -",
-                    "PILE: " + direction  # TODO: deprecated feature
-                    + f" | {self.scanner.current_pic_count}/{self.scanner.total_pic_count} pictures taken",
+                    f"PILE: {self.scanner.current_pic_count}/{self.scanner.total_pic_count} pictures taken",
                     f"Hauteur: {self.config.stack_height}um",
                     f"Etape: {self.config.stack_step}um",
                     "- - - - - - - - - - - -",
@@ -409,7 +397,7 @@ class Controller(object):
                 "",
                 "g t",
                 "",
-                "f",  # TODO: deprecated feature
+                "",
                 "[ ]",
                 "{ }",
                 "",
@@ -431,7 +419,6 @@ class Controller(object):
             
             if self.lang == "en":
                 scan_command = "Start Scanning"
-                direction = "top down" if self.config.top_down else "bottom up"  # TODO: deprecated feature
                 text_status = [
                     "POSITION",
                     f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
@@ -440,7 +427,7 @@ class Controller(object):
                     "CAMERA",
                     f"Exposure: {self.config.exposure_time}us",
                     "- - - - - - - - - - - -",
-                    "STACK: " + direction,  # TODO: deprecated feature
+                    "STACK",
                     f"Height: {self.config.stack_height}um",
                     f"Step: {self.config.stack_step}um",
                     "- - - - - - - - - - - -",
@@ -461,7 +448,6 @@ class Controller(object):
                 ]
             if self.lang == "fr":
                 scan_command = "Demarrer le scan"
-                direction = "de haut en bas" if self.config.top_down else "de bas en haut"  # TODO: deprecated feature
                 text_status = [
                     "POSITION",
                     f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
@@ -470,7 +456,7 @@ class Controller(object):
                     "CAMERA",
                     f"Exposure: {self.config.exposure_time}us",
                     "- - - - - - - - - - - -",
-                    "PILE: " + direction,  # TODO: deprecated feature
+                    "PILE",
                     f"Hauteur: {self.config.stack_height}um",
                     f"Etape: {self.config.stack_step}um",
                     "- - - - - - - - - - - -",
@@ -542,10 +528,12 @@ class Controller(object):
     
     def wait(self, ms=50, display=True):
         for frame in range(ms//self.frame_duration_ms):
+            if display:
+                img = self.camera.latest_image()
+                if img is not None:
+                    self.display(self.camera.latest_image())
             if self.check_for_command():
                 return
-            if display:
-                self.display(self.camera.latest_image())
 
     def start(self):
         self.stage.start()

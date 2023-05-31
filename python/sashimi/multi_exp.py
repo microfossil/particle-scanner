@@ -105,14 +105,14 @@ def dialog_for_path_and_values() -> (Path, list[int]):
     
 
 if __name__ == "__main__":
-    user_path, exposition_values = dialog_for_path_and_values()
+    user_path, exposure_values = dialog_for_path_and_values()
     print("Input collection finished, the scanning program will start.")
     controller = Controller(user_path,
                             'COM5',
                             lang='en',
                             layout='AZERTY',
                             auto_quit=True,
-                            multi_exp=exposition_values,
+                            multi_exp=exposure_values,
                             lowest_z=True)
     # On pressing [p], the program will scan repeatedly with different settings of camera exposition.
     # function returns automatically after scanning
