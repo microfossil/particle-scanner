@@ -5,13 +5,8 @@ import skimage.io as skio
 import numpy as np
 from sashimi.helicon_stack import stack_from_to, stack_for_multiple_exp
 
-# TODO: auto z_correction
-
-# TODO: add an update_total_stacks_nbr() function
-# TODO: measure the time needed to :
-#  - take all the pictures of a stack
-#  - stack these pictures together with Helicon Focus
 # TODO: make an ETA function
+# TODO: use package pillow-heif to compress raw stacks (and exposures?)
 
 
 def measure_sharpness(img):
