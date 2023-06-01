@@ -7,6 +7,7 @@ from sashimi.helicon_stack import stack_from_to, stack_for_multiple_exp
 
 # TODO: make an ETA function
 # TODO: use package pillow-heif to compress raw stacks (and exposures?)
+# TODO: add 200µm margin
 
 
 def measure_sharpness(img):
@@ -166,6 +167,7 @@ class Scanner(object):
         for yi in range(y_steps):
             for xi in range(x_steps):
                 self.current_stack += 1
+
                 if self.check_for_escape():
                     print('escaping scan()')
                     return
