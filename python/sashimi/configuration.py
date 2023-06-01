@@ -9,6 +9,7 @@ class Configuration(object):
         self.stack_height = 1000
         self.stack_step = 60
         self.exposure_time = 2000
+        self.z_margin = 200
         self.scans = [{'FL': [10000, 50000, 2000],
                        'BR':[11000, 51000, 2000],
                        'BL_Z':2000,

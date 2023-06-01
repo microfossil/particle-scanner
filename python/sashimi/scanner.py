@@ -7,9 +7,16 @@ from sashimi.helicon_stack import stack_from_to, stack_for_multiple_exp
 
 # TODO: make an ETA function
 # TODO: use package pillow-heif to compress raw stacks (and exposures?)
-# TODO: add 200µm margin
 
 
+def clip(n, mini=0, maxi=None):
+    if n < mini:
+        return n
+    if maxi is None or n <= maxi:
+        return n
+    return n
+    
+    
 def measure_sharpness(img):
     img = img[::4, ::4, ...]
     sharpness = []
@@ -32,6 +39,7 @@ def remove_folder(folder):
 
 class Scanner(object):
     def __init__(self, controller):
+        # instances
         self.controller = controller
         self.stage = self.controller.stage
         self.camera = self.controller.camera
@@ -47,10 +55,10 @@ class Scanner(object):
         self.selected_scan = self.controller.selected_scan
         self.multi_exp = self.controller.multi_exp
         self.fs_folder = self.save_dir.joinpath("f_stacks")
-
+        
+        # parameters and variables
         if self.multi_exp:
             self.fs_exp_folders = [self.fs_folder.joinpath(f"E{exp}") for exp in self.multi_exp]
-
         self.X_STEP = 1700
         self.Y_STEP = 1700
         self.stack_count = None
@@ -86,7 +94,7 @@ class Scanner(object):
             dz_dx, dz_dy = self.selected_scan()['Z_corrections']
             z_correction = int(dz_dx * dx + dz_dy * dy)
             new_z = self.selected_scan()['FL'][2] + z_correction
-        return new_z
+        return clip(new_z)
         
     def update_stack_count(self):
         self.stack_count = self.config.stack_height // self.config.stack_step
@@ -158,7 +166,6 @@ class Scanner(object):
         
         self.stage.goto(selected_scan['FL'])
         self.stage.wait_until_position(10000)
-        
         x_steps, y_steps = self.step_nbr_xy(self.selected_scan())
         self.total_stacks = x_steps * y_steps
         
@@ -173,7 +180,7 @@ class Scanner(object):
                     return
                 
                 dx, dy = self.X_STEP * xi, self.Y_STEP * yi
-                self.stage.goto_z(selected_scan['FL'][2])
+                self.stage.goto_z(clip(selected_scan['FL'][2]))
                 self.stage.goto_x(selected_scan['FL'][0] + dx)
                 self.stage.goto_y(selected_scan['FL'][1] + dy)
                 self.stage.wait_until_position(1000)
@@ -214,9 +221,6 @@ class Scanner(object):
             self.stage.move_z(self.config.stack_step)
             self.stage.wait_until_position(100)
 
-        # Return to base Z coordinate
-        # img = self.camera.latest_image()
-        # self.show_image(img)
         self.camera.set_exposure(exp_values[0])
         self.stage.goto_z(z_orig)
         self.stage.wait_until_position(50 * self.stack_count)

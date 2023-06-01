@@ -15,39 +15,48 @@ class Controller(object):
                  com_port,
                  lang="en",
                  layout='QWERTY',
+                 z_margin=None,
                  remove_pics=False,
                  auto_f_stack=True,
                  auto_quit=False,
                  multi_exp=None,
                  lowest_z=False):
-        
+        # saved/default config
         self.config = Configuration.load()
+        
+        # user parameters
         self.lang = lang
         self.layout = layout
+        if z_margin is not None:
+            self.config.z_margin = z_margin
+            self.config.save()
+        self.z_margin = self.config.z_margin
         self.remove_pics = remove_pics
         self.auto_f_stack = auto_f_stack
         self.auto_quit = auto_quit
         self.multi_exp = multi_exp
         self.lowest_z = lowest_z
 
+        # parameters an variables
         self.img_mode = 1
-        self.frame_duration_ms = 50
-        self.interrupt_flag = False
+        self.refresh_rate_Hz = 20
+        self.frame_duration_ms = 1000 // self.refresh_rate_Hz
         self.selected_scan_number = 1
         self.scans = self.config.scans
         self.save_dir = save_dir
-
-        self.stage = Stage(self, com_port)
-        self.camera = Camera(self)
-        self.scanner = Scanner(self)
-        self.keyboard = Keyboard(self.layout)
-
+        self.interrupt_flag = False
         self.quit_requested = False
         self.show_help = False
         self.take_stack_requested = False
         self.start_scan_requested = False
         self.stop_scan_requested = False
         self.time_remaining = None
+        
+        # instances
+        self.stage = Stage(self, com_port)
+        self.camera = Camera(self)
+        self.scanner = Scanner(self)
+        self.keyboard = Keyboard(self.layout)
 
     def selected_scan(self):
         return self.scans[self.selected_scan_number - 1]
@@ -222,19 +231,19 @@ class Controller(object):
             scan = self.selected_scan()
             if self.stage.x == scan['BR'][0] or self.stage.y == scan['BR'][1]:
                 return
-            self.selected_scan()['FL'] = [self.stage.x, self.stage.y, self.stage.z]
+            self.selected_scan()['FL'] = [self.stage.x, self.stage.y, self.stage.z - self.z_margin]
             self.config.update_z_correction_terms(self.selected_scan_number - 1)
             self.config.save()
         elif key == kb.SCAN_BR:
             scan = self.selected_scan()
             if self.stage.x == scan['FL'][0] or self.stage.y == scan['FL'][1]:
                 return
-            self.selected_scan()['BR'] = [self.stage.x, self.stage.y, self.stage.z]
+            self.selected_scan()['BR'] = [self.stage.x, self.stage.y, self.stage.z - self.z_margin]
             self.config.update_z_correction_terms(self.selected_scan_number - 1)
             self.config.save()
        
         elif key == kb.SET_Z_COR:
-            self.config.update_z_correction_terms(self.selected_scan_number - 1, self.stage.z)
+            self.config.update_z_correction_terms(self.selected_scan_number - 1, self.stage.z - self.z_margin)
             self.config.save()
 
         # Move to scan area
