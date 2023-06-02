@@ -6,8 +6,7 @@ from sashimi import helicon_stack as helicon_stacker
 from sashimi.controller import Controller
 from sashimi.multi_exp import dialog_for_path_and_values
 
-# TODO: refactor commands "scan" and "multi_exp" to a
-#  single "scan" command with a "multi_exp" option
+# TODO: add z_margin as an option
 
 
 @click.group()
@@ -29,7 +28,7 @@ def cli():
 @click.option('--lang', '-l',
               type=str,
               default="en",
-              # prompt="Language",
+              prompt="Language",
               help='Language of the interface (en/fr)')
 @click.option('--layout',
               type=str,
@@ -70,7 +69,7 @@ def scan(dir_, port, lang, layout, mult_exp, remove_pics, skip_fs, auto_quit, of
 @cli.command()
 @click.option('--dir', '-d', 'dir_',
               type=str,
-              # prompt='Directory containing stacks',
+              prompt='Directory containing stacks',
               help='Directory containing subdirectories of image stacks')
 def stack(dir_):
     focus_stack.stack(dir_)
@@ -79,19 +78,10 @@ def stack(dir_):
 @cli.command()
 @click.option('--dir', '-d', 'dir_',
               type=str,
-              # prompt='Directory containing stacks',
+              prompt='Directory containing stacks',
               help='Directory containing subdirectories of image stacks')
-# @click.option('--multi-exp', '--mx',
-#               type=int,
-#               default=False,
-#               help="Allows to stack with folders containing exposure sub-folders.\n"
-#                    "The inputted values are the different exposures you wish to process")
 def helicon_stack(dir_):
     dir_ = Path(dir_).resolve()
-    # if mx:
-    #     to_ = dir_.joinpath('f_stacks')
-    #     helicon_stacker.stack_for_multiple_exp(dir_, to_, exp_values=mx)
-    # else:
     helicon_stacker.stack(dir_)
 
 
