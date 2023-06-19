@@ -51,7 +51,6 @@ class Scanner(object):
         self.auto_quit = self.controller.auto_quit
         self.save_dir = self.controller.save_dir
         self.scan_dir = self.save_dir
-        self.scans = self.config.scans
         self.selected_scan = self.controller.selected_scan
         self.multi_exp = self.controller.multi_exp
         self.fs_folder = self.save_dir.joinpath("f_stacks")
@@ -124,7 +123,8 @@ class Scanner(object):
         self.update_total_pic_count()
         os.makedirs(self.save_dir, exist_ok=True)
 
-        for n, path in enumerate(self.scans):
+        # TODO: change the name of path
+        for n, path in enumerate(self.config.scans):
             scan_name = f"scan{n + 1}"
             if not self.is_multi_scanning:
                 return
@@ -133,8 +133,11 @@ class Scanner(object):
 
             fl = self.selected_scan()['FL']
             br = self.selected_scan()['BR']
-            assert (br[0] > fl[0])
-            assert (br[1] > fl[1])
+            if not (br[0] > fl[0]) or not (br[1] > fl[1]):
+                print('========================='
+                      'ERROR: BAD COORDINATES!!!'
+                      '=========================')
+                continue
             self.stage.goto(fl)
             self.stage.wait_until_position(5000)
 
@@ -217,7 +220,7 @@ class Scanner(object):
                                                   f"X{self.stage.x:06d}_"
                                                   f"Y{self.stage.y:06d}_"
                                                   f"Z{self.stage.z:06d}.jpg")
-                skio.imsave(str(save_path), img[..., ::-1], check_contrast=False, quality=90)
+                skio.imsave(str(save_path), img[..., ::-1], check_contrast=False, quality=100)
             self.stage.move_z(self.config.stack_step)
             self.stage.wait_until_position(100)
 
@@ -280,4 +283,9 @@ class Scanner(object):
         else:
             return False
         
-        
+    # def make_scan_summary(self):
+        # creates and saves a .txt file in the save directory that
+            # sums up the settings of the scan
+            # gives the duration of the scan + date & time at which the scan started and ended
+            # the approximate space taken by all the pictures taken and created
+            # if the scan was interrupted
