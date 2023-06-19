@@ -106,12 +106,12 @@ class Controller(object):
 
         # Exposure
         elif key == kb.EXPOSURE_UP:
-            self.config.exposure_time += 100
+            self.config.exposure_time += 50
             if self.config.exposure_time > 50000:
                 self.config.exposure_time = 50000
             self.camera.set_exposure(self.config.exposure_time)
         elif key == kb.EXPOSURE_DOWN:
-            self.config.exposure_time -= 100
+            self.config.exposure_time -= 50
             if self.config.exposure_time < 100:
                 self.config.exposure_time = 100
             self.camera.set_exposure(self.config.exposure_time)
