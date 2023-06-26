@@ -59,7 +59,7 @@ class Controller(object):
         self.keyboard = Keyboard(self.layout)
 
     def selected_scan(self):
-        return self.scans[self.selected_scan_number - 1]
+        return self.config.scans[self.selected_scan_number - 1]
 
     def permanent_commands(self, key):
         kb = self.keyboard
@@ -205,27 +205,29 @@ class Controller(object):
             if self.selected_scan_number > 1:
                 self.selected_scan_number -= 1
         elif key == kb.NEXT_SCAN:  # Select next scan zone
-            if self.selected_scan_number < len(self.scans):
+            if self.selected_scan_number < len(self.config.scans):
                 self.selected_scan_number += 1
         elif key == kb.ADD_ZONE:  # add a new zone
-            self.scans.append({'FL': [10000, 50000, 2000],
-                               'BR': [11000, 51000, 2000],
-                               'BL_Z': 2000,
-                               'Z_corrections': [0, 0]})
+            self.config.scans.append({'FL': [10000, 50000, 2000],
+                                      'BR': [11000, 51000, 2000],
+                                      'BL_Z': 2000,
+                                      'Z_corrections': [0, 0]})
         
         elif key == kb.DEL_ZONE:  # delete currently selected zone
-            if len(self.scans) > 1:
-                if self.selected_scan_number == len(self.scans):
-                    self.scans.pop(self.selected_scan_number - 1)
+            if len(self.config.scans) > 1:
+                if self.selected_scan_number == len(self.config.scans):
+                    self.config.scans.pop(self.selected_scan_number - 1)
                     self.selected_scan_number -= 1
                 else:
-                    self.scans.pop(self.selected_scan_number - 1)
+                    self.config.scans.pop(self.selected_scan_number - 1)
+            self.config.save()
         elif key == kb.DEL_ALL_ZONES:  # delete all scans
             self.selected_scan_number = 1
-            self.scans = [{'FL': [10000, 50000, 2000],
-                           'BR': [11000, 51000, 2000],
-                           'BL_Z': 2000,
-                           'Z_corrections': [0, 0]}]
+            self.config.scans = [{'FL': [10000, 50000, 2000],
+                                  'BR': [11000, 51000, 2000],
+                                  'BL_Z': 2000,
+                                  'Z_corrections': [0, 0]}]
+            self.config.save()
         elif key == kb.SCAN_FL:
             scan = self.selected_scan()
             if self.stage.x == scan['BR'][0] or self.stage.y == scan['BR'][1]:
@@ -351,7 +353,7 @@ class Controller(object):
                     f"Height: {self.config.stack_height}um",
                     f"Step: {self.config.stack_step}um",
                     "- - - - - - - - - - - -",
-                    f"SCAN: {sel_scan_num}/{len(self.scans)}",
+                    f"SCAN: {sel_scan_num}/{len(self.config.scans)}",
                     f"FL: {sel_scan['FL']}",
                     f"BR: {sel_scan['BR']}",
                     f"BL: Z={blz}",
@@ -380,7 +382,7 @@ class Controller(object):
                     f"Hauteur: {self.config.stack_height}um",
                     f"Etape: {self.config.stack_step}um",
                     "- - - - - - - - - - - -",
-                    f"SCAN: {sel_scan_num}/{len(self.scans)}",
+                    f"SCAN: {sel_scan_num}/{len(self.config.scans)}",
                     f"AvGch: {sel_scan['FL']}",
                     f"ArDt: {sel_scan['BR']}",
                     f"ArGch: Z={blz}",
@@ -439,7 +441,7 @@ class Controller(object):
                     f"Step: {self.config.stack_step}um",
                     "- - - - - - - - - - - -",
                     "SCAN",
-                    f"Zone: {sel_scan_num}/{len(self.scans)}",
+                    f"Zone: {sel_scan_num}/{len(self.config.scans)}",
                     f"FL: {sel_scan['FL']}",
                     f"BR: {sel_scan['BR']}",
                     f"BL: Z={blz}",
@@ -468,7 +470,7 @@ class Controller(object):
                     f"Etape: {self.config.stack_step}um",
                     "- - - - - - - - - - - -",
                     f"SCAN",
-                    f"Zone: {sel_scan_num}/{len(self.scans)}",
+                    f"Zone: {sel_scan_num}/{len(self.config.scans)}",
                     f"AvGch: {sel_scan['FL']}",
                     f"ArDt: {sel_scan['BR']}",
                     f"ArGch: Z={blz}",

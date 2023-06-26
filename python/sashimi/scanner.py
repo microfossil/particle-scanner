@@ -52,7 +52,6 @@ class Scanner(object):
         self.auto_quit = self.controller.auto_quit
         self.save_dir = self.controller.save_dir
         self.scan_dir = self.save_dir
-        self.scans = self.config.scans
         self.selected_scan = self.controller.selected_scan
         self.multi_exp = self.controller.multi_exp
         self.fs_folder = self.save_dir.joinpath("f_stacks")
@@ -124,14 +123,14 @@ class Scanner(object):
         self.current_pic_count = 0
         self.update_total_pic_count()
         os.makedirs(self.save_dir, exist_ok=True)
-        
+
         if self.auto_f_stack:
             mp.set_start_method("spawn")
             queue = mp.Queue()
             self.parallel_process = mp.Process(target=single_stack, args=(queue, self.multi_exp))
             self.parallel_process.start()
-        
-        for n, path in enumerate(self.scans):
+            
+        for n in range(len(self.config.scans)):
             if not self.is_multi_scanning:
                 break
                 
@@ -271,3 +270,10 @@ class Scanner(object):
             self.controller.quit_requested = True
         self.is_multi_scanning = False
         return True
+
+    # def make_scan_summary(self):
+        # creates and saves a .txt file in the save directory that
+        # sums up the settings of the scan
+        # gives the duration of the scan + date & time at which the scan started and ended
+        # the approximate space taken by all the pictures taken and created
+        # if the scan was interrupted
