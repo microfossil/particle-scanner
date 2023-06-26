@@ -1,9 +1,10 @@
 import os
 from shutil import rmtree
 from pathlib import Path
+import multiprocessing as mp
 import skimage.io as skio
 import numpy as np
-from sashimi.helicon_stack import stack_from_to, stack_for_multiple_exp
+from sashimi.helicon_stack import single_stack
 
 # TODO: make an ETA function
 # TODO: use package pillow-heif to compress raw stacks (and exposures?)
@@ -47,7 +48,7 @@ class Scanner(object):
 
         self.frame_duration_ms = self.controller.frame_duration_ms
         self.auto_f_stack = self.controller.auto_f_stack
-        self.remove_pics = self.controller.remove_pics
+        self.remove_raw = self.controller.remove_raw
         self.auto_quit = self.controller.auto_quit
         self.save_dir = self.controller.save_dir
         self.scan_dir = self.save_dir
@@ -66,9 +67,8 @@ class Scanner(object):
         self.total_stacks = 0
         self.current_pic_count = 0
         self.total_pic_count = 0
-        self.is_scanning = False
         self.is_multi_scanning = False
-
+        self.parallel_process = None
         self.update_stack_count()
         self.update_total_pic_count()
         
@@ -120,37 +120,33 @@ class Scanner(object):
     def multi_scan(self):
         self.is_multi_scanning = True
         self.controller.selected_scan_number = 1
+        self.controller.interrupt_flag = False
         self.current_pic_count = 0
         self.update_total_pic_count()
         os.makedirs(self.save_dir, exist_ok=True)
-
+        
+        if self.auto_f_stack:
+            mp.set_start_method("spawn")
+            queue = mp.Queue()
+            self.parallel_process = mp.Process(target=single_stack, args=(queue, self.multi_exp))
+            self.parallel_process.start()
+        
         for n, path in enumerate(self.scans):
-            scan_name = f"scan{n + 1}"
             if not self.is_multi_scanning:
-                return
-
+                break
+                
+            scan_name = f"scan{n + 1}"
+            scan_dir = Path(self.save_dir).joinpath(scan_name)
+            os.makedirs(scan_dir)
             self.controller.selected_scan_number = n + 1
-
-            fl = self.selected_scan()['FL']
-            br = self.selected_scan()['BR']
-            assert (br[0] > fl[0])
-            assert (br[1] > fl[1])
-            self.stage.goto(fl)
-            self.stage.wait_until_position(5000)
-
-            self.scan_dir = Path(self.save_dir).joinpath(scan_name)
-            print(scan_name)
-
-            self.scan()
             
-            if self.auto_f_stack:
-                self.focus_stack(scan_name)
-                if self.remove_pics:
-                    remove_folder(self.scan_dir)
+            self.scan(scan_dir)
+        
+        if self.auto_f_stack:
+            if self.controller.quit_requested or self.controller.interrupt_flag:
+                self.parallel_process.kill()
             else:
-                print('skip stacking')
-
-        print("finished multi-scanning")
+                self.parallel_process.join()
 
         self.is_multi_scanning = False
         if self.auto_quit:
@@ -158,19 +154,22 @@ class Scanner(object):
             self.controller.interrupt_flag = True if self.controller.quit_requested else False
             self.controller.quit_requested = True
 
-    def scan(self):
-        self.current_stack = 0
-        
-        os.makedirs(self.scan_dir, exist_ok=True)
+    def scan(self, scan_dir):
         selected_scan = self.controller.selected_scan()
+        fl = selected_scan['FL']
+        br = selected_scan['BR']
+        assert (br[0] > fl[0])
+        assert (br[1] > fl[1])
         
-        self.stage.goto(selected_scan['FL'])
+        os.makedirs(scan_dir, exist_ok=True)
+        
+        self.stage.goto(fl)
         self.stage.wait_until_position(10000)
-        x_steps, y_steps = self.step_nbr_xy(self.selected_scan())
+        x_steps, y_steps = self.step_nbr_xy(selected_scan)
         self.total_stacks = x_steps * y_steps
         
         # Start scanning
-        self.is_scanning = True
+        self.current_stack = 0
         for yi in range(y_steps):
             for xi in range(x_steps):
                 self.current_stack += 1
@@ -180,25 +179,23 @@ class Scanner(object):
                     return
                 
                 dx, dy = self.X_STEP * xi, self.Y_STEP * yi
-                self.stage.goto_z(clip(selected_scan['FL'][2]))
-                self.stage.goto_x(selected_scan['FL'][0] + dx)
-                self.stage.goto_y(selected_scan['FL'][1] + dy)
+                du = [fl[0] + dx, fl[1] + dy, fl[2]]
+                self.stage.goto(du)
                 self.stage.wait_until_position(1000)
-                self.take_stack(dx, dy)
-        self.is_scanning = False
+                self.take_stack(dx, dy, scan_dir)
 
-    def take_stack(self, dx, dy):
+    def take_stack(self, dx, dy, scan_dir):
         # Create directory to save stack
-        stack_folder = Path(self.scan_dir).joinpath(f"X{self.stage.x:06d}_Y{self.stage.y:06d}")
-        os.makedirs(stack_folder, exist_ok=True)
+        xy_folder = Path(scan_dir).joinpath(f"X{self.stage.x//10:05d}_Y{self.stage.y//10:05d}")
+        os.makedirs(xy_folder, exist_ok=True)
         if self.multi_exp:
             for exp in self.multi_exp:
-                os.makedirs(stack_folder.joinpath(f"E{exp}"), exist_ok=True)
+                os.makedirs(xy_folder.joinpath(f"E{exp}"), exist_ok=True)
         
         z_orig = self.stage.z
         self.stage.goto_z(self.get_corrected_z(dx, dy))
         self.stage.wait_until_position(1000)
-
+        
         exp_values = self.multi_exp if self.multi_exp else (self.config.exposure_time,)
         for i in range(self.stack_count):
             for exp in exp_values:
@@ -212,28 +209,25 @@ class Scanner(object):
                 self.show_image(img)
                 
                 # save the picture
-                sub_folder = f"E{exp}/" if self.multi_exp else ""
-                save_path = stack_folder.joinpath(f"{sub_folder}"
-                                                  f"X{self.stage.x:06d}_"
-                                                  f"Y{self.stage.y:06d}_"
-                                                  f"Z{self.stage.z:06d}.jpg")
+                if self.multi_exp is not None:
+                    save_path = xy_folder.joinpath(f"E{exp}")
+                else:
+                    save_path = xy_folder
+                save_path = save_path.joinpath(f"X{self.stage.x//10:05d}_"
+                                               f"Y{self.stage.y//10:05d}_"
+                                               f"Z{self.stage.z//10:05d}.jpg")
                 skio.imsave(str(save_path), img[..., ::-1], check_contrast=False, quality=90)
+            
             self.stage.move_z(self.config.stack_step)
             self.stage.wait_until_position(100)
+        
+        if self.auto_f_stack:
+            self.parallel_process.put((xy_folder, self.fs_folder))
 
         self.camera.set_exposure(exp_values[0])
         self.stage.goto_z(z_orig)
         self.stage.wait_until_position(50 * self.stack_count)
-
-    def focus_stack(self, scan_name):
-        if not self.is_multi_scanning:
-            return
-        scan_fs_dir = self.fs_folder.joinpath(scan_name)
-        if self.multi_exp is None:
-            stack_from_to(self.scan_dir, scan_fs_dir)
-        else:
-            stack_for_multiple_exp(self.scan_dir, self.fs_folder, self.multi_exp)
-            
+        
     def find_floor(self):
         z_orig = self.stage.z
         self.stage.goto_z(100)
@@ -271,13 +265,9 @@ class Scanner(object):
         self.controller.display(img)
     
     def check_for_escape(self):
-        if (not self.is_scanning) or (not self.is_multi_scanning) or self.controller.quit_requested:
-            self.is_multi_scanning = False
-            self.is_scanning = False
-            if self.auto_quit:
-                self.controller.quit_requested = True
-            return True
-        else:
+        if self.is_multi_scanning and not self.controller.quit_requested:
             return False
-        
-        
+        if self.auto_quit:
+            self.controller.quit_requested = True
+        self.is_multi_scanning = False
+        return True

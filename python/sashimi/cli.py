@@ -38,6 +38,7 @@ def cli():
               is_flag=True,
               help="Allows to use multiple Exposures")
 @click.option("--remove-pics", "-r",
+@click.option("--remove-raw", "-r",
               is_flag=True,
               help='Removes the non-stacked pictures after finishing stacking')
 @click.option("--skip-fs", "-s",
@@ -54,6 +55,7 @@ def cli():
               is_flag=True,
               help='simplifies z correction')
 def scan(dir_, port, lang, layout, mult_exp, remove_pics, skip_fs, auto_quit, offset, lowest):
+def scan(dir_, port, lang, layout, mult_exp, remove_raw, skip_fs, auto_quit, offset, lowest):
     if mult_exp:
         user_path, exp_values = dialog_for_path_and_values()
         print("Input collection finished, the scanning program will start.")
@@ -63,6 +65,8 @@ def scan(dir_, port, lang, layout, mult_exp, remove_pics, skip_fs, auto_quit, of
         
     controller = Controller(user_path, port, lang=lang, layout=layout, remove_pics=remove_pics,
                             auto_f_stack=not skip_fs, auto_quit=auto_quit, multi_exp=exp_values, lowest_z=lowest)
+    controller = Controller(user_path, port, lang=lang, layout=layout, remove_raw=remove_raw, auto_f_stack=not skip_fs,
+                            auto_quit=auto_quit, multi_exp=exp_values, lowest_z=lowest)
     controller.start()
 
 
