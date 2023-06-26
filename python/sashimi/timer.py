@@ -39,8 +39,7 @@ class Timer(object):
 	
 	def new_lap(self):
 		if not self.is_running:
-			self.start()
-			return
+			raise RuntimeError("Timer object must be in running state to add a lap")
 		self.lap_count += 1
 		new_lap_date = perf_counter()
 		self.prev_lap_time = new_lap_date - self.last_lap_date + self.lap_accu_time
