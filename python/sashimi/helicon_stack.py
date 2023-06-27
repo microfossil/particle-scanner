@@ -148,9 +148,3 @@ def stack_for_multiple_exp(_from: Path, _to: Path, exp_values: list):
             ]
             print(command)
             subprocess.run(command, shell=True)
-
-
-
-
-
-

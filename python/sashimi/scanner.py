@@ -1,9 +1,10 @@
 import os
-from shutil import rmtree
-from pathlib import Path
 import multiprocessing as mp
 import skimage.io as skio
 import numpy as np
+import datetime as dt
+from shutil import rmtree
+from pathlib import Path
 from sashimi.helicon_stack import single_stack
 
 # TODO: make an ETA function
@@ -38,6 +39,14 @@ def remove_folder(folder):
             os.remove(path)
 
 
+def s2hms(s: int) -> [int, int, int]:
+    m = s // 60
+    s = s - 60 * m
+    h = m // 60
+    m = m - 60 * h
+    return h, m, s
+
+
 class Scanner(object):
     def __init__(self, controller):
         # instances
@@ -70,6 +79,19 @@ class Scanner(object):
         self.parallel_process = None
         self.update_stack_count()
         self.update_total_pic_count()
+
+        self.summary = {
+            'save_dir': self.save_dir,
+            'language': self.controller.lang,
+            'layout': self.controller.layout,
+            'auto_f_stack': self.auto_f_stack,
+            'remove_raw': self.remove_raw,
+            'auto_quit': self.auto_quit,
+            'exposure': self.config.exposure_time if self.multi_exp is None else self.multi_exp,
+            'lowest_z': self.controller.lowest_z,
+            'XY_step': (self.X_STEP, self.Y_STEP),
+            'stack_step': self.config.stack_step
+        }
         
     def lowest_corner(self) -> int:
         current_scan = self.selected_scan()
@@ -123,7 +145,9 @@ class Scanner(object):
         self.current_pic_count = 0
         self.update_total_pic_count()
         os.makedirs(self.save_dir, exist_ok=True)
-
+        
+        self.summary['scan_dates'] = []
+        
         if self.auto_f_stack:
             mp.set_start_method("spawn")
             queue = mp.Queue()
@@ -133,13 +157,16 @@ class Scanner(object):
         for n in range(len(self.config.scans)):
             if not self.is_multi_scanning:
                 break
-                
             scan_name = f"scan{n + 1}"
             scan_dir = Path(self.save_dir).joinpath(scan_name)
             os.makedirs(scan_dir)
             self.controller.selected_scan_number = n + 1
-            
+
+            self.summary['scan_dates'].append(dt.datetime.now(tz=dt.timezone(dt.timedelta(hours=2))))
             self.scan(scan_dir)
+        self.summary['scan_dates'].append(dt.datetime.now(tz=dt.timezone(dt.timedelta(hours=2))))
+        
+        self.make_scan_summary()
         
         if self.auto_f_stack:
             if self.controller.quit_requested or self.controller.interrupt_flag:
@@ -271,9 +298,46 @@ class Scanner(object):
         self.is_multi_scanning = False
         return True
 
-    # def make_scan_summary(self):
-        # creates and saves a .txt file in the save directory that
-        # sums up the settings of the scan
-        # gives the duration of the scan + date & time at which the scan started and ended
-        # the approximate space taken by all the pictures taken and created
-        # if the scan was interrupted
+    def make_scan_summary(self):
+        summary_path = self.save_dir.joinpath('summary.txt')
+        with open(summary_path, mode='x') as summary:
+            summary.write('This is the summary of this multi-scan folder.\n'
+                          'Here are some parameters :')
+            param_list = [
+                'save_dir',
+                'language',
+                'layout',
+                'auto_f_stack',
+                'remove_raw',
+                'auto_quit',
+                'exposure',
+                'lowest_z',
+                'XY_step',
+                'stack_step'
+            ]
+            for param in param_list:
+                summary.write(f"{param} = {self.summary[param]}\n")
+            dates = self.summary['scan_dates']
+            deltas = [dt.timedelta(dates(n+1), dates(n)) for n in range(len(dates) - 1)]
+            total_pics = 0
+            
+            if self.multi_exp is None:
+                exp_count = 1
+            else:
+                exp_count = len(self.multi_exp)
+            summary.write('Here are statistics about the scans.')
+            for n, scan in enumerate(self.config.scans):
+                steps_x, steps_y = self.step_nbr_xy(scan)
+                stack_nbr = steps_x * steps_y
+                pic_nbr = stack_nbr * self.stack_count
+                total_pics += pic_nbr
+                h, m, s = s2hms(deltas[n].seconds)
+                summary.write(
+                    f"scan{n + 1} started at {dates[n]}, lasted {h}h {m}min {s}s and took :\n"
+                    f"{stack_nbr} stacks x {exp_count} exposures x {self.stack_count} heights = {pic_nbr} pictures.\n\n"
+                )
+            
+            h, m, s = s2hms(dt.timedelta(dates[-1], dates[0]).seconds)
+            summary.write(f'Overall, the task ended at {dates[-1]} and lasted {h}h {m}min and {s}s.\n')
+            if self.controller.quit_requested:
+                summary.write('///////////THE SCANS WERE INTERRUPTED BEFORE FINISHING!!!///////////\n\n')
