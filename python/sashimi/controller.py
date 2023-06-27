@@ -14,9 +14,9 @@ class Controller(object):
                  save_dir,
                  com_port,
                  lang="en",
-                 layout='QWERTY',
+                 layout='AZERTY',
                  z_margin=None,
-                 remove_pics=False,
+                 remove_raw=False,
                  auto_f_stack=True,
                  auto_quit=False,
                  multi_exp=None,
@@ -31,7 +31,7 @@ class Controller(object):
             self.config.z_margin = z_margin
             self.config.save()
         self.z_margin = self.config.z_margin
-        self.remove_pics = remove_pics
+        self.remove_raw = remove_raw
         self.auto_f_stack = auto_f_stack
         self.auto_quit = auto_quit
         self.multi_exp = multi_exp
@@ -121,7 +121,6 @@ class Controller(object):
 
         # Quit
         elif key == 27:
-            self.scanner.is_scanning = False
             self.scanner.is_multi_scanning = False
             self.interrupt_flag = True
             self.config.save()
@@ -272,7 +271,6 @@ class Controller(object):
 
     def scanning_commands(self, key):
         if key == self.keyboard.SCAN:
-            self.scanner.is_scanning = False
             self.scanner.is_multi_scanning = False
             self.interrupt_flag = True
     
@@ -552,6 +550,7 @@ class Controller(object):
         self.camera.set_exposure(self.config.exposure_time)
         self.stage.move_home(self.config.home_offset)
         self.stage.send_command('M107')  # turns off the extruder fan
+        
         # Control loop
         while not self.quit_requested:
             self.wait()
