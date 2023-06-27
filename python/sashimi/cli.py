@@ -131,9 +131,6 @@ def helicon_stack(dir_, output_dir, exists_ok):
     elif depth == 2:
         helicon_stacker.stack_from_to(dir_, dir)
         print(f"focus stacks saved at {output_dir}")
-    elif depth == 1:
-        helicon_stacker.stack(dir_)
-        print(f"focus stacks saved at {dir_}")
     else:
         print('ERROR: incompatible directory')
 
