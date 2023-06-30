@@ -35,7 +35,7 @@ class Configuration(object):
         self.save()
 
     def save(self, save_name="config"):
-        config_file = os.path.join(os.path.expanduser("~"), ".sashimi", save_name + ".json")
+        config_file = os.path.join(os.path.expanduser("~"), ".Sashimi", save_name + ".json")
         os.makedirs(os.path.dirname(config_file), exist_ok=True)
         with open(config_file, "w") as f:
             j = json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
@@ -44,7 +44,7 @@ class Configuration(object):
     @staticmethod
     def load(save_name="config"):
         print("Load config")
-        config_file = os.path.join(os.path.expanduser("~"), ".sashimi", save_name + ".json")
+        config_file = os.path.join(os.path.expanduser("~"), ".Sashimi", save_name + ".json")
         if os.path.exists(config_file):
             print("Config file found")
             try:

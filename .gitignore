@@ -1,11 +1,3 @@
-python/sashimi/.idea/
-python/sashimi/__pycache__/
-python/sashimi.egg-info/
-
-python/build/
-python/scripts/
-python/MANIFEST
-
+python/sashimi/.idea
 venv/
-*.xml
 *.pyc

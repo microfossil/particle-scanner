@@ -3,8 +3,7 @@ import os
 import click
 import datetime as dt
 from pathlib import Path
-from sashimi import focus_stack
-from sashimi import helicon_stack as helicon_stacker
+from sashimi import helicon_stack as helicon_stacker, focus_stack
 from sashimi.controller import Controller
 from sashimi.multi_exp import dialog_for_path_and_values
 
@@ -51,7 +50,7 @@ def cli():
               help='skips focus-stacking while scanning')
 @click.option('--auto-quit', '-q',
               is_flag=True,
-              help='sashimi quits automatically after scanning')
+              help='Sashimi quits automatically after scanning')
 @click.option('--margin', '-m',
               type=int,
               default=200,

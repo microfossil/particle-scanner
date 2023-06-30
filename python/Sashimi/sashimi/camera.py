@@ -2,7 +2,6 @@ import threading
 
 import cv2
 from pypylon import pylon
-from pypylon import genicam
 
 # TODO: look into pylon.ImageFileFormat
 
