@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 from glob import glob
 from PIL import Image
@@ -78,25 +79,49 @@ def stack_from_to(stacks_dir, save_dir):
         subprocess.run(command)
 
 
-def parallel_stack(iq, exposures=None):
-    while True:
-        if iq.empty():
-            sleep(0.1)
-            continue
+def stack_for_multiple_exp(scan_path: Path, f_stacks_path: Path, exp_values: list):
+    helicon_focus = get_helicon_focus()
+
+    scan_name = scan_path.stem
+    for exp in exp_values:
+        output_folder = f_stacks_path.joinpath(f"E{exp}", scan_name)
+        os.makedirs(output_folder, exist_ok=True)
+
+        xy_folders = sorted([d for d in glob(os.path.join(scan_path, "*")) if os.path.isdir(d)])
+        for folder in xy_folders:
+            stack_name = Path(folder).stem
+            stacked_file_path = output_folder.joinpath(stack_name)
+            dd = Path(folder).joinpath(f"E{exp}")
+            images = sorted(glob(os.path.join(dd, "*.jpg")))
+            if len(images) == 0:
+                continue
+
+            command = [
+                helicon_focus,
+                "-silent",
+                f"{dd}",
+                "-mp:0",
+                "-rp:4",
+                f"-save:{stacked_file_path}.jpg"
+            ]
+            print(command)
+            subprocess.run(command, shell=True)
+            
+            
+def parallel_stack(queue, exposures=None, error_logs=None):
+    if error_logs is not None:
+        sys.stderr = open(error_logs, mode='x', encoding='UTF-8')
         
-        msg = iq.get()
+    while True:
+        if queue.empty():
+            sleep(0.2)
+            continue
+
+        msg = queue.get()
         if msg == "terminate":
             break
-        
         else:
             single_stack(msg, exposures)
-
-
-def gen_stack(img_dir, o_dir):
-    sp = o_dir.joinpath(f"{img_dir.stem}.tiff")
-    command = [get_helicon_focus(), "-silent", f"{img_dir}", "-mp:0", "-rp:4", f"-save:{sp}"]
-    subprocess.run(command)
-    return sp
 
 
 def single_stack(msg, exposures):
@@ -121,30 +146,8 @@ def single_stack(msg, exposures):
         os.remove(f_stack)
 
 
-def stack_for_multiple_exp(_from: Path, _to: Path, exp_values: list):
-    helicon_focus = get_helicon_focus()
-
-    scan_name = _from.stem
-    for exp in exp_values:
-        fs_folder = _to.joinpath(f"E{exp}", scan_name)
-        os.makedirs(fs_folder, exist_ok=True)
-
-        dirs = sorted([d for d in glob(os.path.join(_from, "*")) if os.path.isdir(d)])
-        for d in dirs:
-            stack_name = Path(d).stem
-            save_name = fs_folder.joinpath(stack_name)
-            dd = Path(d).joinpath(f"E{exp}")
-            images = sorted(glob(os.path.join(dd, "*.jpg")))
-            if len(images) == 0:
-                continue
-
-            command = [
-                helicon_focus,
-                "-silent",
-                f"{dd}",
-                "-mp:0",
-                "-rp:4",
-                f"-save:{save_name}.jpg"
-            ]
-            print(command)
-            subprocess.run(command, shell=True)
+def gen_stack(img_dir, o_dir):
+    sp = o_dir.joinpath(f"{img_dir.stem}.tiff")
+    command = [get_helicon_focus(), "-silent", f"{img_dir}", "-mp:0", "-rp:4", f"-save:{sp}"]
+    subprocess.run(command)
+    return sp

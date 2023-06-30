@@ -151,7 +151,10 @@ class Scanner(object):
         if self.auto_f_stack:
             mp.set_start_method("spawn")
             queue = mp.Queue()
-            self.parallel_process = mp.Process(target=single_stack, args=(queue, self.multi_exp))
+            error_logs = self.save_dir.joinpath('error_logs.txt')
+            if error_logs.exists():
+                os.remove(error_logs)
+            self.parallel_process = mp.Process(target=single_stack, args=(queue, self.multi_exp, error_logs))
             self.parallel_process.start()
             
         for n in range(len(self.config.scans)):
