@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from pathlib import Path
 from sashimi.camera import Camera
 from sashimi.scanner import Scanner
 from sashimi.stage import Stage
@@ -43,7 +44,7 @@ class Controller(object):
         self.frame_duration_ms = 1000 // self.refresh_rate_Hz
         self.selected_scan_number = 1
         self.scans = self.config.scans
-        self.save_dir = save_dir
+        self.save_dir = Path(save_dir)
         self.interrupt_flag = False
         self.quit_requested = False
         self.show_help = False

@@ -61,16 +61,21 @@ class Camera(object):
         # Open camera
         self.camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
         self.camera.Open()
-        node_map = self.camera.GetNodeMap()
-        node_map.GetNode("ExposureMode").SetValue("Timed")
+        self.load_camera_settings()
+        self.capture_thread = CaptureThread(self.camera, self.converter, self.controller)
+        self.capture_thread.start()
+    
+    def load_camera_settings(self):
+        n_map = self.camera.GetNodeMap()
+        n_map.GetNode("ExposureMode").SetValue("Timed")
+        # n_map.GetNode().setValue()  # Blue gain
+        # n_map.GetNode().setValue()  # Green gain
+        # n_map.GetNode().setValue()  # Red gain
         self.camera.StaticChunkNodeMapPoolSize = self.camera.MaxNumBuffer.GetValue()
         self.camera.ChunkModeActive = True
         self.camera.ChunkSelector = "ExposureTime"
         self.camera.ChunkEnable = True
-
-        self.capture_thread = CaptureThread(self.camera, self.converter, self.controller)
-        self.capture_thread.start()
-
+    
     def stop(self):
         self.camera.StopGrabbing()
         self.camera.ChunkModeActive = False
