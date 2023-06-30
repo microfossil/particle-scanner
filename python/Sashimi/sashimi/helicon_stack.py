@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 from pathlib import Path
 from glob import glob
 from PIL import Image
@@ -108,45 +109,45 @@ def stack_for_multiple_exp(scan_path: Path, f_stacks_path: Path, exp_values: lis
             subprocess.run(command, shell=True)
             
             
-def parallel_stack(queue, exposures=None, error_logs=None):
+def parallel_stack(queue, error_logs=None):
     if error_logs is not None:
-        sys.stderr = open(error_logs, mode='x', encoding='UTF-8')
-        
+        sys.stdout = sys.stderr = open(error_logs, mode='w', encoding='UTF-8')
+
     while True:
         if queue.empty():
             sleep(0.2)
             continue
 
         msg = queue.get()
+        print(msg)
         if msg == "terminate":
             break
         else:
-            single_stack(msg, exposures)
+            xy_folder, output_folder = msg
+            single_stack(Path(xy_folder), Path(output_folder))
 
 
-def single_stack(msg, exposures):
-    xy_folder, f_stacks = msg
-    
-    if exposures is None:
-        f_stack = gen_stack(xy_folder, f_stacks)
-        fs = Image.open(f_stack)
-        fs.load()
-        fs.save(f_stack.parent.joinpath(f"{f_stack.stem}.png"))
-        os.remove(f_stack)
-        return
-    
-    for exp in exposures:
-        f_stacks_exp = f_stacks.parent.joinpath(f"E{exp}", f_stacks.stem)
-        raw_stack = xy_folder.joinpath(f"E{exp}")
-        
-        f_stack = gen_stack(raw_stack, f_stacks_exp)
-        fs = Image.open(f_stack)
-        fs.load()
-        fs.save(f_stack.parent.joinpath(f"{f_stack.stem}.png"))
-        os.remove(f_stack)
+def single_stack(xy_folder: Path, f_stacks: Path):
+    scan_name = xy_folder.parent.stem
+    f_stack = gen_stack(xy_folder, f_stacks.joinpath(scan_name))
+    fs = Image.open(f_stack)
+    fs.load()
+    fs.save(f_stack.parent.joinpath(f"{f_stack.stem}.png"))
+    os.remove(f_stack)
+
+    # else:
+    #     for exp in exposures:
+    #         f_stacks_exp = f_stacks.parent.joinpath(f"E{exp}", f_stacks.stem)
+    #         raw_stack = xy_folder.joinpath(f"E{exp}")
+    #
+    #         f_stack = gen_stack(raw_stack, f_stacks_exp)
+    #         fs = Image.open(f_stack)
+    #         fs.load()
+    #         fs.save(f_stack.parent.joinpath(f"{f_stack.stem}.png"))
+    #         os.remove(f_stack)
 
 
-def gen_stack(img_dir, o_dir):
+def gen_stack(img_dir: Path, o_dir: Path):
     sp = o_dir.joinpath(f"{img_dir.stem}.tiff")
     command = [get_helicon_focus(), "-silent", f"{img_dir}", "-mp:0", "-rp:4", f"-save:{sp}"]
     subprocess.run(command)

@@ -5,7 +5,7 @@ import numpy as np
 import datetime as dt
 from shutil import rmtree
 from pathlib import Path
-from sashimi.helicon_stack import single_stack
+from sashimi.helicon_stack import parallel_stack
 
 # TODO: make an ETA function
 # TODO: use package pillow-heif to compress raw stacks (and exposures?)
@@ -77,6 +77,7 @@ class Scanner(object):
         self.total_pic_count = 0
         self.is_multi_scanning = False
         self.parallel_process = None
+        self.queue = None
         self.update_stack_count()
         self.update_total_pic_count()
 
@@ -150,11 +151,11 @@ class Scanner(object):
         
         if self.auto_f_stack:
             mp.set_start_method("spawn")
-            queue = mp.Queue()
+            self.queue = mp.Queue()
             error_logs = self.save_dir.joinpath('error_logs.txt')
             if error_logs.exists():
                 os.remove(error_logs)
-            self.parallel_process = mp.Process(target=single_stack, args=(queue, self.multi_exp, error_logs))
+            self.parallel_process = mp.Process(target=parallel_stack, args=(self.queue, error_logs))
             self.parallel_process.start()
             
         for n in range(len(self.config.scans)):
@@ -172,10 +173,8 @@ class Scanner(object):
         self.make_scan_summary()
         
         if self.auto_f_stack:
-            if self.controller.quit_requested or self.controller.interrupt_flag:
-                self.parallel_process.kill()
-            else:
-                self.parallel_process.join()
+            self.queue.put('terminate')
+            self.parallel_process.join()
 
         self.is_multi_scanning = False
         if self.auto_quit:
@@ -251,7 +250,7 @@ class Scanner(object):
             self.stage.wait_until_position(100)
         
         if self.auto_f_stack:
-            self.parallel_process.put((xy_folder, self.fs_folder))
+            self.queue.put((str(xy_folder), str(self.fs_folder)))
 
         self.camera.set_exposure(exp_values[0])
         self.stage.goto_z(z_orig)
@@ -321,7 +320,7 @@ class Scanner(object):
             for param in param_list:
                 summary.write(f"{param} = {self.summary[param]}\n")
             dates = self.summary['scan_dates']
-            deltas = [dt.timedelta(dates(n+1), dates(n)) for n in range(len(dates) - 1)]
+            deltas = [dates[n+1] - dates[n] for n in range(len(dates) - 1)]
             total_pics = 0
             
             if self.multi_exp is None:
@@ -339,8 +338,8 @@ class Scanner(object):
                     f"scan{n + 1} started at {dates[n]}, lasted {h}h {m}min {s}s and took :\n"
                     f"{stack_nbr} stacks x {exp_count} exposures x {self.stack_count} heights = {pic_nbr} pictures.\n\n"
                 )
-            
-            h, m, s = s2hms(dt.timedelta(dates[-1], dates[0]).seconds)
+            delta = dates[-1] - dates[0]
+            h, m, s = s2hms(int(delta.total_seconds()))
             summary.write(f'Overall, the task ended at {dates[-1]} and lasted {h}h {m}min and {s}s.\n')
             if self.controller.quit_requested:
                 summary.write('///////////THE SCANS WERE INTERRUPTED BEFORE FINISHING!!!///////////\n\n')
