@@ -11,31 +11,36 @@ from sashimi.keyboard import Keyboard
 
 
 class Controller(object):
-    def __init__(self,
-                 save_dir,
-                 com_port,
-                 lang="en",
-                 layout='AZERTY',
-                 z_margin=None,
-                 remove_raw=False,
-                 auto_f_stack=True,
-                 auto_quit=False,
-                 multi_exp=None,
-                 lowest_z=False):
+    def __init__(
+            self,
+            save_dir: str | Path,
+            com_port: str,
+            lang: str = "en",
+            layout: str = 'AZERTY',
+            z_margin: int = None,
+            multi_exp: list[float] = None,
+            remove_raw: bool = False,
+            auto_f_stack: bool = True,
+            auto_quit: bool = False,
+            lowest_z: bool = False):
+
         # saved/default config
         self.config = Configuration.load()
         
         # user parameters
-        self.lang = lang
-        self.layout = layout
+        if type(save_dir) == str:
+            save_dir = Path(save_dir)
         if z_margin is not None:
             self.config.z_margin = z_margin
             self.config.save()
-        self.z_margin = self.config.z_margin
+
+        self.save_dir = save_dir
+        self.lang = lang
+        self.layout = layout
+        self.multi_exp = multi_exp
         self.remove_raw = remove_raw
         self.auto_f_stack = auto_f_stack
         self.auto_quit = auto_quit
-        self.multi_exp = multi_exp
         self.lowest_z = lowest_z
 
         # parameters an variables
@@ -43,8 +48,6 @@ class Controller(object):
         self.refresh_rate_Hz = 20
         self.frame_duration_ms = 1000 // self.refresh_rate_Hz
         self.selected_scan_number = 1
-        self.scans = self.config.scans
-        self.save_dir = Path(save_dir)
         self.interrupt_flag = False
         self.quit_requested = False
         self.show_help = False
@@ -233,19 +236,19 @@ class Controller(object):
             scan = self.selected_scan()
             if self.stage.x == scan['BR'][0] or self.stage.y == scan['BR'][1]:
                 return
-            self.selected_scan()['FL'] = [self.stage.x, self.stage.y, self.stage.z - self.z_margin]
+            self.selected_scan()['FL'] = [self.stage.x, self.stage.y, self.stage.z - self.config.z_margin]
             self.config.update_z_correction_terms(self.selected_scan_number - 1)
             self.config.save()
         elif key == kb.SCAN_BR:
             scan = self.selected_scan()
             if self.stage.x == scan['FL'][0] or self.stage.y == scan['FL'][1]:
                 return
-            self.selected_scan()['BR'] = [self.stage.x, self.stage.y, self.stage.z - self.z_margin]
+            self.selected_scan()['BR'] = [self.stage.x, self.stage.y, self.stage.z - self.config.z_margin]
             self.config.update_z_correction_terms(self.selected_scan_number - 1)
             self.config.save()
        
         elif key == kb.SET_Z_COR:
-            self.config.update_z_correction_terms(self.selected_scan_number - 1, self.stage.z - self.z_margin)
+            self.config.update_z_correction_terms(self.selected_scan_number - 1, self.stage.z - self.config.z_margin)
             self.config.save()
 
         # Move to scan area

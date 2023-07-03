@@ -14,5 +14,6 @@ if __name__ == "__main__":
         except OSError:
             os.remove(path)
 
-    controller = Controller(my_dir, "COM5", lang="en", layout='AZERTY', auto_f_stack=True, lowest_z=True)
+    controller = Controller(my_dir, "COM5", "en", 'AZERTY', auto_quit=True,
+                            auto_f_stack=True, remove_raw=True, lowest_z=True)
     controller.start()
