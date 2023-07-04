@@ -56,7 +56,10 @@ def cli():
 @click.option('--lowest', '-z',
               is_flag=True,
               help='simplifies z correction')
-def scan(dir_, port, lang, layout, mult_exp, remove_raw, skip_fs, auto_quit, margin, lowest):
+@click.option('--yes/--no', '-y/-n',
+              default=False,
+              is_flag=True)
+def scan(dir_, port, lang, layout, mult_exp, remove_raw, skip_fs, auto_quit, margin, lowest, yes):
     if dir_ is None:
         dir_ = util.make_unique_subdir()
     if mult_exp == 'undisclosed':

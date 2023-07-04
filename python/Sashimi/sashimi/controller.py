@@ -22,7 +22,8 @@ class Controller(object):
             remove_raw: bool = False,
             auto_f_stack: bool = True,
             auto_quit: bool = False,
-            lowest_z: bool = False):
+            lowest_z: bool = False,
+            do_overwrite: bool = False):
 
         # saved/default config
         self.config = Configuration.load()
@@ -42,6 +43,7 @@ class Controller(object):
         self.auto_f_stack = auto_f_stack
         self.auto_quit = auto_quit
         self.lowest_z = lowest_z
+        self.do_overwrite = do_overwrite
 
         # parameters an variables
         self.img_mode = 1
