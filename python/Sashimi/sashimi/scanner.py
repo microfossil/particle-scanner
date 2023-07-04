@@ -156,9 +156,10 @@ class Scanner(object):
             error_logs = self.save_dir.joinpath('error_logs.txt')
             if error_logs.exists():
                 os.remove(error_logs)
-            self.parallel_process = mp.Process(target=parallel_stack, args=(self.queue, error_logs))
+            arguments = (self.queue, error_logs, self.controller.remove_raw)
+            self.parallel_process = mp.Process(target=parallel_stack, args=arguments)
             self.parallel_process.start()
-            
+
         for n in range(len(self.config.scans)):
             if not self.is_multi_scanning:
                 break
