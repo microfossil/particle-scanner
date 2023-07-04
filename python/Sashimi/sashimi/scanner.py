@@ -88,10 +88,11 @@ class Scanner(object):
             'auto_f_stack': self.auto_f_stack,
             'remove_raw': self.remove_raw,
             'auto_quit': self.auto_quit,
-            'exposure': self.config.exposure_time if self.multi_exp is None else self.multi_exp,
             'lowest_z': self.controller.lowest_z,
-            'XY_step': (self.X_STEP, self.Y_STEP),
-            'stack_step': self.config.stack_step
+            'exposure (µs)': self.config.exposure_time if self.multi_exp is None else self.multi_exp,
+            'stack height (µm)': self.config.stack_height,
+            'XY_step (µm)': (self.X_STEP, self.Y_STEP),
+            'stack_step (µm)': self.config.stack_step
         }
         
     def lowest_corner(self) -> int:
@@ -116,7 +117,7 @@ class Scanner(object):
             dz_dx, dz_dy = self.selected_scan()['Z_corrections']
             z_correction = int(dz_dx * dx + dz_dy * dy)
             new_z = self.selected_scan()['FL'][2] + z_correction
-        return clip(new_z)
+        return clip(new_z - self.controller.z_margin)
         
     def update_stack_count(self):
         self.stack_count = self.config.stack_height // self.config.stack_step
@@ -312,10 +313,11 @@ class Scanner(object):
                 'auto_f_stack',
                 'remove_raw',
                 'auto_quit',
-                'exposure',
                 'lowest_z',
-                'XY_step',
-                'stack_step'
+                'exposure (µs)',
+                'stack height (µm)',
+                'XY_step (µm)',
+                'stack_step (µm)'
             ]
             for param in param_list:
                 summary.write(f"{param} = {self.summary[param]}\n")

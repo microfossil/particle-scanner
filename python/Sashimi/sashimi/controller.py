@@ -5,23 +5,25 @@ from sashimi.camera import Camera
 from sashimi.scanner import Scanner
 from sashimi.stage import Stage
 from sashimi.configuration import Configuration
-from sashimi.keyboard import Keyboard
+from sashimi.util import Keyboard
 
 # TODO: Add save/load config files
 
 
 class Controller(object):
-    def __init__(self,
-                 save_dir,
-                 com_port,
-                 lang="en",
-                 layout='AZERTY',
-                 z_margin=None,
-                 remove_raw=False,
-                 auto_f_stack=True,
-                 auto_quit=False,
-                 multi_exp=None,
-                 lowest_z=False):
+    def __init__(
+            self,
+            save_dir,
+            com_port,
+            lang="en",
+            layout='AZERTY',
+            z_margin=None,
+            remove_raw=False,
+            auto_f_stack=True,
+            auto_quit=False,
+            multi_exp=None,
+            lowest_z=False
+    ):
         # saved/default config
         self.config = Configuration.load()
         
@@ -233,19 +235,19 @@ class Controller(object):
             scan = self.selected_scan()
             if self.stage.x == scan['BR'][0] or self.stage.y == scan['BR'][1]:
                 return
-            self.selected_scan()['FL'] = [self.stage.x, self.stage.y, self.stage.z - self.z_margin]
+            self.selected_scan()['FL'] = [self.stage.x, self.stage.y, self.stage.z]
             self.config.update_z_correction_terms(self.selected_scan_number - 1)
             self.config.save()
         elif key == kb.SCAN_BR:
             scan = self.selected_scan()
             if self.stage.x == scan['FL'][0] or self.stage.y == scan['FL'][1]:
                 return
-            self.selected_scan()['BR'] = [self.stage.x, self.stage.y, self.stage.z - self.z_margin]
+            self.selected_scan()['BR'] = [self.stage.x, self.stage.y, self.stage.z]
             self.config.update_z_correction_terms(self.selected_scan_number - 1)
             self.config.save()
        
         elif key == kb.SET_Z_COR:
-            self.config.update_z_correction_terms(self.selected_scan_number - 1, self.stage.z - self.z_margin)
+            self.config.update_z_correction_terms(self.selected_scan_number - 1, self.stage.z)
             self.config.save()
 
         # Move to scan area

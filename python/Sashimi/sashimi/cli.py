@@ -1,11 +1,9 @@
 import os
-
 import click
 import datetime as dt
 from pathlib import Path
-from sashimi import helicon_stack as helicon_stacker, focus_stack
 from sashimi.controller import Controller
-from sashimi.multi_exp import dialog_for_path_and_values
+from sashimi import helicon_stack as helicon_stacker, util, focus_stack
 
 # TODO: add z_margin as an option
 
@@ -60,11 +58,7 @@ def cli():
               help='simplifies z correction')
 def scan(dir_, port, lang, layout, mult_exp, remove_raw, skip_fs, auto_quit, margin, lowest):
     if dir_ is None:
-        d = dt.datetime.now(tz=dt.timezone(dt.timedelta(hours=2)))
-        name = f"{d.day}{d.month}{d.year}_{d.hour}{d.minute}{d.second}"
-        dir_ = Path(f'$env:USERPROFILE/Documents/Sashimi/{name}/')
-        os.makedirs(dir_)
-    
+        dir_ = util.make_unique_subdir()
     if mult_exp == 'undisclosed':
         exp_values, dir_ = dialog_for_path_and_values()
     elif mult_exp is not None:
@@ -75,7 +69,7 @@ def scan(dir_, port, lang, layout, mult_exp, remove_raw, skip_fs, auto_quit, mar
     controller = Controller(dir_, port, lang=lang, layout=layout,
                             z_margin=margin, remove_raw=remove_raw,
                             auto_f_stack=not skip_fs, auto_quit=auto_quit,
-                            multi_exp=exp_values, lowest_z=lowest)
+                            multi_exp=exp_values, lowest_z=lowest, do_overwrite=yes)
     controller.start()
 
 
@@ -85,16 +79,12 @@ def scan(dir_, port, lang, layout, mult_exp, remove_raw, skip_fs, auto_quit, mar
               prompt='Directory containing stacks',
               help='Directory with a structure like "THIS/DIRECTORY/X00100_Y02200/X00100_Y02200_Z00135.jpg"')
 def stack(dir_):
-    focus_stack.stack(dir_)
     if dir_ is None:
-        d = dt.datetime.now(tz=dt.timezone(dt.timedelta(hours=2)))
-        name = f"{d.day}{d.month}{d.year}_{d.hour}{d.minute}{d.second}"
-        dir_ = dir_ = Path(f'$env:USERPROFILE/Documents/Sashimi/{name}/')
-        os.makedirs(dir_)
+        util.make_unique_subdir()
     else:
         dir_ = Path(dir_).resolve()
+    focus_stack.stack(dir_)
     print(f"focus stacks saved at {dir_}")
-
 
 
 @cli.command()
@@ -139,6 +129,15 @@ def get_homogeneous_depth(path):
         return 0
     child = next(path.iterdir())
     return get_homogeneous_depth(child) + 1
+
+
+def dialog_for_path_and_values() -> (Path, list[int]):
+    u_path = util.ask_for_path()
+    interval = util.ask_for_interval()
+    step_nbr = util.ask_for_step_nbr(interval)
+    step_size = (interval[1] - interval[0]) // (step_nbr - 1)
+    exp_val = [interval[0] + i * step_size for i in range(step_nbr)]
+    return u_path, exp_val
 
 
 if __name__ == "__main__":

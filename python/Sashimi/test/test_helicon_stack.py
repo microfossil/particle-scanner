@@ -1,15 +1,8 @@
 import os
-
 import sashimi.helicon_stack as hs
 import multiprocessing as mp
-import datetime as dt
+from sashimi.util import make_unique_subdir
 from pathlib import Path
-
-
-def invent_default_directory():
-	d = dt.datetime.now(tz=dt.timezone(dt.timedelta(hours=2)))
-	o_name = f"{d.day}{d.month}{d.year}_{d.hour}{d.minute}{d.second}_zstacks"
-	return Path("~").expanduser().joinpath("obj_det", o_name)
 
 
 if __name__ == "__main__":
@@ -17,7 +10,7 @@ if __name__ == "__main__":
 	output_dir = Path(input("output directory: "))
 	
 	if output_dir is None:
-		output_dir = invent_default_directory()
+		output_dir = make_unique_subdir()
 		os.makedirs(output_dir)
 		print(f'No output dir was given. Output will be saved on :\n{output_dir}')
 	
