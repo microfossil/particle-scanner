@@ -5,7 +5,7 @@ from sashimi.camera import Camera
 from sashimi.scanner import Scanner
 from sashimi.stage import Stage
 from sashimi.configuration import Configuration
-from sashimi.util import Keyboard
+from sashimi.utils import Keyboard
 
 # TODO: Add save/load config files
 

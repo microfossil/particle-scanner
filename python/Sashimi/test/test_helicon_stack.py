@@ -1,7 +1,7 @@
 import os
 import sashimi.helicon_stack as hs
 import multiprocessing as mp
-from sashimi.util import make_unique_subdir
+from sashimi.utils import make_unique_subdir
 from pathlib import Path
 
 

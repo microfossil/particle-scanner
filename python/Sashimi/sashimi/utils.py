@@ -1,11 +1,21 @@
 import os
+import shutil
 import datetime as dt
 from pathlib import Path
 
 
+def remove_folder(path):
+	for file in os.listdir(path):
+		subdir = path.joinpath(file)
+		try:
+			shutil.rmtree(subdir)
+		except OSError:
+			os.remove(subdir)
+
+
 def make_unique_subdir(directory=None):
 	if directory is None:
-		directory = Path("~").expanduser().joinpath("Desktop", "sashimi")
+		directory = Path.home().joinpath("Desktop", "sashimi")
 	d = dt.datetime.now(tz=dt.timezone(dt.timedelta(hours=2)))
 	subdir = f"{d.day}{d.month}{d.year}_{d.hour}{d.minute}"
 	if directory.joinpath("obj_det", subdir).exists():

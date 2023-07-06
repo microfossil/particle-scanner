@@ -3,7 +3,7 @@ import click
 import datetime as dt
 from pathlib import Path
 from sashimi.controller import Controller
-from sashimi import helicon_stack as helicon_stacker, util, focus_stack
+from sashimi import helicon_stack as helicon_stacker, utils, focus_stack
 
 # TODO: add z_margin as an option
 
@@ -61,7 +61,7 @@ def cli():
               is_flag=True)
 def scan(dir_, port, lang, layout, mult_exp, remove_raw, skip_fs, auto_quit, margin, lowest, yes):
     if dir_ is None:
-        dir_ = util.make_unique_subdir()
+        dir_ = utils.make_unique_subdir()
     if mult_exp == 'undisclosed':
         exp_values, dir_ = dialog_for_path_and_values()
     elif mult_exp is not None:
@@ -83,7 +83,7 @@ def scan(dir_, port, lang, layout, mult_exp, remove_raw, skip_fs, auto_quit, mar
               help='Directory with a structure like "THIS/DIRECTORY/X00100_Y02200/X00100_Y02200_Z00135.jpg"')
 def stack(dir_):
     if dir_ is None:
-        util.make_unique_subdir()
+        utils.make_unique_subdir()
     else:
         dir_ = Path(dir_).resolve()
     focus_stack.stack(dir_)
@@ -135,9 +135,9 @@ def get_homogeneous_depth(path):
 
 
 def dialog_for_path_and_values() -> (Path, list[int]):
-    u_path = util.ask_for_path()
-    interval = util.ask_for_interval()
-    step_nbr = util.ask_for_step_nbr(interval)
+    u_path = utils.ask_for_path()
+    interval = utils.ask_for_interval()
+    step_nbr = utils.ask_for_step_nbr(interval)
     step_size = (interval[1] - interval[0]) // (step_nbr - 1)
     exp_val = [interval[0] + i * step_size for i in range(step_nbr)]
     return u_path, exp_val

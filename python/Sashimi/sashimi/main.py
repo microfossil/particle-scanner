@@ -1,8 +1,6 @@
 from sashimi.controller import Controller
-from pathlib import Path
-from sashimi.util import make_unique_subdir
-import os
-import shutil
+from sashimi.utils import make_unique_subdir
+
 
 if __name__ == "__main__":
     my_dir = make_unique_subdir()

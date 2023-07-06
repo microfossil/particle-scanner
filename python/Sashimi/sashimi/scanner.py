@@ -5,10 +5,9 @@ import numpy as np
 import datetime as dt
 from shutil import rmtree
 from pathlib import Path
-from sashimi.helicon_stack import parallel_stack
+from sashimi import utils, helicon_stack
 
 # TODO: make an ETA function
-# TODO: use package pillow-heif to compress raw stacks (and exposures?)
 
 
 def clip(n, mini=0, maxi=None):
@@ -59,11 +58,10 @@ class Scanner(object):
         self.auto_f_stack = self.controller.auto_f_stack
         self.remove_raw = self.controller.remove_raw
         self.auto_quit = self.controller.auto_quit
-        self.save_dir = self.controller.save_dir
-        self.scan_dir = self.save_dir
+        self.scan_dir = self.controller.save_dir
         self.selected_scan = self.controller.selected_scan
         self.multi_exp = self.controller.multi_exp
-        self.fs_folder = self.save_dir.joinpath("f_stacks")
+        self.fs_folder = self.controller.save_dir.joinpath("f_stacks")
         
         # parameters and variables
         if self.multi_exp:
@@ -82,7 +80,7 @@ class Scanner(object):
         self.update_total_pic_count()
 
         self.summary = {
-            'save_dir': self.save_dir,
+            'save_dir': self.controller.save_dir,
             'language': self.controller.lang,
             'layout': self.controller.layout,
             'auto_f_stack': self.auto_f_stack,
@@ -142,36 +140,39 @@ class Scanner(object):
     
     def multi_scan(self):
         self.is_multi_scanning = True
-        self.controller.selected_scan_number = 1
-        self.controller.interrupt_flag = False
         self.current_pic_count = 0
         self.update_total_pic_count()
-        os.makedirs(self.save_dir, exist_ok=True)
-        
         self.summary['scan_dates'] = []
+        self.controller.selected_scan_number = 1
+        self.controller.interrupt_flag = False
+        
+        if self.controller.do_overwrite:
+            if self.controller.save_dir.exists():
+                utils.remove_folder(self.controller.save_dir)
+            os.makedirs(self.controller.save_dir)
+        else:
+            self.controller.save_dir = utils.make_unique_subdir(self.controller.save_dir.parent)
         
         if self.auto_f_stack:
             mp.set_start_method("spawn")
             self.queue = mp.Queue()
-            error_logs = self.save_dir.joinpath('error_logs.txt')
+            error_logs = self.controller.save_dir.joinpath('error_logs.txt')
             if error_logs.exists():
                 os.remove(error_logs)
             arguments = (self.queue, error_logs, self.controller.remove_raw)
-            self.parallel_process = mp.Process(target=parallel_stack, args=arguments)
+            self.parallel_process = mp.Process(target=helicon_stack.parallel_stack, args=arguments)
             self.parallel_process.start()
 
         for n in range(len(self.config.scans)):
             if not self.is_multi_scanning:
                 break
             scan_name = f"scan{n + 1}"
-            scan_dir = Path(self.save_dir).joinpath(scan_name)
+            scan_dir = Path(self.controller.save_dir).joinpath(scan_name)
             os.makedirs(scan_dir)
             self.controller.selected_scan_number = n + 1
-
             self.summary['scan_dates'].append(dt.datetime.now(tz=dt.timezone(dt.timedelta(hours=2))))
             self.scan(scan_dir)
         self.summary['scan_dates'].append(dt.datetime.now(tz=dt.timezone(dt.timedelta(hours=2))))
-        
         self.make_scan_summary()
         
         if self.auto_f_stack:
@@ -188,8 +189,12 @@ class Scanner(object):
         selected_scan = self.controller.selected_scan()
         fl = selected_scan['FL']
         br = selected_scan['BR']
-        assert (br[0] > fl[0])
-        assert (br[1] > fl[1])
+        try :
+            assert (br[0] > fl[0])
+            assert (br[1] > fl[1])
+        except AssertionError:
+            print("INVALID SCAN COORDINATES")
+            return
         
         os.makedirs(scan_dir, exist_ok=True)
         
@@ -300,10 +305,11 @@ class Scanner(object):
         if self.auto_quit:
             self.controller.quit_requested = True
         self.is_multi_scanning = False
+        self.controller.interrupt_flag = True
         return True
 
     def make_scan_summary(self):
-        summary_path = self.save_dir.joinpath('summary.txt')
+        summary_path = self.controller.save_dir.joinpath('summary.txt')
         with open(summary_path, mode='x') as summary:
             summary.write('This is the summary of this multi-scan folder.\n'
                           'Here are some parameters :')
@@ -344,5 +350,5 @@ class Scanner(object):
             delta = dates[-1] - dates[0]
             h, m, s = s2hms(int(delta.total_seconds()))
             summary.write(f'Overall, the task ended at {dates[-1]} and lasted {h}h {m}min and {s}s.\n')
-            if self.controller.quit_requested:
+            if self.controller.interrupt_flag:
                 summary.write('///////////THE SCANS WERE INTERRUPTED BEFORE FINISHING!!!///////////\n\n')
