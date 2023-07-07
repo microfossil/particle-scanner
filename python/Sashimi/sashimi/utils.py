@@ -13,9 +13,13 @@ def remove_folder(path):
 			os.remove(subdir)
 
 
-def make_unique_subdir(directory=None):
+def make_unique_subdir(directory: str | Path = None):
 	if directory is None:
 		directory = Path.home().joinpath("Desktop", "sashimi")
+	else:
+		if type(directory) == str:
+			directory = Path(directory)
+
 	d = dt.datetime.now(tz=dt.timezone(dt.timedelta(hours=2)))
 	subdir = f"{d.day}{d.month}{d.year}_{d.hour}{d.minute}"
 	if directory.joinpath("obj_det", subdir).exists():

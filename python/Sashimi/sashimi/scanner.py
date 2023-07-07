@@ -115,7 +115,7 @@ class Scanner(object):
             dz_dx, dz_dy = self.selected_scan()['Z_corrections']
             z_correction = int(dz_dx * dx + dz_dy * dy)
             new_z = self.selected_scan()['FL'][2] + z_correction
-        return clip(new_z - self.controller.z_margin)
+        return clip(new_z - self.config.z_margin)
         
     def update_stack_count(self):
         self.stack_count = self.config.stack_height // self.config.stack_step
