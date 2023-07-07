@@ -111,7 +111,7 @@ def stack_for_multiple_exp(scan_path: Path, f_stacks_path: Path, exp_values: lis
 
 def parallel_stack(queue, error_logs, exposures, remove_raw=False):
     with open(error_logs, mode='w', encoding='UTF-8') as file:
-        sys.stderr = file
+        sys.stderr = sys.stdout = file
         while True:
             if queue.empty():
                 sleep(0.5)
@@ -134,6 +134,7 @@ def parallel_stack(queue, error_logs, exposures, remove_raw=False):
                     from_ = xy_folder.joinpath(f"E{exp}")
                     to_ = xy_folder.joinpath(f"E{exp}")
                     gen_stack(from_, to_, scan_name, img_name)
+
             if remove_raw:
                 utils.remove_folder(xy_folder)
 

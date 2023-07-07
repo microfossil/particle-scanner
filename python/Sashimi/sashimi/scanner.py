@@ -145,21 +145,22 @@ class Scanner(object):
         self.summary['scan_dates'] = []
         self.controller.selected_scan_number = 1
         self.controller.interrupt_flag = False
-        
-        if self.controller.do_overwrite:
-            if self.controller.save_dir.exists():
+
+        if self.controller.save_dir.exists() and len(list(self.controller.save_dir.iterdir())) > 0:
+            if self.controller.do_overwrite:
                 utils.remove_folder(self.controller.save_dir)
-            os.makedirs(self.controller.save_dir)
-        else:
-            self.controller.save_dir = utils.make_unique_subdir(self.controller.save_dir.parent)
+                os.makedirs(self.controller.save_dir)
+            else:
+                self.controller.save_dir = utils.make_unique_subdir(self.controller.save_dir.parent)
         
         if self.auto_f_stack:
+            os.makedirs(self.fs_folder)
             mp.set_start_method("spawn")
             self.queue = mp.Queue()
             error_logs = self.controller.save_dir.joinpath('error_logs.txt')
             if error_logs.exists():
                 os.remove(error_logs)
-            arguments = (self.queue, error_logs, self.controller.remove_raw)
+            arguments = (self.queue, error_logs, self.multi_exp, self.controller.remove_raw)
             self.parallel_process = mp.Process(target=helicon_stack.parallel_stack, args=arguments)
             self.parallel_process.start()
 
@@ -311,6 +312,8 @@ class Scanner(object):
     def make_scan_summary(self):
         summary_path = self.controller.save_dir.joinpath('summary.txt')
         with open(summary_path, mode='x') as summary:
+            if self.controller.interrupt_flag:
+                summary.write('///////////THE SCANS WERE INTERRUPTED BEFORE FINISHING!!!///////////\n\n')
             summary.write('This is the summary of this multi-scan folder.\n'
                           'Here are some parameters :')
             param_list = [
@@ -337,7 +340,8 @@ class Scanner(object):
             else:
                 exp_count = len(self.multi_exp)
             summary.write('Here are statistics about the scans.')
-            for n, scan in enumerate(self.config.scans):
+            for n in range(len(deltas)):
+                scan = self.config.scans[n]
                 steps_x, steps_y = self.step_nbr_xy(scan)
                 stack_nbr = steps_x * steps_y
                 pic_nbr = stack_nbr * self.stack_count
@@ -350,5 +354,3 @@ class Scanner(object):
             delta = dates[-1] - dates[0]
             h, m, s = s2hms(int(delta.total_seconds()))
             summary.write(f'Overall, the task ended at {dates[-1]} and lasted {h}h {m}min and {s}s.\n')
-            if self.controller.interrupt_flag:
-                summary.write('///////////THE SCANS WERE INTERRUPTED BEFORE FINISHING!!!///////////\n\n')

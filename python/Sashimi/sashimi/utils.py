@@ -22,14 +22,14 @@ def make_unique_subdir(directory: str | Path = None):
 
 	d = dt.datetime.now(tz=dt.timezone(dt.timedelta(hours=2)))
 	subdir = f"{d.day}{d.month}{d.year}_{d.hour}{d.minute}"
-	if directory.joinpath("obj_det", subdir).exists():
+	if directory.joinpath(subdir).exists():
 		subdir = subdir + str(d.second)
 	n = 0
 	subdir_ = subdir
-	while directory.joinpath("obj_det", subdir_).exists():
+	while directory.joinpath(subdir_).exists():
 		n += 1
 		subdir_ = subdir + f"_{n}"
-	output = directory.joinpath("obj_det", subdir_)
+	output = directory.joinpath(subdir_)
 	os.makedirs(output)
 	return output
 
