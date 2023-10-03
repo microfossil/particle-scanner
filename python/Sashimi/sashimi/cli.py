@@ -5,8 +5,6 @@ from pathlib import Path
 from sashimi.controller import Controller
 from sashimi import helicon_stack as helicon_stacker, utils, focus_stack
 
-# TODO: add z_margin as an option
-
 
 @click.group()
 def cli():

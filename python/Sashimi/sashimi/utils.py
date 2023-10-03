@@ -169,13 +169,13 @@ class Keyboard(object):
 		self.TAKE_STACK1 = ord('\n')
 		self.TAKE_STACK2 = ord('\r')
 		
-		self.SAVE_TO_CFG1 = ord('5')
-		self.SAVE_TO_CFG2 = ord('6')
-		self.SAVE_TO_CFG3 = ord('7')
+		self.SAVE_TO_CFG1 = ord('5')  # NOT IMPLEMENTED YET
+		self.SAVE_TO_CFG2 = ord('6')  # NOT IMPLEMENTED YET
+		self.SAVE_TO_CFG3 = ord('7')  # NOT IMPLEMENTED YET
 		
-		self.LOAD_CFG1 = ord('8')
-		self.LOAD_CFG2 = ord('9')
-		self.LOAD_CFG3 = ord('0')
+		self.LOAD_CFG1 = ord('8')  # NOT IMPLEMENTED YET
+		self.LOAD_CFG2 = ord('9')  # NOT IMPLEMENTED YET
+		self.LOAD_CFG3 = ord('0')  # NOT IMPLEMENTED YET
 		
 		if self.layout == 'AZERTY':
 			self.FORWARD = ord('z')

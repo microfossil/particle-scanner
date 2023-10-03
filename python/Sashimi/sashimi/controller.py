@@ -271,7 +271,7 @@ class Controller(object):
             self.take_stack_requested = True
 
         # Find floor
-        elif key == ord('c'):
+        elif key == ord('C'):
             self.scanner.find_floor()
 
     def scanning_commands(self, key):
