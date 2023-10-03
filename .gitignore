@@ -1,8 +1,6 @@
 venv/
 *.pyc
+*.idea
+*.DS_Store
 python/Sashimi/sashimi/micro_panorama.py
 python/Sashimi/sashimi/plot_stitching.py
-python/Sashimi/.idea
-python/Sashimi/.DS_Store
-.idea
-.DS_Store
