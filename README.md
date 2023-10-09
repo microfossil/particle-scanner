@@ -184,7 +184,7 @@ save the height.
 > ⚠️ **Warning:** Before scanning and for every region, make sure the x and y coordinates of the back-right corner are 
 > greater than those of the front-left. Otherwise, the software will not understand what to do and stop!
 
-*Note: there are a lot of different controls that are not shown here. To know more, see [controls](contols.md).*
+*Note: there are a lot of different controls that are not shown here. To know more, see [controls](controls.md).*
 
 ### 5. Start scan
 
