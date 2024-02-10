@@ -1,4 +1,5 @@
 import threading
+from pathlib import Path
 
 import cv2
 from pypylon import pylon
@@ -12,7 +13,7 @@ class CaptureThread(threading.Thread):
     def __init__(self,
                  camera: pylon.InstantCamera,
                  converter: pylon.ImageFormatConverter,
-                 controller,
+                 cancel_event: threading.Event,
                  group=None,
                  target=None,
                  name=None,
@@ -22,7 +23,7 @@ class CaptureThread(threading.Thread):
         super(CaptureThread, self).__init__()
         self.camera = camera
         self.converter = converter
-        self.controller = controller
+        self.cancel_event = cancel_event
         self.target = target
         self.name = name
         self.image = None
@@ -35,45 +36,55 @@ class CaptureThread(threading.Thread):
             grab_result = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
             if grab_result is False:
                 continue
+            # try:
             if grab_result.GrabSucceeded():
                 with capture_lock:
                     self.image = cv2.rotate(self.converter.Convert(grab_result).Array, cv2.ROTATE_180)
                     self.exposure = grab_result.ChunkExposureTime.Value
                 # Check if quit
-                if self.controller.quit_requested:
+                if self.cancel_event.is_set():
                     grab_result.Release()
                     break
+            # except Exception as e:
+            #     ra
+            #     print("Error: Failed to grab image.")
             grab_result.Release()
         return
 
 
 class Camera(object):
-    def __init__(self, controller):
+    def __init__(self):
         self.image = None
         self.camera = None
-        self.controller = controller
         self.converter = pylon.ImageFormatConverter()
         self.converter.OutputPixelFormat = pylon.PixelType_BGR8packed
         self.capture_thread = None
+        self.cancel_event = threading.Event()
 
     def start(self):
         # Open camera
         self.camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
         self.camera.Open()
         self.load_camera_settings()
-        self.capture_thread = CaptureThread(self.camera, self.converter, self.controller)
+        self.cancel_event.clear()
+        self.capture_thread = CaptureThread(self.camera, self.converter, self.cancel_event)
         self.capture_thread.start()
     
     def load_camera_settings(self):
         n_map = self.camera.GetNodeMap()
         n_map.GetNode("ExposureMode").SetValue("Timed")
-        pylon.FeaturePersistence_Load("nodeFile.pfs", n_map)
+        node_file = "nodeFile.pfs"
+        if Path(node_file).exists():
+            pylon.FeaturePersistence_Load(node_file, n_map)
+        else:
+            pylon.FeaturePersistence_Save(node_file, n_map)
         self.camera.StaticChunkNodeMapPoolSize = self.camera.MaxNumBuffer.GetValue()
         self.camera.ChunkModeActive = True
         self.camera.ChunkSelector = "ExposureTime"
         self.camera.ChunkEnable = True
     
     def stop(self):
+        self.cancel_event.set()
         self.camera.StopGrabbing()
         self.camera.ChunkModeActive = False
         self.camera.Close()

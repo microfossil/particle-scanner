@@ -1,3 +1,5 @@
+from typing import Union
+
 import cv2
 import numpy as np
 from pathlib import Path
@@ -13,7 +15,7 @@ from sashimi.utils import Keyboard
 class Controller(object):
     def __init__(
             self,
-            save_dir: str | Path,
+            save_dir: Union[str, Path],
             com_port: str,
             lang: str = "en",
             layout: str = 'AZERTY',
@@ -49,7 +51,7 @@ class Controller(object):
         self.img_mode = 1
         self.refresh_rate_Hz = 20
         self.frame_duration_ms = 1000 // self.refresh_rate_Hz
-        self.selected_scan_number = 1
+        self.selected_scan_zone = 0
         self.interrupt_flag = False
         self.quit_requested = False
         self.show_help = False
@@ -65,7 +67,7 @@ class Controller(object):
         self.keyboard = Keyboard(self.layout)
 
     def selected_scan(self):
-        return self.config.scans[self.selected_scan_number - 1]
+        return self.config.scans[self.selected_scan_zone]
 
     def permanent_commands(self, key):
         kb = self.keyboard
@@ -208,11 +210,11 @@ class Controller(object):
 
             # Scan scans edition
         elif key == kb.PREV_SCAN:  # Select previous scan zone
-            if self.selected_scan_number > 1:
-                self.selected_scan_number -= 1
+            if self.selected_scan_zone > 1:
+                self.selected_scan_zone -= 1
         elif key == kb.NEXT_SCAN:  # Select next scan zone
-            if self.selected_scan_number < len(self.config.scans):
-                self.selected_scan_number += 1
+            if self.selected_scan_zone < len(self.config.scans):
+                self.selected_scan_zone += 1
         elif key == kb.ADD_ZONE:  # add a new zone
             self.config.scans.append({'FL': [10000, 50000, 2000],
                                       'BR': [11000, 51000, 2000],
@@ -221,14 +223,14 @@ class Controller(object):
         
         elif key == kb.DEL_ZONE:  # delete currently selected zone
             if len(self.config.scans) > 1:
-                if self.selected_scan_number == len(self.config.scans):
-                    self.config.scans.pop(self.selected_scan_number - 1)
-                    self.selected_scan_number -= 1
+                if self.selected_scan_zone == len(self.config.scans):
+                    self.config.scans.pop(self.selected_scan_zone)
+                    self.selected_scan_zone -= 1
                 else:
-                    self.config.scans.pop(self.selected_scan_number - 1)
+                    self.config.scans.pop(self.selected_scan_zone)
             self.config.save()
         elif key == kb.DEL_ALL_ZONES:  # delete all scans
-            self.selected_scan_number = 1
+            self.selected_scan_zone = 1
             self.config.scans = [{'FL': [10000, 50000, 2000],
                                   'BR': [11000, 51000, 2000],
                                   'BL_Z': 2000,
@@ -239,17 +241,17 @@ class Controller(object):
             if self.stage.x == scan['BR'][0] or self.stage.y == scan['BR'][1]:
                 return
             self.selected_scan()['FL'] = [self.stage.x, self.stage.y, self.stage.z]
-            self.config.update_z_correction_terms(self.selected_scan_number - 1)
+            self.config.update_z_correction_terms(self.selected_scan_zone)
             self.config.save()
         elif key == kb.SCAN_BR:
             scan = self.selected_scan()
             if self.stage.x == scan['FL'][0] or self.stage.y == scan['FL'][1]:
                 return
             self.selected_scan()['BR'] = [self.stage.x, self.stage.y, self.stage.z]
-            self.config.update_z_correction_terms(self.selected_scan_number - 1)
+            self.config.update_z_correction_terms(self.selected_scan_zone)
             self.config.save()
         elif key == kb.SET_Z_COR:
-            self.config.update_z_correction_terms(self.selected_scan_number - 1, self.stage.z)
+            self.config.update_z_correction_terms(self.selected_scan_zone, self.stage.z)
             self.config.save()
 
         # Move to scan area
@@ -306,7 +308,7 @@ class Controller(object):
         LEFT_EDGE_SIZE = 300
         im = np.pad(im, [[0, 0], [LEFT_EDGE_SIZE, 0], [0, 0]])
 
-        sel_scan_num = self.selected_scan_number
+        sel_scan_num = self.selected_scan_zone
         sel_scan = self.selected_scan()
         blz = self.selected_scan()['BL_Z']
         

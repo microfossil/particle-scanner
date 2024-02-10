@@ -17,5 +17,6 @@ dependencies=[
         'opencv-python',
         'pyserial',
         'click',
-        'pillow'
+        'pillow',
+        'PySide6'
     ]

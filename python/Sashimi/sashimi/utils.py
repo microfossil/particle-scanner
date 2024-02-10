@@ -2,6 +2,7 @@ import os
 import shutil
 import datetime as dt
 from pathlib import Path
+from typing import Union
 
 
 def remove_folder(path):
@@ -13,7 +14,7 @@ def remove_folder(path):
 			os.remove(subdir)
 
 
-def make_unique_subdir(directory: str | Path = None):
+def make_unique_subdir(directory: Union[str, Path] = None):
 	if directory is None:
 		directory = Path.home().joinpath("Desktop", "sashimi")
 	else:

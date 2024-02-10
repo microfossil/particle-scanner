@@ -122,26 +122,24 @@ def parallel_stack(queue, error_logs, exposures, remove_raw=False):
             if msg == "terminate":
                 break
                 
-            xy_folder = Path(msg[0])  # save_dir/scanX/X__Y__/   (...X__Y__Z__.jpg)    or (...E__/X__Y__Z__.jpg)
-            output_folder = Path(msg[1])  # save_dir/f_stacks/   (...scanX/X__Y__.jpg) or (...E__/scanX/X__Y__.jpg)
-            scan_name = xy_folder.parent.stem
-            img_name = xy_folder.stem
-            
-            if exposures is None:
-                gen_stack(xy_folder, output_folder, scan_name, img_name)
-            else:
-                for exp in exposures:
-                    from_ = xy_folder.joinpath(f"E{exp}")
-                    to_ = xy_folder.joinpath(f"E{exp}")
-                    gen_stack(from_, to_, scan_name, img_name)
+            xy_folder = Path(msg[0])
+            output_folder = Path(msg[1])  #
 
+            exposure_name = xy_folder.parent.stem
+            img_name = xy_folder.parent.parent.stem
+            scan_name = xy_folder.parent.parent.parent.stem
+
+            img_name = f"{scan_name}_{img_name}_{exposure_name}"
+            output_folder = xy_folder.parent.parent.parent
+
+            gen_stack(xy_folder, output_folder, img_name)
             if remove_raw:
                 utils.remove_folder(xy_folder)
 
 
-def gen_stack(from_: Path, to_: Path, scan_name: str, img_name: str):
-    tiff_path = to_.joinpath(scan_name, f"{img_name}.tiff")
-    png_path = to_.joinpath(scan_name, f"{img_name}.png")
+def gen_stack(from_: Path, to_: Path, img_name):
+    tiff_path = to_ / f"{img_name}.tiff"
+    png_path = to_ / f"{img_name}.png"
     command = [get_helicon_focus(), "-silent", f"{from_}", "-mp:0", "-rp:4", f"-save:{tiff_path}"]
     subprocess.run(command)
     img = Image.open(tiff_path)

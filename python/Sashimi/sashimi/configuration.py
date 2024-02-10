@@ -1,23 +1,30 @@
 import json
 import os
+from typing import Optional
+
+from sashimi.scanner import ScannerConfiguration
 
 
 class Configuration(object):
     def __init__(self):
-        self.port = "COM3"
+
+        self.port = "COM8"
+
+        self.exposure_time = 2000
+        self.gain = 0.0
         self.home_offset = [10000, 50000, 2000]
+
+        self.scanner: Optional[ScannerConfiguration] = None
+
         self.stack_height = 1000
         self.stack_step = 60
-        self.exposure_time = 2000
+        self.exposure_times = [2000]
+        self.gain = 0
         self.z_margin = 200
-        self.scans = [{'FL': [10000, 50000, 2000],
-                       'BR': [11000, 51000, 2000],
-                       'BL_Z': 2000,
-                       'Z_corrections':[0, 0]}]
     
     def update_z_correction_terms(self, index, blz=None):
         # supposes the scan surface is flat and non-vertical
-        fl, br = self.scans[index]['FL'], self.scans[index]['BR']
+        fl, br = self.scanner.zones[index].FL, self.scanner.zones[index].BR
         x, y, z = 0, 1, 2
 
         if br[x] == fl[x] or br[y] == fl[y]:
@@ -30,12 +37,11 @@ class Configuration(object):
         dz_dx = (blz - fl[z]) / (br[x] - fl[x])
         dz_dy = (br[z] - blz) / (br[y] - fl[y])
 
-        self.scans[index]['BL_Z'] = blz
-        self.scans[index]['Z_corrections'] = [dz_dx, dz_dy]
-        self.save()
+        self.scanner.zones[index].BL_Z = blz
+        self.scanner.zones[index].Z_corrections = [dz_dx, dz_dy]
 
     def save(self, save_name="config"):
-        config_file = os.path.join(os.path.expanduser("~"), ".Sashimi", save_name + ".json")
+        config_file = os.path.join(os.path.expanduser("~"), ".sashimi", save_name + ".json")
         os.makedirs(os.path.dirname(config_file), exist_ok=True)
         with open(config_file, "w") as f:
             j = json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)

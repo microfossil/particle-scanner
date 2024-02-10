@@ -45,47 +45,61 @@ class Stage(object):
         self.move_y(offset[1])
         self.goto_z(offset[2] + 1000)
         self.goto_z(offset[2])
-        self.wait_until_position(20000)
+        self.busy()
 
-    def move_x(self, distance_um):
+    def move_x(self, distance_um, busy=False):
         self.goto_x(self.x + distance_um)
+        if busy:
+            self.busy()
 
-    def move_y(self, distance_um):
+    def move_y(self, distance_um, busy=False):
         self.goto_y(self.y + distance_um)
+        if busy:
+            self.busy()
 
-    def move_z(self, distance_um):
+    def move_z(self, distance_um, busy=False):
         sleep_time = abs(distance_um) / 1000
         self.goto_z(self.z + distance_um)
         time.sleep(sleep_time)
+        if busy:
+            self.busy()
 
-    def goto_x(self, position):
+    def goto_x(self, position, busy=False):
         self.x = position
         if self.x < self.x_limits[0]:
             self.x = self.x_limits[0]
         if self.x > self.x_limits[1]:
             self.x = self.x_limits[1]
         self.send_command(f"G0 X {self.x / 1000:3f} F3000")
+        if busy:
+            self.busy()
 
-    def goto_y(self, position):
+    def goto_y(self, position, busy=False):
         self.y = position
         if self.y < self.y_limits[0]:
             self.y = self.y_limits[0]
         if self.y > self.y_limits[1]:
             self.y = self.y_limits[1]
         self.send_command(f"G0 Y {self.y / 1000:3f} F3000")
+        if busy:
+            self.busy()
 
-    def goto_z(self, position):
+    def goto_z(self, position, busy=False):
         self.z = position
         if self.z < self.z_limits[0]:
             self.z = self.z_limits[0]
         if self.z > self.z_limits[1]:
             self.z = self.z_limits[1]
         self.send_command(f"G0 Z {self.z / 1000:3f} F100")
+        if busy:
+            self.busy()
 
-    def goto(self, position):
+    def goto(self, position, busy=False):
         self.goto_x(position[0])
         self.goto_y(position[1])
         self.goto_z(position[2])
+        if busy:
+            self.busy()
 
     def poll(self):
         dummy = self.read()
@@ -102,22 +116,19 @@ class Stage(object):
                 sub_parts = parts[2].split(':')
                 self.reported_z = int(float(sub_parts[1]) * 1000)
 
-    def wait_until_position(self, ms):
-        # tells the printer to finish it's planned movements before executing any other g-code
+    def busy(self):
         self.send_command('M400')
         self.send_command("M118 Ready")
-        for i in range(ms//self.controller.frame_duration_ms):
-            self.controller.wait()
-            messages = self.read()
-            for message in messages:
-                if message.startswith('Ready'):
-                    return
-        
-        print(f"!!! ERROR: position not attained after {ms}ms ")
+
+    def is_ready(self):
+        messages = self.read()
+        for message in messages:
+            if message.startswith('Ready'):
+                return True
+        return False
 
     def send_command(self, command):
         self.serial.write((command + "\n").encode())
-        # print((command + "\n").encode())
 
     def read(self):
         lines = []
