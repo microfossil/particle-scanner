@@ -114,15 +114,15 @@ class Controller(object):
 
         # Exposure
         elif key == kb.EXPOSURE_UP:
-            self.config.exposure_time += 50
-            if self.config.exposure_time > 50000:
-                self.config.exposure_time = 50000
-            self.camera.set_exposure(self.config.exposure_time)
+            self.config.camera.exposure_time += 50
+            if self.config.camera.exposure_time > 50000:
+                self.config.camera.exposure_time = 50000
+            self.camera.set_exposure(self.config.camera.exposure_time)
         elif key == kb.EXPOSURE_DOWN:
-            self.config.exposure_time -= 50
-            if self.config.exposure_time < 100:
-                self.config.exposure_time = 100
-            self.camera.set_exposure(self.config.exposure_time)
+            self.config.camera.exposure_time -= 50
+            if self.config.camera.exposure_time < 100:
+                self.config.camera.exposure_time = 100
+            self.camera.set_exposure(self.config.camera.exposure_time)
         # Help
         elif key == kb.HELP1 or key == kb.HELP2:
             self.show_help = ~self.show_help
@@ -144,10 +144,10 @@ class Controller(object):
 
         # Home
         elif key == kb.HOME:
-            self.stage.move_home(self.config.home_offset)
+            self.stage.zero(self.config.stage.home_offset)
             print("Stage: move home")
         elif key == kb.SET_HOME:
-            self.config.home_offset = self.stage.position
+            self.config.stage.home_offset = self.stage.position
             print("Stage: set current position to home offset")
 
         # elif key == kb.SAVE_TO_CFG1:
@@ -351,10 +351,10 @@ class Controller(object):
                 text_status = [
                     "POSITION",
                     f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
-                    f"Home: {self.config.home_offset}",
+                    f"Home: {self.config.stage.home_offset}",
                     "- - - - - - - - - - - -",
                     "CAMERA",
-                    f"Exposure: {self.config.exposure_time}us",
+                    f"Exposure: {self.config.camera.exposure_time}us",
                     "- - - - - - - - - - - -",
                     f"STACK: {self.scanner.current_pic_count}/{self.scanner.total_pic_count} pics",
                     f"Height: {self.config.stack_height}um",
@@ -380,10 +380,10 @@ class Controller(object):
                 text_status = [
                     "POSITION",
                     f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
-                    f"Origine: {self.config.home_offset}",
+                    f"Origine: {self.config.stage.home_offset}",
                     "- - - - - - - - - - - -",
                     "CAMERA",
-                    f"Exposure: {self.config.exposure_time}us",
+                    f"Exposure: {self.config.camera.exposure_time}us",
                     "- - - - - - - - - - - -",
                     f"PILE: {self.scanner.current_pic_count}/{self.scanner.total_pic_count} pictures taken",
                     f"Hauteur: {self.config.stack_height}um",
@@ -438,10 +438,10 @@ class Controller(object):
                 text_status = [
                     "POSITION",
                     f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
-                    f"Home: {self.config.home_offset}",
+                    f"Home: {self.config.stage.home_offset}",
                     "- - - - - - - - - - - -",
                     "CAMERA",
-                    f"Exposure: {self.config.exposure_time}us",
+                    f"Exposure: {self.config.camera.exposure_time}us",
                     "- - - - - - - - - - - -",
                     "STACK",
                     f"Height: {self.config.stack_height}um",
@@ -467,10 +467,10 @@ class Controller(object):
                 text_status = [
                     "POSITION",
                     f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
-                    f"Home: {self.config.home_offset}",
+                    f"Home: {self.config.stage.home_offset}",
                     "- - - - - - - - - - - -",
                     "CAMERA",
-                    f"Exposure: {self.config.exposure_time}us",
+                    f"Exposure: {self.config.camera.exposure_time}us",
                     "- - - - - - - - - - - -",
                     "PILE",
                     f"Hauteur: {self.config.stack_height}um",
@@ -554,8 +554,8 @@ class Controller(object):
     def start(self):
         self.stage.start()
         self.camera.start()
-        self.camera.set_exposure(self.config.exposure_time)
-        self.stage.move_home(self.config.home_offset)
+        self.camera.set_exposure(self.config.camera.exposure_time)
+        self.stage.zero(self.config.stage.home_offset)
         self.stage.send_command('M107')  # turns off the extruder fan
         
         # Control loop

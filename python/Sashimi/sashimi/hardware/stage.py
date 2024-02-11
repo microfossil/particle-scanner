@@ -1,12 +1,19 @@
+from dataclasses import dataclass, field
+from typing import List
+
 import cv2
 import serial
 import time
 
+@dataclass
+class StageConfiguration:
+    port: str = "COM8"
+    home_offset: List[int] = field(default_factory=lambda: [10000, 50000, 2000])
+    limits: List[List[int]] = field(default_factory=lambda: [[0, 200000], [0, 200000], [0, 20000]])
 
 class Stage(object):
-    def __init__(self, controller, port):
-        self.controller = controller
-        self.port = port
+    def __init__(self, config: StageConfiguration):
+        self.port = config.port
         self.serial: serial.Serial = None
 
         # Distances in micrometers
@@ -18,9 +25,9 @@ class Stage(object):
         self.reported_y = 0
         self.reported_z = 0
 
-        self.x_limits = (0, 200000)
-        self.y_limits = (0, 200000)
-        self.z_limits = (0, 20000)
+        self.x_limits = config.limits[0]
+        self.y_limits = config.limits[1]
+        self.z_limits = config.limits[2]
 
         self.buffer = []
 
@@ -36,7 +43,7 @@ class Stage(object):
     def position(self):
         return [self.x, self.y, self.z]
 
-    def move_home(self, offset):
+    def home(self, offset, busy=False):
         self.send_command("G28 R X Y Z")
         self.x = 0
         self.y = 0
@@ -45,7 +52,16 @@ class Stage(object):
         self.move_y(offset[1])
         self.goto_z(offset[2] + 1000)
         self.goto_z(offset[2])
-        self.busy()
+        if busy:
+            self.busy()
+
+    def zero(self, busy=False):
+        self.send_command("G28 R X Y Z")
+        self.x = 0
+        self.y = 0
+        self.z = 0
+        if busy:
+            self.busy()
 
     def move_x(self, distance_um, busy=False):
         self.goto_x(self.x + distance_um)
@@ -138,7 +154,6 @@ class Stage(object):
                     self.buffer.append(chr(b))
                 else:
                     line = ''.join(self.buffer)
-                    print(line)
                     lines.append(line)
                     self.buffer = []
         # print(lines)

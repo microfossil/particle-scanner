@@ -4,19 +4,22 @@ build-backend = "hatchling.build"
 
 [project]
 name='sashimi'
-version='2.0.0'
+version='3.0.0'
 description='3D printer stacking software'
-requires-python=">=3.10"
+requires-python=">=3.11,<3.12"
 authors=[{name='Ross Marchant', email='ross.g.marchant@gmail.com'},
          {name='Louis Lanoy', email='louis.lanoy@icloud.com'}]
 dependencies=[
-        'scikit-image',
-        'numpy',
-        'scipy',
-        'pypylon',
-        'opencv-python',
-        'pyserial',
-        'click',
-        'pillow',
-        'PySide6'
+        'numpy==1.26.4',
+        'scikit-image==0.22.0',
+        'scipy==1.12.0',
+        'pypylon==3.0.1',
+        'opencv-python==4.9.0.80',
+        'pyserial==3.5',
+        'click==8.1.7',
+        'pillow==10.2.0',
+        'PySide6==6.6.1',
+        'marshmallow_dataclass==8.6.0',
+        'tqdm',
+        'itk-montage'
     ]

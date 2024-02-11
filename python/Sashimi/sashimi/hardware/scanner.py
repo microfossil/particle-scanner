@@ -16,13 +16,15 @@ import multiprocessing as mp
 
 from PySide6.QtCore import QObject, Signal, QTimer, Slot
 
-from sashimi import utils, helicon_stack
-from sashimi.camera import Camera
-from sashimi.stage import Stage
+from sashimi import utils
+from sashimi.configuration.base import BaseModel
+from sashimi.hardware.camera import Camera
+from sashimi.hardware.stage import Stage
+from sashimi.stacking import helicon_stack
 
 
 @dataclass
-class ScanZone:
+class ScanZone(BaseModel):
     FL: List[int]
     BR: List[int]
     BL_Z: int
@@ -30,11 +32,11 @@ class ScanZone:
 
 
 @dataclass
-class ScannerConfiguration:
+class ScannerConfiguration(BaseModel):
     """
     Configuration for the state machine
     """
-    save_dir: Path = Path("F:\\Sashimi")
+    save_dir: str = "F:\\Sashimi"
     scan_name: str = "test"
     overwrite: bool = False
 
@@ -45,8 +47,8 @@ class ScannerConfiguration:
 
     stack_height: int = 2000
     stack_step: int = 60
-    step_X: int = 1700
-    step_Y: int = 1700
+    step_x: int = 1700
+    step_y: int = 1200
 
     remove_raw_images: bool = True
 
@@ -65,16 +67,19 @@ class ScannerState:
     wait_state: Optional[str] = None
 
     num_zones: int = 0
+    num_exposures: int = 0
     num_stacks: int = 0
-    num_images: int = 0
+    num_focus: int = 0
 
     steps_x: int = 0
     steps_y: int = 0
 
     zone_idx: int = 0
     stack_idx: int = 0
-    image_idx: int = 0
     exposure_idx: int = 0
+    focus_idx: int = 0
+
+    image_idx: int = 0
 
     z_orig: int = 0
     stack_x: int = 0
@@ -115,12 +120,11 @@ class Scanner(QObject):
 
     Slot()
     def start(self):
+        self.scan_cancelled = False
         self._transition_to("init")
 
     Slot()
     def cancel(self):
-        self.queue.put("terminate")
-        self.parallel_process.join()
         self.scan_cancelled = True
 
     def _state_has_changed(self):
@@ -144,19 +148,27 @@ class Scanner(QObject):
         self._transition_to("wait")
         self._state_has_changed()
 
-    def _get_stack_path(self):
+    def _get_exposure_path(self):
         return (Path(self.config.save_dir)
                 / self.config.scan_name
-                / f"zone_{self.state.zone_idx:05d}"
-                / f"x_{self.state.stack_x:05d}_y_{self.state.stack_y:05d}"
-                / f"exp_{self.config.exposure_times[self.state.exposure_idx]:05d}")
+                / f"Zone{self.state.zone_idx:03d}"
+                / f"Exp{self.config.exposure_times[self.state.exposure_idx]:05d}")
 
-    def _get_stack_raw_path(self):
-        return self._get_stack_path() / f"raw"
+    def _get_stack_path(self):
+        return self._get_exposure_path() / r"images"
+
+    def _get_raw_path(self):
+        return self._get_exposure_path() / f"raw" / f"Yi{self.state.stack_y:06d}_Xi{self.state.stack_x:06d}"
+
+    def _get_stack_filename(self, x, y):
+        return self._get_stack_path() / (f"{self.config.scan_name}"
+                                         f"_Zone{self.state.zone_idx:03d}"
+                                         f"_Exp{self.config.exposure_times[self.state.exposure_idx]:05d}"
+                                         f"_Y{y:06d}_X{x:06d}")
 
     def _get_stack_offset(self):
         zone = self.config.zones[self.state.zone_idx]
-        steps_x, steps_y = self.config.step_X, self.config.step_Y
+        steps_x, steps_y = self.config.step_x, self.config.step_y
         xi, yi = self.state.stack_x, self.state.stack_y
         fl = zone.FL
         dx, dy = steps_x * xi, steps_y * yi
@@ -189,8 +201,8 @@ class Scanner(QObject):
         return max(new_z - self.config.z_margin, 0)
 
     def _get_steps_xy(self, scan) -> (int, int):
-        x_steps = 1 + (scan.BR[0] - scan.FL[0]) // self.config.step_X
-        y_steps = 1 + (scan.BR[1] - scan.FL[1]) // self.config.step_Y
+        x_steps = 1 + (scan.BR[0] - scan.FL[0]) // self.config.step_x
+        y_steps = 1 + (scan.BR[1] - scan.FL[1]) // self.config.step_y
         return x_steps, y_steps
 
     def wait_state(self):
@@ -204,18 +216,21 @@ class Scanner(QObject):
                 print("ERROR: timeout waiting")
                 self._state_has_changed()
 
-    def loop(self):
+    def loop(self, frame):
+
+        # If cancelled, goto done
+        if self.scan_cancelled:
+            self._transition_to("done")
+
         # The current state
         state = self.state.state
 
         # Get image every loop
-        self.camera_img, self.camera_exposure = self.camera.latest_image(with_exposure=True)
+        # frame = self.camera.latest_image(with_exposure=True)
+        if frame is not None:
+            self.camera_img, self.camera_exposure = frame
 
-        # If cancelled, goto idle
-        if self.scan_cancelled:
-            self.state.state = "idle"
-
-        print(f"SCANNER: {state}")
+        # print(f"SCANNER: {state}")
 
         # --------------------------------------------------------------------
         if state == "idle":
@@ -252,17 +267,18 @@ class Scanner(QObject):
             Path(self.config.save_dir).mkdir(parents=True, exist_ok=True)
 
             # Stack errors
-            error_logs = scan_dir / 'error_logs.txt'
-            if error_logs.exists():
-                os.remove(error_logs)
+            self.error_logs = scan_dir / 'error_logs.txt'
+            if self.error_logs.exists():
+                os.remove(self.error_logs)
 
             # Parallel stack command queue
             self.queue = mp.Queue()
-            arguments = (self.queue, error_logs, self.config.exposure_times, self.config.remove_raw_images)
+            arguments = (self.queue, self.error_logs, self.config.remove_raw_images)
             self.parallel_process = mp.Process(target=helicon_stack.parallel_stack, args=arguments)
             self.parallel_process.start()
 
             # Update state
+            self.state.num_exposures = len(self.config.exposure_times)
             self.state.num_zones = len(self.config.zones)
             self.state.zone_idx = 0
             self._transition_to("zone")
@@ -270,7 +286,7 @@ class Scanner(QObject):
         elif state == "zone":
             # If we have finished all the zones
             if self.state.zone_idx == self.state.num_zones:
-                self._transition_to("idle")
+                self._transition_to("done")
                 return
 
             # Get the current zone
@@ -282,6 +298,7 @@ class Scanner(QObject):
             self.num_stacks = self.state.steps_x * self.state.steps_y * len(self.config.exposure_times)
             self.state.stack_x = 0
             self.state.stack_y = 0
+            self.state.image_idx = 0
 
             # Move to zone start
             self.stage.goto(zone.FL, busy=True)
@@ -305,7 +322,7 @@ class Scanner(QObject):
         # --------------------------------------------------------------------
         elif state == "stack_exposure":
             # All exposures done?
-            if self.state.exposure_idx == len(self.config.exposure_times):
+            if self.state.exposure_idx == self.state.num_exposures:
                 print("STACK: All exposures done")
                 self.state.stack_x += 1
                 if self.state.stack_x >= self.state.steps_x:
@@ -321,39 +338,47 @@ class Scanner(QObject):
             exposure_time = self.config.exposure_times[self.state.exposure_idx]
             # Set the exposure time
             self.camera.set_exposure(exposure_time)
-            # Make the path
-            stack_images_exposure_path = self._get_stack_raw_path()
-            stack_images_exposure_path.mkdir(parents=True, exist_ok=True)
-            # Wait for exposure
             self._wait_for_exposure_then_transition_to("stack_z", exposure_time)
         # --------------------------------------------------------------------
         elif state == "stack_z":
+            # Reset images
+            self.state.focus_idx = 0
+            self.state.num_focus = (self.config.stack_height + self.config.z_margin) // self.config.stack_step
+            # Make path
+            self._get_raw_path().mkdir(parents=True, exist_ok=True)
             # Move to start
             self.state.z_orig = self.stage.z
             _, dx, dy = self._get_stack_offset()
             self.stage.goto_z(self._get_corrected_z(dx, dy), busy=True)
-            # Reset images
-            self.state.image_idx = 0
-            self.state.num_images = (self.config.stack_height + self.config.z_margin) // self.config.stack_step
             self._wait_for_move_then_transition_to("stack_image", 10000)
         # --------------------------------------------------------------------
         elif state == "stack_image":
-            save_path = (self._get_stack_raw_path()
-                         / f"X{self.stage.x // 10:05d}_"
-                           f"Y{self.stage.y // 10:05d}_"
-                           f"Z{self.stage.z // 10:05d}.jpg")
-            print(save_path)
+            save_path = (self._get_raw_path()
+                         / f"X{self.stage.x:06d}_"
+                           f"Y{self.stage.y:06d}_"
+                           f"Z{self.stage.z:06d}.jpg")
             skio.imsave(str(save_path), self.camera_img[..., ::-1], check_contrast=False, quality=90)
-            self.state.image_idx += 1
+            self.state.focus_idx += 1
             # Stack done?
-            if self.state.image_idx > self.state.num_images:
-                self.queue.put((str(self._get_stack_raw_path()), str(self._get_stack_path())))
+            print(self.state.focus_idx, self.state.num_focus, self.state.image_idx, self.state.num_exposures)
+            if self.state.focus_idx > self.state.num_focus:
+                self.queue.put(
+                    (
+                        str(self._get_raw_path()),
+                        str(self._get_stack_filename(self.stage.x, self.stage.y))
+                    )
+                )
+                self.state.image_idx += 1
                 self.state.exposure_idx += 1
                 self.stage.goto_z(self.state.z_orig, busy=True)
-                self._wait_for_move_then_transition_to("stack_exposure", 50 * self.state.num_images)
+                self._wait_for_move_then_transition_to("stack_exposure", 50 * self.state.num_focus)
             # Move and take next
             else:
                 self.stage.move_z(self.config.stack_step, busy=True)
                 self._wait_for_move_then_transition_to("stack_image", 100)
-
-
+        # --------------------------------------------------------------------
+        elif state == "done":
+            self.queue.put("terminate")
+            self.parallel_process.join()
+            self._transition_to("idle")
+            return

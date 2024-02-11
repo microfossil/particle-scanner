@@ -1,11 +1,15 @@
 import os
+import shutil
 import sys
 import subprocess
 from pathlib import Path
 from glob import glob
+from typing import Union
+
 from PIL import Image
 from time import sleep
 from sashimi import utils
+import traceback
 
 
 def get_helicon_focus():
@@ -15,6 +19,10 @@ def get_helicon_focus():
         if not os.path.exists(helicon_focus):
             raise ResourceWarning("Helicon Focus was not found")
     return helicon_focus
+
+
+def get_focus_stack():
+    return r"C:\Users\ross.marchant\bin\focus-stack\focus-stack.exe"
 
 
 def stack(_dir):
@@ -109,41 +117,62 @@ def stack_for_multiple_exp(scan_path: Path, f_stacks_path: Path, exp_values: lis
             subprocess.run(command, shell=True)
             
 
-def parallel_stack(queue, error_logs, exposures, remove_raw=False):
+def parallel_stack(queue, error_logs, remove_raw=False):
     with open(error_logs, mode='w', encoding='UTF-8') as file:
         sys.stderr = sys.stdout = file
         while True:
             if queue.empty():
                 sleep(0.5)
                 continue
-    
             msg = queue.get()
-            print(msg)
             if msg == "terminate":
                 break
-                
-            xy_folder = Path(msg[0])
-            output_folder = Path(msg[1])  #
 
-            exposure_name = xy_folder.parent.stem
-            img_name = xy_folder.parent.parent.stem
-            scan_name = xy_folder.parent.parent.parent.stem
+            raw_folder = Path(msg[0])
+            image_path = msg[1]
 
-            img_name = f"{scan_name}_{img_name}_{exposure_name}"
-            output_folder = xy_folder.parent.parent.parent
+            try:
+                # stack_with_helicon(raw_folder, image_path)
+                stack_with_focus_stack(raw_folder, image_path)
+            except:
+                print(f"Error processing {raw_folder}")
+                traceback.print_exc()
 
-            gen_stack(xy_folder, output_folder, img_name)
-            if remove_raw:
-                utils.remove_folder(xy_folder)
+            shutil.rmtree(raw_folder)
 
 
-def gen_stack(from_: Path, to_: Path, img_name):
-    tiff_path = to_ / f"{img_name}.tiff"
-    png_path = to_ / f"{img_name}.png"
-    command = [get_helicon_focus(), "-silent", f"{from_}", "-mp:0", "-rp:4", f"-save:{tiff_path}"]
+def stack_with_helicon(raw_images_path: Union[str, Path], image_path: Union[str, Path]):
+    if isinstance(raw_images_path, str):
+        raw_images_path = Path(raw_images_path)
+    if isinstance(image_path, str):
+        image_path = Path(image_path)
+    image_path.parent.mkdir(parents=True, exist_ok=True)
+    tiff_path = f"{image_path}.tiff"
+    png_path = f"{image_path}.png"
+    command = [get_helicon_focus(), "-silent", f"{str(raw_images_path)}", "-mp:0", "-rp:4", f"-save:{tiff_path}"]
     subprocess.run(command)
     img = Image.open(tiff_path)
     img.load()
     img.save(png_path)
     os.remove(tiff_path)
     return
+
+
+def stack_with_focus_stack(raw_images_path: Union[str, Path], image_path: Union[str, Path]):
+    if isinstance(raw_images_path, str):
+        raw_images_path = Path(raw_images_path)
+    if isinstance(image_path, str):
+        image_path = Path(image_path)
+    image_path.parent.mkdir(parents=True, exist_ok=True)
+    # Get images
+    images = [str(f) for f in raw_images_path.glob("*.jpg") if f.is_file()]
+    # File names
+    png_path = f"{image_path}.png"
+    depthmap_path = f"{image_path}_depthmap.png"
+    command = [get_focus_stack(), *images, f"--output={png_path}", "--no-whitebalance", "--no-contrast", "--nocrop"]
+    subprocess.run(command)
+    return
+
+if __name__ == "__main__":
+    stack_with_helicon(Path(r"F:\Sashimi\test\Zone000\Exp02000\raw\Yi000001_Xi000000"),
+              r"F:\Sashimi\test\Zone000\Exp02000\raw\Yi000001_Xi000000")

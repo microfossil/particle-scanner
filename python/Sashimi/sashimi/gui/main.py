@@ -1,12 +1,12 @@
 import sys
 
-from PySide6.QtCore import QThread, Qt
+from PySide6.QtCore import QThread
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QLabel, QWidget, QHBoxLayout, \
     QDoubleSpinBox, QSpinBox, QGridLayout, QLayout, QTextEdit
 from PySide6.QtGui import QImage, QPixmap
 import numpy as np
 
-from sashimi.configuration import Configuration
+from sashimi.configuration.configuration import Configuration
 from sashimi.gui.controller import ControllerWorker
 
 
@@ -27,7 +27,12 @@ class MainWindow(QMainWindow):
         # Assuming you have a mechanism in your GUI to capture key presses
         # self.keyPressedSignal.connect(self.worker.on_key_pressed)
 
+
         self.thread.start()
+
+        # self.stage_timer = QTimer()
+        # self.stage_timer.timeout.connect(self.worker.stage_poll_position)
+        # self.stage_timer.start(500)
 
         self.image_label = QLabel("Camera Feed")
         self.init_ui()
@@ -96,7 +101,7 @@ class MainWindow(QMainWindow):
         exposureSpinBox = QSpinBox(self)
         exposureSpinBox.setRange(100, 20000)
         exposureSpinBox.setSingleStep(500)
-        exposureSpinBox.setValue(self.worker.config.exposure_time)
+        exposureSpinBox.setValue(self.worker.config.camera.exposure_time)
         layout.addWidget(exposureSpinBox)
         exposureSpinBox.valueChanged.connect(self.worker.camera_exposure)
         self.worker.camera_exposure_changed.connect(exposureSpinBox.setValue)
@@ -111,7 +116,7 @@ class MainWindow(QMainWindow):
         spinBox = QDoubleSpinBox(self)
         spinBox.setRange(0.0, 20.0)
         spinBox.setSingleStep(0.5)
-        spinBox.setValue(self.worker.config.gain)
+        spinBox.setValue(self.worker.config.camera.gain)
         layout.addWidget(spinBox)
         spinBox.valueChanged.connect(self.worker.camera_gain)
         self.worker.camera_gain_changed.connect(spinBox.setValue)
@@ -121,17 +126,40 @@ class MainWindow(QMainWindow):
 
     def init_controls_ui(self, controls_layout):
 
-
+        self.add_state_information(controls_layout)
         self.add_movement_controls(controls_layout)
         self.add_scan_controls(controls_layout)
         self.add_config_information(controls_layout)
+
+    def add_state_information(self, parent_layout):
+
+        label = QLabel("State")
+        parent_layout.addWidget(label)
+
+        layout = QHBoxLayout()
+        x_label = QLabel("X:")
+        layout.addWidget(x_label)
+        y_label = QLabel("Y:")
+        layout.addWidget(y_label)
+        z_label = QLabel("Z:")
+        layout.addWidget(z_label)
+
+        def update_stage_state(stage_state):
+            x_label.setText(f"X: {stage_state.x}")
+            y_label.setText(f"Y: {stage_state.y}")
+            z_label.setText(f"Z: {stage_state.z}")
+
+        self.worker.stage_state_changed.connect(update_stage_state)
+        # update_stage_state(self.worker.stage.state)
+
+        parent_layout.addLayout(layout)
 
     def add_config_information(self, parent_layout):
         displayBox = QTextEdit()
         displayBox.setReadOnly(True)
         def update_config_information(config: Configuration):
             message = ""
-            message += f"Home:\t{config.home_offset[0]}\t{config.home_offset[1]}\t{config.home_offset[2]}"
+            message += f"Home:\t{config.stage.home_offset[0]}\t{config.stage.home_offset[1]}\t{config.stage.home_offset[2]}"
             message += "\n"
             for i, zone in enumerate(config.scanner.zones):
                 if self.worker.selected_scan_zone == i:
@@ -166,13 +194,18 @@ class MainWindow(QMainWindow):
         btnNextZone = QPushButton("Next Zone")
         btnNextZone.clicked.connect(self.worker.scan_select_next_zone)
         row1Layout.addWidget(btnNextZone)
+
+        btnAddZone = QPushButton("New Zone")
+        btnAddZone.clicked.connect(self.worker.scan_add_zone)
+        row1Layout.addWidget(btnAddZone)
+
+        btnDeleteZone = QPushButton("Delete Zone")
+        btnDeleteZone.clicked.connect(self.worker.scan_delete_zone)
+        row1Layout.addWidget(btnDeleteZone)
         layout.addLayout(row1Layout)
 
         # Row 2: Add New, Set FL, Set BR, Set Z Correction
         row2Layout = QHBoxLayout()
-        btnAddZone = QPushButton("New Zone")
-        btnAddZone.clicked.connect(self.worker.scan_add_zone)
-        row2Layout.addWidget(btnAddZone)
 
         btnSetFL = QPushButton("Set Front Left")
         btnSetFL.clicked.connect(self.worker.scan_set_FL)
@@ -189,26 +222,50 @@ class MainWindow(QMainWindow):
 
         # Row 3: Delete Selected, Delete All
         row3Layout = QHBoxLayout()
-        btnDeleteZone = QPushButton("Delete Zone")
-        btnDeleteZone.clicked.connect(self.worker.scan_delete_zone)
-        row3Layout.addWidget(btnDeleteZone)
-
-        btnDeleteAllZones = QPushButton("Delete All Zones")
-        btnDeleteAllZones.clicked.connect(self.worker.scan_delete_all_zones)
-        row3Layout.addWidget(btnDeleteAllZones)
+        self.add_stack_height_control(row3Layout)
+        self.add_stack_step_control(row3Layout)
         layout.addLayout(row3Layout)
 
+        row_4_layout = QHBoxLayout()
         start_scan_button = QPushButton("Start Scanning")
         start_scan_button.clicked.connect(self.worker.scanner.start)
-        layout.addWidget(start_scan_button)
+        row_4_layout.addWidget(start_scan_button)
 
-        self.add_layout_as_widget(layout, parent_layout)
+        button = QPushButton("Stop Scanning")
+        button.clicked.connect(self.worker.scanner.cancel)
+        row_4_layout.addWidget(button)
 
+        layout.addLayout(row_4_layout)
+
+        parent_layout.addLayout(layout)
 
     def add_movement_controls(self, parent_layout):
+        # Label
+        label = QLabel()
+        label.setText("Home")
+        parent_layout.addWidget(label)
+
+        # Home buttons
+        home_layout = QHBoxLayout()
+        # zero_button = QPushButton("Zero")
+        # zero_button.clicked.connect(self.worker.stage_zero)
+        # home_layout.addWidget(zero_button)
+        home_button = QPushButton("Home")
+        home_button.clicked.connect(self.worker.stage_home)
+        home_layout.addWidget(home_button)
+        set_home_button = QPushButton("Set Home")
+        set_home_button.clicked.connect(self.worker.stage_set_home)
+        home_layout.addWidget(set_home_button)
+        self.add_layout_as_widget(home_layout, parent_layout)
+
+        # Label
+        label = QLabel()
+        label.setText("Movement")
+        parent_layout.addWidget(label)
+
+        # Movement buttons
         grid = QGridLayout()
         grid.setSizeConstraint(QLayout.SetFixedSize)
-
         # Create and place buttons in a 5x6 grid
         for row in range(5):
             for col in range(6):
@@ -258,17 +315,45 @@ class MainWindow(QMainWindow):
                     button = QPushButton("X Down")
                     button.clicked.connect(self.worker.stage_move_x_down)
 
-                elif col == 0 and row == 0:
-                    button = QPushButton("Zero")
-                    button.clicked.connect(self.worker.stage_home)
-
                 else:
                     continue
                 grid.addWidget(button, row, col)
 
         self.add_layout_as_widget(grid, parent_layout)
 
+    def add_stack_height_control(self, parent_layout):
+        layout = QVBoxLayout()
+        label = QLabel("Stack Height (um):", self)
+        layout.addWidget(label)
+        spinBox = QSpinBox(self)
+        spinBox.setRange(100, 10000)
+        spinBox.setSingleStep(200)
+        spinBox.setValue(self.worker.config.scanner.stack_height)
+        layout.addWidget(spinBox)
+        spinBox.valueChanged.connect(self.worker.stack_set_height)
+        def update(config: Configuration):
+            spinBox.setValue(config.scanner.stack_height)
+        self.worker.config_changed.connect(update)
+        widget = QWidget()
+        widget.setLayout(layout)
+        parent_layout.addWidget(widget)
 
+    def add_stack_step_control(self, parent_layout):
+        layout = QVBoxLayout()
+        label = QLabel("Stack Step (um):", self)
+        layout.addWidget(label)
+        spinBox = QSpinBox(self)
+        spinBox.setRange(20, 200)
+        spinBox.setSingleStep(20)
+        spinBox.setValue(self.worker.config.scanner.stack_step)
+        layout.addWidget(spinBox)
+        spinBox.valueChanged.connect(self.worker.stack_set_step)
+        def update(config: Configuration):
+            spinBox.setValue(config.scanner.stack_step)
+        self.worker.config_changed.connect(update)
+        widget = QWidget()
+        widget.setLayout(layout)
+        parent_layout.addWidget(widget)
 
     def update_image(self, image: np.ndarray):
         # Convert image to QImage and display
@@ -290,7 +375,7 @@ if __name__ == "__main__":
     # Assuming 'controller' is an instance of your Controller class
     app = QApplication(sys.argv)
 
-    window = MainWindow()  # You need to create and pass the controller instance here
+    window = MainWindow()
     window.show()
 
     sys.exit(app.exec())
