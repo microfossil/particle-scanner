@@ -5,7 +5,7 @@ from itk.itkImagePython import itkImageUC3, itkImageUC2
 from tqdm import tqdm
 
 # Directory containing the images
-path = r"F:\Sashimi\test\Zone000\Exp02000\images"
+path = r"F:\Sashimi\20240211_233555_test\Zone000\Exp02000\images"
 scale = 2
 
 # List all image files in the directory and sort them according to your custom logic
@@ -118,7 +118,6 @@ for t in range(stage_tiles.LinearSize()):
 actual_tiles.Write(str(output_path / "TileConfiguration.registered.txt"))
 
 print("Producing the mosaic")
-
 input_pixel_type = itk.template(color_images[0])[1][0]
 try:
     input_rgb_type = itk.template(input_pixel_type)[0]
