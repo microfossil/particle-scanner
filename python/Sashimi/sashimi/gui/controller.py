@@ -60,7 +60,7 @@ class ControllerWorker(QObject):
         self.stage.start()
 
         # Camera
-        self.camera = Camera(self.config.camera.rescale)
+        self.camera = Camera()
         self.img_mode = CameraMode.BGR
         self.camera.start()
 
@@ -96,12 +96,11 @@ class ControllerWorker(QObject):
 
     @Slot()
     def loop(self):
-
         # Camera
         frame = self.camera.latest_image(with_exposure=True)
         if frame is not None:
             img, exposure = frame
-            display_img = cv2.resize(img, (640, 480))
+            display_img = cv2.resize(img, (2448//3, 2048//3))
             display_img = cv2.cvtColor(display_img, cv2.COLOR_BGR2RGB)
             if self.img_mode == CameraMode.GRAY:
                 display_img = cv2.cvtColor(display_img, cv2.COLOR_BGR2GRAY)
@@ -123,8 +122,8 @@ class ControllerWorker(QObject):
                 display_img[:, :, 0] = r_channel
             self.camera_image_changed.emit(display_img)  # Emit signal with the processed BGR image
 
-            if self.camera.rescale != 1.0:
-                img = cv2.resize(frame[0], (0, 0), fx=self.camera.rescale, fy=self.camera.rescale)
+            if self.config.camera.rescale != 1.0:
+                img = cv2.resize(frame[0], (0, 0), fx=self.config.camera.rescale, fy=self.config.camera.rescale)
                 frame = (img, exposure)
 
         # Scanner
@@ -329,4 +328,28 @@ class ControllerWorker(QObject):
     def stack_set_step(self, value):
         self.config.scanner.stack_step = value
         print("STACK: Set stack step")
+        self._config_has_changed()
+
+    @Slot()
+    def stack_set_overlap_x(self, value):
+        self.config.scanner.overlap_x = value / 100
+        print("STACK: Set overlap X")
+        self._config_has_changed()
+
+    @Slot()
+    def stack_set_overlap_y(self, value):
+        self.config.scanner.overlap_y = value / 100
+        print("STACK: Set overlap Y")
+        self._config_has_changed()
+
+    @Slot()
+    def scan_set_name(self, name):
+        self.config.scanner.scan_name = name
+        print("SCAN: Set name")
+        self._config_has_changed()
+
+    @Slot()
+    def scan_set_save_dir(self, path):
+        self.config.scanner.save_dir = path
+        print("SCAN: Set save dir")
         self._config_has_changed()

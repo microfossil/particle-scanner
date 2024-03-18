@@ -68,10 +68,14 @@ class CaptureThread(threading.Thread):
 
 
 class Camera(object):
-    def __init__(self, rescale):
+    def __init__(self):
+        self.pixel_size = 3.45
+        self.objective_magnification = 4
+        self.width = 2448
+        self.height = 2048
+
         self.image = None
         self.camera = None
-        self.rescale = rescale
         self.converter = pylon.ImageFormatConverter()
         self.converter.OutputPixelFormat = pylon.PixelType_BGR8packed
         self.capture_thread = None
@@ -83,7 +87,7 @@ class Camera(object):
         self.camera.Open()
         self.load_camera_settings()
         self.cancel_event.clear()
-        self.capture_thread = CaptureThread(self.camera, self.converter, self.cancel_event, self.rescale)
+        self.capture_thread = CaptureThread(self.camera, self.converter, self.cancel_event)
         self.capture_thread.start()
     
     def load_camera_settings(self):

@@ -118,6 +118,7 @@ def stack_for_multiple_exp(scan_path: Path, f_stacks_path: Path, exp_values: lis
             
 
 def parallel_stack(queue, error_logs, remove_raw=False):
+    Path(error_logs).parent.mkdir(parents=True, exist_ok=True)
     with open(error_logs, mode='w', encoding='UTF-8') as file:
         sys.stderr = sys.stdout = file
         while True:
@@ -168,8 +169,9 @@ def stack_with_focus_stack(raw_images_path: Union[str, Path], image_path: Union[
     images = [str(f) for f in raw_images_path.glob("*.jpg") if f.is_file()]
     # File names
     png_path = f"{image_path}.png"
-    depthmap_path = f"{image_path}_depthmap.png"
-    command = [get_focus_stack(), *images, f"--output={png_path}", "--no-whitebalance", "--no-contrast", "--nocrop"]
+    depthmap_path = image_path.parent.parent / "depthmap" / f"{image_path.stem}.png"
+    depthmap_path.parent.mkdir(parents=True, exist_ok=True)
+    command = [get_focus_stack(), *images, f"--output={png_path}", "--no-whitebalance", "--no-contrast", "--nocrop", f"--depthmap={depthmap_path}"]
     subprocess.run(command)
     return
 
