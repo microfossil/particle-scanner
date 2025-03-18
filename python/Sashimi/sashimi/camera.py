@@ -2,6 +2,7 @@ import threading
 
 import cv2
 from pypylon import pylon
+from pathlib import Path
 
 # TODO: look into pylon.ImageFileFormat
 
@@ -55,23 +56,36 @@ class Camera(object):
         self.converter = pylon.ImageFormatConverter()
         self.converter.OutputPixelFormat = pylon.PixelType_BGR8packed
         self.capture_thread = None
+        self.camera_setting_file = "nodeFile.pfs"
 
     def start(self):
         # Open camera
         self.camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
         self.camera.Open()
-        self.load_camera_settings()
-        self.capture_thread = CaptureThread(self.camera, self.converter, self.controller)
-        self.capture_thread.start()
-    
-    def load_camera_settings(self):
-        n_map = self.camera.GetNodeMap()
-        n_map.GetNode("ExposureMode").SetValue("Timed")
-        pylon.FeaturePersistence.Load("nodeFile.pfs", n_map)
         self.camera.StaticChunkNodeMapPoolSize = self.camera.MaxNumBuffer.GetValue()
         self.camera.ChunkModeActive = True
         self.camera.ChunkSelector = "ExposureTime"
         self.camera.ChunkEnable = True
+        if Path(self.camera_setting_file).is_file():
+            self.load_camera_settings()
+        else:
+            answer = input("No camera setting file found. Do you want to save the current camera settings? (y/n): ")
+            if answer.lower() == 'y':
+                self.save_camera_settings()
+        self.capture_thread = CaptureThread(self.camera, self.converter, self.controller)
+        self.capture_thread.start()
+    
+    def save_camera_settings(self):
+        n_map = self.camera.GetNodeMap()
+        pylon.FeaturePersistence.Save(self.camera_setting_file, n_map)
+        print(f"Camera settings saved in '{self.camera_setting_file}'.\n"\
+              "This file will be used next time application is launched.")
+
+    def load_camera_settings(self):
+        n_map = self.camera.GetNodeMap()
+        n_map.GetNode("ExposureMode").SetValue("Timed")
+        pylon.FeaturePersistence.Load(self.camera_setting_file, n_map)
+        print(f"Loading camera settings file '{self.camera_setting_file}'.")
     
     def stop(self):
         self.camera.StopGrabbing()
