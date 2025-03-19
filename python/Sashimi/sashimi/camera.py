@@ -49,14 +49,14 @@ class CaptureThread(threading.Thread):
 
 
 class Camera(object):
-    def __init__(self, controller):
+    def __init__(self, controller, package_path, camera_settings_file="nodeFile.pfs"):
         self.image = None
         self.camera = None
         self.controller = controller
         self.converter = pylon.ImageFormatConverter()
         self.converter.OutputPixelFormat = pylon.PixelType_BGR8packed
         self.capture_thread = None
-        self.camera_setting_file = "nodeFile.pfs"
+        self.camera_settings_file_path = str(Path(package_path).joinpath(camera_settings_file))
 
     def start(self):
         # Open camera
@@ -66,7 +66,7 @@ class Camera(object):
         self.camera.ChunkModeActive = True
         self.camera.ChunkSelector = "ExposureTime"
         self.camera.ChunkEnable = True
-        if Path(self.camera_setting_file).is_file():
+        if Path(self.camera_settings_file_path).is_file():
             self.load_camera_settings()
         else:
             answer = input("No camera setting file found. Do you want to save the current camera settings? (y/n): ")
@@ -77,15 +77,15 @@ class Camera(object):
     
     def save_camera_settings(self):
         n_map = self.camera.GetNodeMap()
-        pylon.FeaturePersistence.Save(self.camera_setting_file, n_map)
-        print(f"Camera settings saved in '{self.camera_setting_file}'.\n"\
+        pylon.FeaturePersistence.Save(self.camera_settings_file_path, n_map)
+        print(f"Camera settings saved in '{self.camera_settings_file_path}'.\n"\
               "This file will be used next time application is launched.")
 
     def load_camera_settings(self):
         n_map = self.camera.GetNodeMap()
         n_map.GetNode("ExposureMode").SetValue("Timed")
-        pylon.FeaturePersistence.Load(self.camera_setting_file, n_map)
-        print(f"Loading camera settings file '{self.camera_setting_file}'.")
+        pylon.FeaturePersistence.Load(self.camera_settings_file_path, n_map)
+        print(f"Loading camera settings file '{self.camera_settings_file_path}'.")
     
     def stop(self):
         self.camera.StopGrabbing()

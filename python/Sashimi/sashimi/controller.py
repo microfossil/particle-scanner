@@ -60,7 +60,7 @@ class Controller(object):
         
         # instances
         self.stage = Stage(self, com_port)
-        self.camera = Camera(self)
+        self.camera = Camera(self, self.config.package_path, self.config.camera_settings_file)
         self.scanner = Scanner(self)
         self.keyboard = Keyboard(self.layout)
 
