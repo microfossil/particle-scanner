@@ -63,9 +63,15 @@ class Camera(object):
         self.camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
         self.camera.Open()
         self.camera.StaticChunkNodeMapPoolSize = self.camera.MaxNumBuffer.GetValue()
-        self.camera.ChunkModeActive = True
+
+        # Activate chunks (embedded data). This allows to read the exposuretime
+        #  an image has been taken with from the image data
+        self.camera.ChunkModeActive = True # enable camera chunk mode
+        # enable exposuretime chunk
         self.camera.ChunkSelector = "ExposureTime"
         self.camera.ChunkEnable = True
+
+        # Check if camera settings file exists and loads it if it does
         if Path(self.camera_settings_file_path).is_file():
             self.load_camera_settings()
         else:
