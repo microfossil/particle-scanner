@@ -1,5 +1,5 @@
 import threading
-
+import os
 import cv2
 from pypylon import pylon
 from pathlib import Path
@@ -49,14 +49,15 @@ class CaptureThread(threading.Thread):
 
 
 class Camera(object):
-    def __init__(self, controller, package_path, camera_settings_file="nodeFile.pfs"):
+    def __init__(self, controller, settings_dir, camera_settings_file="nodeFile.pfs"):
         self.image = None
         self.camera = None
         self.controller = controller
         self.converter = pylon.ImageFormatConverter()
         self.converter.OutputPixelFormat = pylon.PixelType_BGR8packed
         self.capture_thread = None
-        self.camera_settings_file_path = str(Path(package_path).joinpath(camera_settings_file))
+        self.settings_dir = settings_dir
+        self.camera_settings_file_path = str(Path(settings_dir).joinpath(camera_settings_file))
 
     def start(self):
         # Open camera
@@ -79,6 +80,7 @@ class Camera(object):
         else:
             answer = input("No camera setting file found. Do you want to save the current camera settings? (y/n): ")
             if answer.lower() == 'y':
+                os.makedirs(self.settings_dir, exist_ok=True)
                 self.save_camera_settings()
         self.capture_thread = CaptureThread(self.camera, self.converter, self.controller)
         self.capture_thread.start()

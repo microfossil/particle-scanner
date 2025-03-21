@@ -16,8 +16,8 @@ class Configuration(object):
                        'BR': [11000, 51000, 2000],
                        'BL_Z': 2000,
                        'Z_corrections':[0, 0]}]
-        self.package_path = os.path.dirname(sashimi.__file__)
-        self.camera_settings_file="nodeFile.pfs"
+        self.camera_settings_dir = os.path.join(os.path.expanduser("~"), ".Sashimi", "CameraSettings")
+        self.camera_settings_file = "nodeFile.pfs"
 
     def update_z_correction_terms(self, index, blz=None):
         # supposes the scan surface is flat and non-vertical
