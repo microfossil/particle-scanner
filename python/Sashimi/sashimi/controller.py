@@ -278,7 +278,7 @@ class Controller(object):
     def check_for_command(self, wait_time=50):
         key = cv2.waitKey(wait_time)
         if key == -1:
-            return False
+            return
         # print(key)
         
         self.permanent_commands(key)
@@ -461,7 +461,7 @@ class Controller(object):
                 text_status = [
                     "POSITION",
                     f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
-                    f"Home: {self.config.home_offset}",
+                    f"Home: {self.config.home_position}",
                     "- - - - - - - - - - - -",
                     "CAMERA",
                     f"Exposure: {self.config.exposure_time}us",
@@ -549,7 +549,7 @@ class Controller(object):
         # self.stage.start()
         self.camera.start()
         self.camera.set_exposure(self.config.exposure_time)
-        self.stage.move_home(self.config.home_offset)
+        self.stage.move_home(self.config.home_position)
         # self.stage.send_command('M107')  # turns off the extruder fan
         
         # Control loop
