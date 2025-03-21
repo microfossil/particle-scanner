@@ -565,8 +565,9 @@ class Controller(object):
     def start(self):
         self.camera.start()
         self.camera.set_exposure(self.config.exposure_time)
+        print("\n=========================================")
+        print("          Printer initialization         \n")
         self.stage.move_home(self.config.home_position)
-        # self.stage.send_gcode('M107')  # turns off the extruder fan
 
         # Control loop
         while not self.quit_requested:

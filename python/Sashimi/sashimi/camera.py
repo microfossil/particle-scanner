@@ -72,6 +72,8 @@ class Camera(object):
         self.camera.ChunkEnable = True
 
         # Check if camera settings file exists and loads it if it does
+        print("\n=========================================")
+        print("             Camera settings             \n")
         if Path(self.camera_settings_file_path).is_file():
             self.load_camera_settings()
         else:

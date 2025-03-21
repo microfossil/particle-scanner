@@ -47,22 +47,24 @@ class Configuration(object):
 
     @staticmethod
     def load(save_name="config"):
-        print("Load config")
+        print("\n=========================================")
+        print("          Loading configuration          \n")
         config_file = os.path.join(os.path.expanduser("~"), ".Sashimi", save_name + ".json")
         if os.path.exists(config_file):
-            print("Config file found")
+            print(f"Configuration file found {config_file}\n")
             try:
                 with open(config_file, "r") as f:
                     j = json.load(f)
-                    print(j)
                     config = Configuration()
-                    print(config.__dict__)
                     for key, val in j.items():
-                        print(f"{key}: {val}")
                         if key in config.__dict__:
                             config.__dict__[key] = val
             except RuntimeError:
                 config = Configuration()
         else:
+            print("Configuration file not found, loading base configuration")
             config = Configuration()
+        print("Configuration used:\n-------------------")
+        for key, val in config.__dict__.items():
+            print(f"{key}: {val}")
         return config
