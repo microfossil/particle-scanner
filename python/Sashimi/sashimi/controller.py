@@ -535,26 +535,20 @@ class Controller(object):
 
         # Show the image in the UI using open CV
         cv2.imshow("im", im)
-    
-    def wait(self, ms=50, display=True):
-        for frame in range(ms//self.frame_duration_ms):
-            if display:
-                img = self.camera.latest_image()
-                if img is not None:
-                    self.display(self.camera.latest_image())
-            if self.check_for_command():
-                return
 
     def start(self):
-        # self.stage.start()
         self.camera.start()
         self.camera.set_exposure(self.config.exposure_time)
         self.stage.move_home(self.config.home_position)
-        # self.stage.send_command('M107')  # turns off the extruder fan
+        # self.stage.send_gcode('M107')  # turns off the extruder fan
         
         # Control loop
         while not self.quit_requested:
-            self.wait()
+            # self.wait()
+            img = self.camera.latest_image()
+            if img is not None:
+                self.display(img)
+            self.check_for_command(self.frame_duration_ms)
 
         # Clean up
         cv2.destroyAllWindows()
