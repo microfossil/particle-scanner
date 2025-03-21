@@ -17,3 +17,5 @@ venv/
 
 python/Sashimi/sashimi/micro_panorama.py
 python/Sashimi/sashimi/plot_stitching.py
+
+nodeFile.pfs
