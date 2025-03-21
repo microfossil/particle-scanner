@@ -7,9 +7,6 @@ from sashimi.stage import Stage
 from sashimi.configuration import Configuration
 from sashimi.utils import Keyboard
 
-# TODO: Add save/load config files
-
-
 class Controller(object):
     def __init__(
             self,
@@ -141,11 +138,11 @@ class Controller(object):
 
         # Home
         elif key == kb.HOME:
-            self.stage.move_home(self.config.home_offset)
+            self.stage.move_home(self.config.home_position)
             print("Stage: move home")
         elif key == kb.SET_HOME:
-            self.config.home_offset = self.stage.position
-            print("Stage: set current position to home offset")
+            self.config.home_position = self.stage.position
+            print("Stage: set current position to home position")
 
         # elif key == kb.SAVE_TO_CFG1:
         #     self.config.save("config_1")
@@ -435,7 +432,7 @@ class Controller(object):
                 text_status = [
                     "POSITION",
                     f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
-                    f"Home: {self.config.home_offset}",
+                    f"Home: {self.config.home_position}",
                     "- - - - - - - - - - - -",
                     "CAMERA",
                     f"Exposure: {self.config.exposure_time}us",
@@ -553,7 +550,7 @@ class Controller(object):
         self.camera.start()
         self.camera.set_exposure(self.config.exposure_time)
         self.stage.move_home(self.config.home_offset)
-        self.stage.send_command('M107')  # turns off the extruder fan
+        # self.stage.send_command('M107')  # turns off the extruder fan
         
         # Control loop
         while not self.quit_requested:
@@ -561,6 +558,5 @@ class Controller(object):
 
         # Clean up
         cv2.destroyAllWindows()
-        # self.stage.stop()
         self.camera.stop()
         return self.interrupt_flag
