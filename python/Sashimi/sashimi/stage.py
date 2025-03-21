@@ -25,14 +25,6 @@ class Stage(object):
 
         self.buffer = []
 
-    # def start(self):
-    #     self.serial = serial.Serial(self.port, 115200)
-    #     if not self.serial.isOpen():
-    #         self.serial.open()
-
-    # def stop(self):
-    #     self.serial.close()
-
     @property
     def position(self):
         return [self.x, self.y, self.z]
@@ -46,7 +38,7 @@ class Stage(object):
         self.move_y(offset[1])
         self.goto_z(offset[2] + 1000)
         self.goto_z(offset[2])
-        self.wait_until_position(20000)
+        # self.wait_until_position(20000)
 
     def move_x(self, distance_um):
         self.goto_x(self.x + distance_um)
@@ -88,62 +80,24 @@ class Stage(object):
         self.goto_y(position[1])
         self.goto_z(position[2])
 
-    def poll(self):
-        dummy = self.read()
-        self.send_command("M114 R")
-        self.controller.wait(100)
-        responses = self.read()
-        for response in responses:
-            if response.startswith("X:"):
-                parts = response.split(' ')
-                sub_parts = parts[0].split(':')
-                self.reported_x = int(float(sub_parts[1]) * 1000)
-                sub_parts = parts[1].split(':')
-                self.reported_y = int(float(sub_parts[1]) * 1000)
-                sub_parts = parts[2].split(':')
-                self.reported_z = int(float(sub_parts[1]) * 1000)
-
-    def wait_until_position(self, ms):
-        # tells the printer to finish it's planned movements before executing any other g-code
-        self.send_gcode('M400')
-        self.send_gcode("M118 Ready")
-        for i in range(ms//self.controller.frame_duration_ms):
-            self.controller.wait()
-            # messages = self.read()
-            # for message in messages:
-            #     if message.startswith('Ready'):
-            #         return
-        
-        print(f"!!! ERROR: position not attained after {ms}ms ")
-
-    # def send_command(self, command):
-    #     self.serial.write((command + "\n").encode())
-    #     print((command + "\n").encode())
-
-    def send_gcode(self, command):
+    def send_gcode(self, command, timeout=60):
         url = f"{self.printer_ip}:{self.port}/printer/gcode/script"
         payload = {"script": command}
-        response = requests.post(url, json=payload)
-        print(response.json())  # Prints API response
-        return response.json()
+        try:
+            response = requests.post(url, json=payload, timeout=timeout)
+            return response.json()
+        except requests.Timeout as e:
+            print(f"Request timed out after {timeout} seconds.\n{e}")
+        except requests.RequestException as e:
+            print(f"An error occurred: {e}")
 
-    def get_query_printer_object(self, command):
+    def get_query_printer_object(self, command, timeout=60):
         url = f"{self.printer_ip}:{self.port}/printer/objects/query"
         payload = {"objects": command}
-        response = requests.post(url, json=payload)
-        print(response.json())  # Prints API response
-        return response.json()
-
-    # def read(self):
-    #     lines = []
-    #     while self.serial.in_waiting > 0:
-    #         for b in self.serial.read():
-    #             if b != ord('\n') and b != ord('\r'):
-    #                 self.buffer.append(chr(b))
-    #             else:
-    #                 line = ''.join(self.buffer)
-    #                 print(line)
-    #                 lines.append(line)
-    #                 self.buffer = []
-    #     # print(lines)
-    #     return lines
+        try:
+            response = requests.post(url, json=payload, timeout=timeout)
+            return response.json()
+        except requests.Timeout as e:
+            print(f"Request timed out after {timeout} seconds.\n{e}")
+        except requests.RequestException as e:
+            print(f"An error occurred: {e}")
