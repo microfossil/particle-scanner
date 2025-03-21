@@ -18,11 +18,6 @@ def cli():
               default=None,
               help='path to a directory with a structure like "THIS/DIRECTORY/stacks/images.jpg"\n'
                    'With ')
-@click.option('--port', '-p',
-              type=str,
-              prompt='COM port of printer',
-              default='COM5',
-              help='COM port of the 3D printer')
 @click.option('--lang', '-l',
               type=str,
               default="en",
@@ -57,7 +52,7 @@ def cli():
 @click.option('--yes/--no', '-y/-n',
               default=False,
               is_flag=True)
-def scan(dir_, port, lang, layout, mult_exp, remove_raw, skip_fs, auto_quit, margin, lowest, yes):
+def scan(dir_, lang, layout, mult_exp, remove_raw, skip_fs, auto_quit, margin, lowest, yes):
     if dir_ is None:
         dir_ = utils.make_unique_subdir()
     if mult_exp == 'undisclosed':
@@ -67,7 +62,7 @@ def scan(dir_, port, lang, layout, mult_exp, remove_raw, skip_fs, auto_quit, mar
     else:
         exp_values = None
         
-    controller = Controller(dir_, port, lang=lang, layout=layout,
+    controller = Controller(dir_, lang=lang, layout=layout,
                             z_margin=margin, remove_raw=remove_raw,
                             auto_f_stack=not skip_fs, auto_quit=auto_quit,
                             multi_exp=exp_values, lowest_z=lowest, do_overwrite=yes)

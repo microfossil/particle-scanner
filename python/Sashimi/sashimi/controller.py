@@ -14,7 +14,6 @@ class Controller(object):
     def __init__(
             self,
             save_dir: str | Path,
-            com_port: str,
             lang: str = "en",
             layout: str = 'AZERTY',
             z_margin: int = None,
@@ -59,7 +58,7 @@ class Controller(object):
         self.time_remaining = None
         
         # instances
-        self.stage = Stage(self, com_port)
+        self.stage = Stage(self, self.config.printer_ip, self.config.port)
         self.camera = Camera(self, self.config.package_path, self.config.camera_settings_file)
         self.scanner = Scanner(self)
         self.keyboard = Keyboard(self.layout)
@@ -550,7 +549,7 @@ class Controller(object):
                 return
 
     def start(self):
-        self.stage.start()
+        # self.stage.start()
         self.camera.start()
         self.camera.set_exposure(self.config.exposure_time)
         self.stage.move_home(self.config.home_offset)
@@ -562,6 +561,6 @@ class Controller(object):
 
         # Clean up
         cv2.destroyAllWindows()
-        self.stage.stop()
+        # self.stage.stop()
         self.camera.stop()
         return self.interrupt_flag
