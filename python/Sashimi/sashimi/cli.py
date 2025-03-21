@@ -1,7 +1,6 @@
 import os
-import click
-import datetime as dt
 from pathlib import Path
+import click
 from sashimi.controller import Controller
 from sashimi import helicon_stack as helicon_stacker, utils, focus_stack
 
@@ -61,7 +60,7 @@ def scan(dir_, lang, layout, mult_exp, remove_raw, skip_fs, auto_quit, margin, l
         exp_values = mult_exp.split(",").map(lambda x: int((x.strip(' '))))
     else:
         exp_values = None
-        
+
     controller = Controller(dir_, lang=lang, layout=layout,
                             z_margin=margin, remove_raw=remove_raw,
                             auto_f_stack=not skip_fs, auto_quit=auto_quit,
@@ -100,14 +99,14 @@ def stack(dir_):
 def helicon_stack(dir_, output_dir, exists_ok):
     dir_ = Path(dir_)
     depth = get_homogeneous_depth(dir_)
-    
+
     if depth == 2 or depth == 3:
         if output_dir is None:
             output_dir = dir_.joinpath("f_stacks")
         else:
             output_dir = Path(output_dir)
         os.makedirs(output_dir, exist_ok=exists_ok)
-    
+
     if depth == 3:
         xy_folder = next(dir_.iterdir())
         exposures = sorted([int(folder.stem.lstrip()) for folder in xy_folder.iterdir()])

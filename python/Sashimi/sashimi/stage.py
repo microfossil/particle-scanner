@@ -1,8 +1,7 @@
-import cv2
-import serial
 import time
-import requests
 from decimal import Decimal, getcontext
+import cv2
+import requests
 
 # Set precision for correction factor computation
 getcontext().prec = 10
@@ -21,7 +20,7 @@ class Stage(object):
         self.x_reported = 0
         self.y_reported = 0
         self.z_reported = 0
-        
+
         self.x_limits = (0, 200000)
         self.y_limits = (0, 200000)
         self.z_limits = (0, 20000)
@@ -125,7 +124,7 @@ class Stage(object):
             self.z_reported + offset == z_target/1000
             ):
             return True
-        
+
     def send_gcode(self, command, timeout=60):
         url = f"{self.printer_ip}:{self.port}/printer/gcode/script"
         payload = {"script": command}

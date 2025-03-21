@@ -18,7 +18,7 @@ class Configuration(object):
                        'Z_corrections':[0, 0]}]
         self.package_path = os.path.dirname(sashimi.__file__)
         self.camera_settings_file="nodeFile.pfs"
-    
+
     def update_z_correction_terms(self, index, blz=None):
         # supposes the scan surface is flat and non-vertical
         fl, br = self.scans[index]['FL'], self.scans[index]['BR']
@@ -30,7 +30,7 @@ class Configuration(object):
 
         if blz is None:
             blz = (fl[z] + br[z])//2
-        
+
         dz_dx = (blz - fl[z]) / (br[x] - fl[x])
         dz_dy = (br[z] - blz) / (br[y] - fl[y])
 
