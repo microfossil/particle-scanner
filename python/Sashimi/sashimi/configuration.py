@@ -5,7 +5,8 @@ import sashimi
 
 class Configuration(object):
     def __init__(self):
-        self.port = "COM3"
+        self.printer_ip = "http://172.20.211.175"
+        self.port = "7125"
         self.home_offset = [10000, 50000, 2000]
         self.stack_height = 1000
         self.stack_step = 60
