@@ -12,16 +12,15 @@ class Stage(object):
         self.controller = controller
         self.printer_ip = printer_ip
         self.port = port
-        # self.serial: serial.Serial = None
 
         # Distances in micrometers
         self.x = 0
         self.y = 0
         self.z = 0
 
-        self.reported_x = 0
-        self.reported_y = 0
-        self.reported_z = 0
+        self.x_reported = 0
+        self.y_reported = 0
+        self.z_reported = 0
         
         self.x_limits = (0, 200000)
         self.y_limits = (0, 200000)
@@ -37,6 +36,8 @@ class Stage(object):
         response = self.send_gcode("G28")
         if response["result"] == "ok":
             print('Printer homed successfully')
+
+        self.z_correction_factor = self.z_correction_factor_compute()
 
         self.goto_x(home_position[0])
         self.goto_y(home_position[1])
@@ -86,7 +87,13 @@ class Stage(object):
         self.goto_y(position[1])
         self.goto_z(position[2])
 
-    def correction_factor_compute(self):
+    def poll(self):
+        response = self.get_query_printer_object({"gcode_move": ["position"]})
+        self.x_reported = response['result']['status']['gcode_move']['position'][0]
+        self.y_reported = response['result']['status']['gcode_move']['position'][1]
+        self.z_reported = response['result']['status']['gcode_move']['position'][2]
+
+    def z_correction_factor_compute(self):
         """
         There is currently an offset between Z position sent to the 3D printer 
         and Z position returned from it. 
@@ -97,31 +104,25 @@ class Stage(object):
                  it to get to Z at 2mm, offset will be 2 x 0.0028mm, etc.
         This offset might be due to the precision and accuracy limitations of the printer's hardware
         and firmware. 
-        We compensate this difference by introducing correction_factor variable. It is computed 
+        We compensate this difference by introducing z_correction_factor variable. It is computed 
         as the difference between the Z position the printer is moved to (1mm) and the position read 
         from it.
         """
         self.send_gcode("G0 Z 1")
-        response = self.get_query_printer_object({"gcode_move": ["position"]})
-        z_position_read = response['result']['status']['gcode_move']['position'][2]
-        correction_factor = Decimal('1') - Decimal(f'{z_position_read}')
-        print(f"Z correction factor = {correction_factor}")
-        return correction_factor
+        self.poll()
+        z_correction_factor = Decimal('1') - Decimal(f'{self.z_reported}')
+        print(f"Z correction factor = {z_correction_factor}")
+        return z_correction_factor
 
     def check_position_reached(self, x_target, y_target, z_target):
         """This function checks if the printer has reached the target position"""
-        response = self.get_query_printer_object({"gcode_move": ["position"]})
-        x_position_read = response['result']['status']['gcode_move']['position'][0]
-        y_position_read = response['result']['status']['gcode_move']['position'][1]
-        z_position_read = response['result']['status']['gcode_move']['position'][2]
-
-        correction_factor = self.correction_factor_compute()
-        offset = float(correction_factor * z_target / 1000)
+        self.poll()
+        offset = float(self.z_correction_factor * z_target / 1000)
 
         if (
-            x_position_read == x_target/1000 and
-            y_position_read == y_target/1000 and
-            z_position_read + offset == z_target/1000
+            self.x_reported == x_target/1000 and
+            self.y_reported == y_target/1000 and
+            self.z_reported + offset == z_target/1000
             ):
             return True
         
