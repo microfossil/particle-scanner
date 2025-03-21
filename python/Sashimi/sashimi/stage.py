@@ -29,15 +29,15 @@ class Stage(object):
     def position(self):
         return [self.x, self.y, self.z]
 
-    def move_home(self, offset):
+    def move_home(self, home_position):
         self.send_gcode("G28 R X Y Z")
         self.x = 0
         self.y = 0
         self.z = 0
-        self.move_x(offset[0])
-        self.move_y(offset[1])
-        self.goto_z(offset[2] + 1000)
-        self.goto_z(offset[2])
+        self.move_x(home_position[0])
+        self.move_y(home_position[1])
+        self.goto_z(home_position[2] + 1000)
+        self.goto_z(home_position[2])
         # self.wait_until_position(20000)
 
     def move_x(self, distance_um):
