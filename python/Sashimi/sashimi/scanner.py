@@ -252,7 +252,7 @@ class Scanner(object):
                 save_path = save_path.joinpath(f"X{self.stage.x//10:05d}_"
                                                f"Y{self.stage.y//10:05d}_"
                                                f"Z{self.stage.z//10:05d}.jpg")
-                skio.imsave(str(save_path), img[..., ::-1], check_contrast=False, quality=90)
+                skio.imsave(str(save_path), img[..., ::-1], check_contrast=False)
             
             self.stage.move_z(self.config.stack_step)
             self.stage.wait_until_position(100)
