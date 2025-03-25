@@ -345,7 +345,7 @@ class Controller(object):
                 text_status = [
                     "POSITION",
                     f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
-                    f"Home: {self.config.home_offset}",
+                    f"Home: {self.config.home_position}",
                     "- - - - - - - - - - - -",
                     "CAMERA",
                     f"Exposure: {self.config.exposure_time}us",
@@ -374,7 +374,7 @@ class Controller(object):
                 text_status = [
                     "POSITION",
                     f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
-                    f"Origine: {self.config.home_offset}",
+                    f"Origine: {self.config.home_position}",
                     "- - - - - - - - - - - -",
                     "CAMERA",
                     f"Exposure: {self.config.exposure_time}us",
