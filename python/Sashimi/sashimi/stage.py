@@ -42,9 +42,7 @@ class Stage(object):
         self.goto_y(home_position[1])
         self.goto_z(home_position[2])
 
-        if self.check_position_reached(home_position[0], home_position[1], home_position[2]):
-            print("Printer reached position X:" \
-                  f"{home_position[0]}µm Y:{home_position[1]}µm Z:{home_position[2]}µm")
+        self.check_position_reached(home_position[0], home_position[1], home_position[2])
 
     def move_x(self, distance_um):
         self.goto_x(self.x + distance_um)
@@ -113,17 +111,31 @@ class Stage(object):
         print(f"Z correction factor = {z_correction_factor}")
         return z_correction_factor
 
-    def check_position_reached(self, x_target, y_target, z_target):
+    def check_position_reached(self, *args):
         """This function checks if the printer has reached the target position"""
+        if len(args) == 1 and isinstance(args[0], (tuple, list)) and len(args[0]) == 3:
+            x_target, y_target, z_target = args[0]
+        elif len(args) == 3:
+            x_target, y_target, z_target = args
+        else:
+            raise ValueError("Provide either one argument (a tuple or list with three coordinates)"\
+                             "or three separate arguments x, y, z.")
+
         self.poll()
         offset = float(self.z_correction_factor * z_target / 1000)
 
+        # Due to the limited precision of floating-point representation (which can lead
+        # to rounding errors because not all decimal numbers can be represented exactly
+        # in binary form), z_reported and offset can introduce small errors.
+        # That is why strict equality isn't checked between z_reported + offset and z_target.
+        # Rather, we prefer to check that the difference is under a certain threshold.
         if (
-            self.x_reported == x_target/1000 and
-            self.y_reported == y_target/1000 and
-            self.z_reported + offset == z_target/1000
-            ):
-            return True
+            self.x_reported == x_target / 1000 and
+            self.y_reported == y_target / 1000 and
+            abs(self.z_reported + offset - z_target / 1000) < 10e-10
+        ):
+            print("Printer reached position X:" \
+                  f"{x_target} µm Y:{y_target} µm Z:{z_target} µm")
 
     def send_gcode(self, command, timeout=60):
         url = f"{self.printer_ip}:{self.port}/printer/gcode/script"
