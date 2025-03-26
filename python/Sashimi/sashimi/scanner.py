@@ -200,7 +200,8 @@ class Scanner(object):
         os.makedirs(scan_dir, exist_ok=True)
         
         self.stage.goto(fl)
-        self.stage.wait_until_position(10000)
+        self.stage.check_position_reached(fl)
+        # self.stage.wait_until_position(10000)
         x_steps, y_steps = self.step_nbr_xy(selected_scan)
         self.total_stacks = x_steps * y_steps
         
@@ -217,7 +218,8 @@ class Scanner(object):
                 dx, dy = self.X_STEP * xi, self.Y_STEP * yi
                 du = [fl[0] + dx, fl[1] + dy, fl[2]]
                 self.stage.goto(du)
-                self.stage.wait_until_position(1000)
+                self.stage.check_position_reached(du)
+                # self.stage.wait_until_position(1000)
                 self.take_stack(dx, dy, scan_dir)
 
     def take_stack(self, dx, dy, scan_dir):
@@ -230,7 +232,7 @@ class Scanner(object):
         
         z_orig = self.stage.z
         self.stage.goto_z(self.get_corrected_z(dx, dy))
-        self.stage.wait_until_position(1000)
+        # self.stage.wait_until_position(1000)
         
         exp_values = self.multi_exp if self.multi_exp else (self.config.exposure_time,)
         for i in range(self.stack_count):
@@ -255,19 +257,19 @@ class Scanner(object):
                 skio.imsave(str(save_path), img[..., ::-1], check_contrast=False)
             
             self.stage.move_z(self.config.stack_step)
-            self.stage.wait_until_position(100)
+            # self.stage.wait_until_position(100)
         
         if self.auto_f_stack:
             self.queue.put((str(xy_folder), str(self.fs_folder)))
 
         self.camera.set_exposure(exp_values[0])
         self.stage.goto_z(z_orig)
-        self.stage.wait_until_position(50 * self.stack_count)
+        # self.stage.wait_until_position(50 * self.stack_count)
         
     def find_floor(self):
         z_orig = self.stage.z
         self.stage.goto_z(100)
-        self.stage.wait_until_position(500)
+        # self.stage.wait_until_position(500)
         sharpness = []
         for i in range(100):
             img = self.camera.latest_image()
@@ -276,7 +278,7 @@ class Scanner(object):
             sharpness.append(sh)
             print(sh)
             self.stage.move_z(20)
-            self.stage.wait_until_position(200)
+            # self.stage.wait_until_position(200)
         sharpness = np.asarray(sharpness)
         print(np.max(sharpness, axis=0))
         print(np.argmax(sharpness, axis=0) * 20 + 100)
