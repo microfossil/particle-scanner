@@ -57,7 +57,6 @@ class Scanner(object):
         self.frame_duration_ms = self.controller.frame_duration_ms
         self.auto_f_stack = self.controller.auto_f_stack
         self.remove_raw = self.controller.remove_raw
-        self.auto_quit = self.controller.auto_quit
         self.scan_dir = self.controller.save_dir
         self.selected_scan = self.controller.selected_scan
         self.multi_exp = self.controller.multi_exp
@@ -85,7 +84,6 @@ class Scanner(object):
             'layout': self.controller.layout,
             'auto_f_stack': self.auto_f_stack,
             'remove_raw': self.remove_raw,
-            'auto_quit': self.auto_quit,
             'lowest_z': self.controller.lowest_z,
             'exposure (µs)': self.config.exposure_time if self.multi_exp is None else self.multi_exp,
             'stack height (µm)': self.config.stack_height,
@@ -181,10 +179,6 @@ class Scanner(object):
             self.parallel_process.join()
 
         self.is_multi_scanning = False
-        if self.auto_quit:
-            # in case of user interruption:
-            self.controller.interrupt_flag = True if self.controller.quit_requested else False
-            self.controller.quit_requested = True
 
     def scan(self, scan_dir):
         selected_scan = self.controller.selected_scan()
@@ -305,8 +299,6 @@ class Scanner(object):
     def check_for_escape(self):
         if self.is_multi_scanning and not self.controller.quit_requested:
             return False
-        if self.auto_quit:
-            self.controller.quit_requested = True
         self.is_multi_scanning = False
         self.controller.interrupt_flag = True
         return True
@@ -324,7 +316,6 @@ class Scanner(object):
                 'layout',
                 'auto_f_stack',
                 'remove_raw',
-                'auto_quit',
                 'lowest_z',
                 'exposure (µs)',
                 'stack height (µm)',
