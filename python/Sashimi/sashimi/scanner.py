@@ -60,11 +60,10 @@ class Scanner(object):
         self.scan_dir = self.controller.save_dir
         self.selected_scan = self.controller.selected_scan
         self.multi_exp = self.controller.multi_exp
-        self.fs_folder = self.controller.save_dir.joinpath("f_stacks")
+        self.fs_folder = ''
+        self.fs_exp_folders = ''
         
         # parameters and variables
-        if self.multi_exp:
-            self.fs_exp_folders = [self.fs_folder.joinpath(f"E{exp}") for exp in self.multi_exp]
         self.X_STEP = 1700
         self.Y_STEP = 1700
         self.stack_count = None
@@ -152,8 +151,12 @@ class Scanner(object):
                 self.controller.save_dir = utils.make_unique_subdir(self.controller.save_dir.parent)
         
         if self.auto_f_stack:
+            self.fs_folder = self.controller.save_dir.joinpath("f_stacks")
+            if self.multi_exp:
+                self.fs_exp_folders = [self.fs_folder.joinpath(f"E{exp}") for exp in self.multi_exp]
             os.makedirs(self.fs_folder)
-            mp.set_start_method("spawn")
+            if not mp.get_start_method(allow_none=True):
+                mp.set_start_method("spawn")
             self.queue = mp.Queue()
             error_logs = self.controller.save_dir.joinpath('error_logs.txt')
             if error_logs.exists():
