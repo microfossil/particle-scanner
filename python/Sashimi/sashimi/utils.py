@@ -13,25 +13,23 @@ def remove_folder(path):
 			os.remove(subdir)
 
 
-def make_unique_subdir(directory: str | Path = None):
-	if directory is None:
-		directory = Path.home().joinpath("Desktop", "sashimi")
-	else:
-		if type(directory) == str:
-			directory = Path(directory)
+def make_unique_subdir(base_dir: str | Path = None):
+	if base_dir is None:
+		base_dir = os.path.join(os.path.expanduser("~"), "SASHIMI")
 
 	d = dt.datetime.now(tz=dt.timezone(dt.timedelta(hours=2)))
-	subdir = f"{d.day}{d.month}{d.year}_{d.hour}{d.minute}"
-	if directory.joinpath(subdir).exists():
-		subdir = subdir + str(d.second)
-	n = 0
-	subdir_ = subdir
-	while directory.joinpath(subdir_).exists():
-		n += 1
-		subdir_ = subdir + f"_{n}"
-	output = directory.joinpath(subdir_)
-	os.makedirs(output)
-	return output
+	subdir_name = f"{d.day:02}-{d.month:02}-{d.year:02}_{d.hour:02}{d.minute:02}"
+	
+	subdir_path = os.path.join(base_dir, subdir_name)
+	counter = 2
+
+	# Check if the base_dir exists and create a unique name if necessary
+	while os.path.exists(subdir_path):
+		subdir_path = os.path.join(base_dir, f"{subdir_name}_{counter}")
+		counter += 1
+		
+	os.makedirs(subdir_path)
+	return Path(subdir_path)
 
 
 def is_valid_path(_path):
