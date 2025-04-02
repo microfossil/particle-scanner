@@ -5,7 +5,7 @@ from sashimi.utils import make_unique_subdir
 
 if __name__ == "__main__":
     sashimi_output_dir = os.path.join(os.path.expanduser("~"), ".Sashimi", "output")
-    os.makedirs(os.path.dirname(sashimi_output_dir), exist_ok=True)
+    os.makedirs(sashimi_output_dir, exist_ok=True)
     work_dir = make_unique_subdir(sashimi_output_dir)
     controller = Controller(work_dir, lang="en", layout='AZERTY', auto_f_stack=True, lowest_z=True)
     controller.start()
