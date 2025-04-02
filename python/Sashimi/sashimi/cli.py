@@ -38,9 +38,6 @@ def cli():
 @click.option("--skip-fs", "-s",
               is_flag=True,
               help='skips focus-stacking while scanning')
-@click.option('--auto-quit', '-q',
-              is_flag=True,
-              help='Sashimi quits automatically after scanning')
 @click.option('--margin', '-m',
               type=int,
               default=200,
