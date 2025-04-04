@@ -6,7 +6,7 @@ from sashimi.scanner import Scanner
 from sashimi.stage import Stage
 from sashimi.configuration import Configuration
 from sashimi.utils import Keyboard
-
+from sashimi.user_interface import UserInterface
 class Controller(object):
     def __init__(
             self,
@@ -57,6 +57,7 @@ class Controller(object):
         self.camera = Camera(self, self.config.camera_settings_dir, self.config.camera_settings_file)
         self.scanner = Scanner(self)
         self.keyboard = Keyboard(self.layout)
+        self.ui = UserInterface(self)
 
     def selected_scan(self):
         return self.config.scans[self.selected_scan_number - 1]
@@ -286,280 +287,6 @@ class Controller(object):
             self.menu_commands(key)
         return True
 
-    def display(self, im: np.array):
-        kb = self.keyboard
-        # Reduce size of image
-        im = im[::4, ::4, :].astype(np.uint8)
-
-        if self.img_mode > 1:
-            # Image mode and 2, 3, 4 are red, green and blue.
-            # If one of these are selected, create a new colour image just from that channel
-            im = np.repeat(im[:, :, self.img_mode - 2][..., np.newaxis], 3, axis=-1)
-
-        # Add some black space to left of image to draw current status
-        LEFT_EDGE_SIZE = 300
-        im = np.pad(im, [[0, 0], [LEFT_EDGE_SIZE, 0], [0, 0]])
-
-        sel_scan_num = self.selected_scan_number
-        sel_scan = self.selected_scan()
-        blz = self.selected_scan()['BL_Z']
-
-        text_status = []
-        text_help = []
-
-        # Define the UI text to be displayed
-
-        if self.scanner.is_multi_scanning:
-            text_button = [
-                "",
-                "",
-                "",
-                "",
-                "",
-                "g t",
-                "",
-                "",
-                "[ ]",
-                "{ }",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "p",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "esc"
-            ]
-
-            if self.lang == "en":
-                scan_command = "Stop scanning"
-                text_status = [
-                    "POSITION",
-                    f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
-                    f"Home: {self.config.home_position}",
-                    "- - - - - - - - - - - -",
-                    "CAMERA",
-                    f"Exposure: {self.config.exposure_time}us",
-                    "- - - - - - - - - - - -",
-                    f"STACK: {self.scanner.current_pic_count}/{self.scanner.total_pic_count} pics",
-                    f"Height: {self.config.stack_height}um",
-                    f"Step: {self.config.stack_step}um",
-                    "- - - - - - - - - - - -",
-                    f"SCAN: {sel_scan_num}/{len(self.config.scans)}",
-                    f"FL: {sel_scan['FL']}",
-                    f"BR: {sel_scan['BR']}",
-                    f"BL: Z={blz}",
-                    "- - - - - - - - - - - -",
-                    "COMMANDS",
-                    f"{scan_command}",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "quit"
-                ]
-            if self.lang == "fr":
-                scan_command = "Arreter le scan"
-                text_status = [
-                    "POSITION",
-                    f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
-                    f"Origine: {self.config.home_position}",
-                    "- - - - - - - - - - - -",
-                    "CAMERA",
-                    f"Exposure: {self.config.exposure_time}us",
-                    "- - - - - - - - - - - -",
-                    f"PILE: {self.scanner.current_pic_count}/{self.scanner.total_pic_count} pictures taken",
-                    f"Hauteur: {self.config.stack_height}um",
-                    f"Etape: {self.config.stack_step}um",
-                    "- - - - - - - - - - - -",
-                    f"SCAN: {sel_scan_num}/{len(self.config.scans)}",
-                    f"AvGch: {sel_scan['FL']}",
-                    f"ArDt: {sel_scan['BR']}",
-                    f"ArGch: Z={blz}",
-                    "- - - - - - - - - - - -",
-                    "DEMANDES",
-                    f"{scan_command}",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "quitter"
-                ]
-        else:
-            text_button = [
-                f"{chr(kb.FORWARD)} {chr(kb.BACK)} {chr(kb.LEFT)}",
-                f"{chr(kb.RIGHT)} {chr(kb.UP)} {chr(kb.DOWN)}",
-                "h",
-                "",
-                "",
-                "g t",
-                "",
-                "",
-                "[ ]",
-                "{ }",
-                "",
-                "",
-                f"{chr(kb.PREV_SCAN)} {chr(kb.NEXT_SCAN)}",
-                "j",
-                "i",
-                "u",
-                "",
-                "",
-                "p",
-                "v",
-                "B",
-                "N",
-                "",
-                "",
-                "esc"
-            ]
-
-            if self.lang == "en":
-                scan_command = "Start Scanning"
-                text_status = [
-                    "POSITION",
-                    f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
-                    f"Home: {self.config.home_position}",
-                    "- - - - - - - - - - - -",
-                    "CAMERA",
-                    f"Exposure: {self.config.exposure_time}us",
-                    "- - - - - - - - - - - -",
-                    "STACK",
-                    f"Height: {self.config.stack_height}um",
-                    f"Step: {self.config.stack_step}um",
-                    "- - - - - - - - - - - -",
-                    "SCAN",
-                    f"Zone: {sel_scan_num}/{len(self.config.scans)}",
-                    f"FL: {sel_scan['FL']}",
-                    f"BR: {sel_scan['BR']}",
-                    f"BL: Z={blz}",
-                    "- - - - - - - - - - - -",
-                    "COMMANDS",
-                    f"{scan_command}",
-                    "Add new zone",
-                    "Delete current zone",
-                    "Delete all scans",
-                    "",
-                    "",
-                    "quit"
-                ]
-            if self.lang == "fr":
-                scan_command = "Demarrer le scan"
-                text_status = [
-                    "POSITION",
-                    f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
-                    f"Home: {self.config.home_position}",
-                    "- - - - - - - - - - - -",
-                    "CAMERA",
-                    f"Exposure: {self.config.exposure_time}us",
-                    "- - - - - - - - - - - -",
-                    "PILE",
-                    f"Hauteur: {self.config.stack_height}um",
-                    f"Etape: {self.config.stack_step}um",
-                    "- - - - - - - - - - - -",
-                    f"SCAN",
-                    f"Zone: {sel_scan_num}/{len(self.config.scans)}",
-                    f"AvGch: {sel_scan['FL']}",
-                    f"ArDt: {sel_scan['BR']}",
-                    f"ArGch: Z={blz}",
-                    "- - - - - - - - - - - -",
-                    "DEMANDES",
-                    f"{scan_command}",
-                    "Ajouter une zone",
-                    "Suppr. la zone",
-                    "Suppr. toutes les scans",
-                    "",
-                    "",
-                    "quitter"
-                ]
-
-        # Define the help text to be displayed
-        if self.show_help:
-            if self.lang == "en":
-                text_help = [
-                    "h/H: set/goto home position",
-                    "w,s,a,d,q,e: forward, back, left, right, up, down",
-                    "W,S,A,D,Q,E: 10 x forward, back, left, right, up, down",
-                    "[ ]: -/+ stack height (100um)",
-                    "{ }: -/+ stack step (20um)",
-                    "j/J: set/goto scan front left",
-                    "i/I: set/goto scan back right",
-                    "enter: take stack",
-                    "p: start/stop scan",
-                    "esc: quit",
-                    "?: close help",
-                ]
-            if self.lang == "fr":
-                text_help = [
-                    "h/H: fixer/aller a la position d'origine",
-                    "z,s,q,d,a,e: avant, arriere, gauche, droit, haut, bas",
-                    "Z,S,Q,D,A,E: 10 x avant, arriere, gauche, droit, haut, bas"
-                    "[ ]: -/+ hauteur de pile (100um)",
-                    "{ }: -/+ etape de pile (20um)",
-                    "j/J: fixer/aller a l'avant-gauche de la zone de scan",
-                    "i/I: fixer/aller a l'arriere droit de la zone de scan",
-                    "entree: faire une pile",
-                    "p:  demarrer/arreter un scan",
-                    "esc: quitter",
-                    "?: se fermer",
-                ]
-        else:
-            if self.lang == "en":
-                text_help = ["?: show help"]
-            if self.lang == "fr":
-                text_help = ["?: afficher l'aide"]
-
-        # Draw the UIs text
-        for i, t in enumerate(text_status):
-            cv2.putText(
-                im,
-                t,
-                (50, i * 20 + 20),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.4,
-                (230, 230, 3055),
-                1,
-                cv2.LINE_AA
-                )
-
-        for i, t in enumerate(text_button):
-            cv2.putText(
-                im,
-                t,
-                (10, i * 20 + 20),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.4,
-                (120, 255, 255),
-                1,
-                cv2.LINE_AA
-                )
-
-        for i, t in enumerate(text_help):
-            cv2.putText(
-                im,
-                t,
-                (LEFT_EDGE_SIZE + 10, i * 20 + 20),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.4,
-                (0, 255, 255),
-                1,
-                cv2.LINE_AA
-                )
-
-        # Show the image in the UI using open CV
-        cv2.imshow("im", im)
-
     def start(self):
         self.camera.start()
         self.camera.set_exposure(self.config.exposure_time)
@@ -572,7 +299,7 @@ class Controller(object):
             # self.wait()
             img = self.camera.latest_image()
             if img is not None:
-                self.display(img)
+                self.ui.render(img)
             self.check_for_command(self.frame_duration_ms)
 
         # Clean up
