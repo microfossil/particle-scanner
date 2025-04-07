@@ -17,11 +17,6 @@ def cli():
               default=None,
               help='path to a directory with a structure like "THIS/DIRECTORY/stacks/images.jpg"\n'
                    'With ')
-@click.option('--lang', '-l',
-              type=str,
-              default="en",
-              prompt="Language",
-              help='Language of the interface (en/fr)')
 @click.option('--layout',
               type=str,
               default='AZERTY',
@@ -48,7 +43,7 @@ def cli():
 @click.option('--yes/--no', '-y/-n',
               default=False,
               is_flag=True)
-def scan(dir_, lang, layout, mult_exp, remove_raw, skip_fs, margin, lowest, yes):
+def scan(dir_, layout, mult_exp, remove_raw, skip_fs, margin, lowest, yes):
     if dir_ is None:
         dir_ = utils.make_unique_subdir()
     if mult_exp == 'undisclosed':
@@ -58,7 +53,7 @@ def scan(dir_, lang, layout, mult_exp, remove_raw, skip_fs, margin, lowest, yes)
     else:
         exp_values = None
 
-    controller = Controller(dir_, lang=lang, layout=layout,
+    controller = Controller(dir_, layout=layout,
                             z_margin=margin, remove_raw=remove_raw,
                             auto_f_stack=not skip_fs,
                             multi_exp=exp_values, lowest_z=lowest, do_overwrite=yes)

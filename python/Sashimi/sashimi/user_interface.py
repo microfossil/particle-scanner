@@ -5,7 +5,6 @@ class UserInterface:
     def __init__(self, controller):
         self.controller = controller
         self.keyboard = controller.keyboard
-        self.lang = controller.lang
         self.stage = controller.stage
         self.config = controller.config
         self.scanner = controller.scanner
@@ -41,62 +40,33 @@ class UserInterface:
 
     def _get_text_status(self, sel_scan_num, sel_scan, blz):
         scan_command = "Stop scanning" if self.scanner.is_multi_scanning else "Start scanning"
-        if self.lang == "en":
-            return [
-                "POSITION",
-                f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
-                f"Home: {self.config.home_position}",
-                "- - - - - - - - - - - -",
-                "CAMERA",
-                f"Exposure: {self.config.exposure_time}us",
-                "- - - - - - - - - - - -",
-                "STACK",
-                f"Height: {self.config.stack_height}um",
-                f"Step: {self.config.stack_step}um",
-                "- - - - - - - - - - - -",
-                "SCAN",
-                f"Zone: {sel_scan_num}/{len(self.config.scans)}",
-                f"FL: {sel_scan['FL']}",
-                f"BR: {sel_scan['BR']}",
-                f"BL: Z={blz}",
-                "- - - - - - - - - - - -",
-                "COMMANDS",
-                scan_command,
-                "Add new zone",
-                "Delete current zone",
-                "Delete all scans",
-                "",
-                "",
-                "quit",
-            ]
-        elif self.lang == "fr":
-            return [
-                "POSITION",
-                f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
-                f"Origine: {self.config.home_position}",
-                "- - - - - - - - - - - -",
-                "CAMERA",
-                f"Exposition: {self.config.exposure_time}us",
-                "- - - - - - - - - - - -",
-                "PILE",
-                f"Hauteur: {self.config.stack_height}um",
-                f"Etape: {self.config.stack_step}um",
-                "- - - - - - - - - - - -",
-                "SCAN",
-                f"Zone: {sel_scan_num}/{len(self.config.scans)}",
-                f"AvGch: {sel_scan['FL']}",
-                f"ArDt: {sel_scan['BR']}",
-                f"ArGch: Z={blz}",
-                "- - - - - - - - - - - -",
-                "DEMANDES",
-                scan_command,
-                "Ajouter une zone",
-                "Suppr. la zone",
-                "Suppr. toutes les scans",
-                "",
-                "",
-                "quitter",
-            ]
+        return [
+            "POSITION",
+            f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
+            f"Home: {self.config.home_position}",
+            "- - - - - - - - - - - -",
+            "CAMERA",
+            f"Exposure: {self.config.exposure_time}us",
+            "- - - - - - - - - - - -",
+            "STACK",
+            f"Height: {self.config.stack_height}um",
+            f"Step: {self.config.stack_step}um",
+            "- - - - - - - - - - - -",
+            "SCAN",
+            f"Zone: {sel_scan_num}/{len(self.config.scans)}",
+            f"FL: {sel_scan['FL']}",
+            f"BR: {sel_scan['BR']}",
+            f"BL: Z={blz}",
+            "- - - - - - - - - - - -",
+            "COMMANDS",
+            scan_command,
+            "Add new zone",
+            "Delete current zone",
+            "Delete all scans",
+            "",
+            "",
+            "quit",
+        ]
 
     def _get_text_button(self):
         if self.scanner.is_multi_scanning:
@@ -133,36 +103,21 @@ class UserInterface:
 
     def _get_text_help(self):
         if self.controller.show_help:
-            if self.lang == "en":
-                return [
-                    "h/H: set/goto home position",
-                    "w,s,a,d,q,e: forward, back, left, right, up, down",
-                    "W,S,A,D,Q,E: 10 x forward, back, left, right, up, down",
-                    "[ ]: -/+ stack height (100um)",
-                    "{ }: -/+ stack step (20um)",
-                    "j/J: set/goto scan front left",
-                    "i/I: set/goto scan back right",
-                    "enter: take stack",
-                    "p: start/stop scan",
-                    "esc: quit",
-                    "?: close help",
-                ]
-            elif self.lang == "fr":
-                return [
-                    "h/H: fixer/aller a la position d'origine",
-                    "z,s,q,d,a,e: avant, arriere, gauche, droit, haut, bas",
-                    "Z,S,Q,D,A,E: 10 x avant, arriere, gauche, droit, haut, bas",
-                    "[ ]: -/+ hauteur de pile (100um)",
-                    "{ }: -/+ etape de pile (20um)",
-                    "j/J: fixer/aller a l'avant-gauche de la zone de scan",
-                    "i/I: fixer/aller a l'arriere droit de la zone de scan",
-                    "entree: faire une pile",
-                    "p:  demarrer/arreter un scan",
-                    "esc: quitter",
-                    "?: se fermer",
-                ]
+            return [
+                "h/H: set/goto home position",
+                "w,s,a,d,q,e: forward, back, left, right, up, down",
+                "W,S,A,D,Q,E: 10 x forward, back, left, right, up, down",
+                "[ ]: -/+ stack height (100um)",
+                "{ }: -/+ stack step (20um)",
+                "j/J: set/goto scan front left",
+                "i/I: set/goto scan back right",
+                "enter: take stack",
+                "p: start/stop scan",
+                "esc: quit",
+                "?: close help",
+            ]
         else:
-            return ["?: show help"] if self.lang == "en" else ["?: afficher l'aide"]
+            return ["?: show help"]
 
     def _draw_text(self, im, text_list, start_pos, color):
         for i, text in enumerate(text_list):

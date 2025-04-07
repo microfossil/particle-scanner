@@ -11,7 +11,6 @@ class Controller(object):
     def __init__(
             self,
             save_dir: str | Path,
-            lang: str = "en",
             layout: str = 'AZERTY',
             z_margin: int = None,
             multi_exp: list[float] = None,
@@ -31,7 +30,6 @@ class Controller(object):
             self.config.save()
 
         self.save_dir = save_dir
-        self.lang = lang
         self.layout = layout
         self.multi_exp = multi_exp
         self.remove_raw = remove_raw

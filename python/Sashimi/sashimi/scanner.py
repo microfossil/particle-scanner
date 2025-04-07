@@ -79,7 +79,6 @@ class Scanner(object):
 
         self.summary = {
             'save_dir': self.controller.save_dir,
-            'language': self.controller.lang,
             'layout': self.controller.layout,
             'auto_f_stack': self.auto_f_stack,
             'remove_raw': self.remove_raw,
@@ -315,7 +314,6 @@ class Scanner(object):
                           'Here are some parameters :')
             param_list = [
                 'save_dir',
-                'language',
                 'layout',
                 'auto_f_stack',
                 'remove_raw',
