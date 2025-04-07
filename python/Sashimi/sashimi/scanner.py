@@ -240,7 +240,7 @@ class Scanner(object):
                 # set exposure and take a picture
                 self.camera.set_exposure(exp)
                 img = self.wait_until_exposure(exp, 300)
-                self.show_image(img)
+                # self.show_image(img)
                 
                 # save the picture
                 if self.multi_exp is not None:
@@ -293,10 +293,10 @@ class Scanner(object):
         print(f'desired exposure was not reached in {ms}ms')
         return img
 
-    def show_image(self, img):
-        if img is None:
-            return
-        self.controller.display(img)
+    # def show_image(self, img):
+    #     if img is None:
+    #         return
+    #     self.controller.display(img)
     
     def check_for_escape(self):
         if self.is_multi_scanning and not self.controller.quit_requested:
