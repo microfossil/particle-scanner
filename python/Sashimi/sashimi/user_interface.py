@@ -40,6 +40,9 @@ class UserInterface:
 
     def _get_text_status(self, sel_scan_num, sel_scan, blz):
         scan_command = "Stop scanning" if self.scanner.is_multi_scanning else "Start scanning"
+        add_zone_command = "" if self.scanner.is_multi_scanning else "Add new zone"
+        del_zone_command = "" if self.scanner.is_multi_scanning else "Delete current zone"
+        del_scans_command = "" if self.scanner.is_multi_scanning else "Delete all scans"
         return [
             "POSITION",
             f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}",
@@ -60,9 +63,9 @@ class UserInterface:
             "- - - - - - - - - - - -",
             "COMMANDS",
             scan_command,
-            "Add new zone",
-            "Delete current zone",
-            "Delete all scans",
+            add_zone_command,
+            del_zone_command,
+            del_scans_command,
             "",
             "",
             "quit",
@@ -77,27 +80,22 @@ class UserInterface:
                 f"{chr(kb.FORWARD)} {chr(kb.BACK)} {chr(kb.LEFT)}",
                 f"{chr(kb.RIGHT)} {chr(kb.UP)} {chr(kb.DOWN)}",
                 "h",
-                "",
-                "",
+                *[""] * 2,
                 "g t",
-                "",
-                "",
+                *[""] * 2,
                 "[ ]",
                 "{ }",
-                "",
-                "",
+                *[""] * 2,
                 f"{chr(kb.PREV_SCAN)} {chr(kb.NEXT_SCAN)}",
                 "j",
                 "i",
                 "u",
-                "",
-                "",
+                *[""] * 2,
                 "p",
                 "v",
                 "B",
                 "N",
-                "",
-                "",
+                *[""] * 2,
                 "esc",
             ]
 
