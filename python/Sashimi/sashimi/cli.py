@@ -49,7 +49,7 @@ def scan(dir_, layout, mult_exp, remove_raw, skip_fs, margin, lowest, yes):
     if mult_exp == 'undisclosed':
         exp_values, dir_ = dialog_for_path_and_values()
     elif mult_exp is not None:
-        exp_values = mult_exp.split(",").map(lambda x: int((x.strip(' '))))
+        exp_values = list(map(lambda x: int(x.strip()), mult_exp.split(",")))
     else:
         exp_values = None
 
