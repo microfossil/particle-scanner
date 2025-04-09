@@ -1,5 +1,6 @@
 import time
 from decimal import Decimal, getcontext
+import threading
 import cv2
 import requests
 
@@ -11,6 +12,7 @@ class Stage(object):
         self.controller = controller
         self.printer_ip = printer_ip
         self.port = port
+        self.lock = threading.Lock()
 
         # Distances in micrometers
         self.x = 0
@@ -32,28 +34,34 @@ class Stage(object):
         return [self.x, self.y, self.z]
 
     def move_home(self, home_position):
-        response = self.send_gcode("G28")
-        if response["result"] == "ok":
-            print('Printer homed successfully')
+        with self.lock:  # Ensure thread-safe access for the entire method
+            response = self.send_gcode("G28")
+            if response["result"] == "ok":
+                pass
+            else:
+                print("Error moving to home position by sending G28 command.")
 
-        self.z_correction_factor = self.z_correction_factor_compute()
+            self.z_correction_factor = self.z_correction_factor_compute()
 
-        self.goto_x(home_position[0])
-        self.goto_y(home_position[1])
-        self.goto_z(home_position[2])
+            self.goto_x(home_position[0])
+            self.goto_y(home_position[1])
+            self.goto_z(home_position[2])
 
-        self.check_position_reached(home_position[0], home_position[1], home_position[2])
+            self.check_position_reached(home_position[0], home_position[1], home_position[2])
 
     def move_x(self, distance_um):
-        self.goto_x(self.x + distance_um)
+        with self.lock:  # Ensure thread-safe access
+            self.goto_x(self.x + distance_um)
 
     def move_y(self, distance_um):
-        self.goto_y(self.y + distance_um)
+        with self.lock:  # Ensure thread-safe access
+            self.goto_y(self.y + distance_um)
 
     def move_z(self, distance_um):
-        sleep_time = abs(distance_um) / 1000
-        self.goto_z(self.z + distance_um)
-        time.sleep(sleep_time)
+        with self.lock:  # Ensure thread-safe access
+            sleep_time = abs(distance_um) / 1000
+            self.goto_z(self.z + distance_um)
+            time.sleep(sleep_time)
 
     def goto_x(self, position):
         self.x = position

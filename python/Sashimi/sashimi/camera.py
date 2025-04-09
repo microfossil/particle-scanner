@@ -98,6 +98,8 @@ class Camera(object):
         print(f"Loading camera settings file '{self.camera_settings_file_path}'.")
     
     def stop(self):
+        if self.capture_thread is not None:
+            self.capture_thread.join() # Wait for the thread to terminate before stopping the camera
         self.camera.StopGrabbing()
         self.camera.ChunkModeActive = False
         self.camera.Close()

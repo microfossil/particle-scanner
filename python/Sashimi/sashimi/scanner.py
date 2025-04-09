@@ -6,6 +6,7 @@ import datetime as dt
 from shutil import rmtree
 from pathlib import Path
 from sashimi import utils, helicon_stack
+import threading
 
 # TODO: make an ETA function
 
@@ -76,6 +77,7 @@ class Scanner(object):
         self.queue = None
         self.update_stack_count()
         self.update_total_pic_count()
+        self.lock = threading.Lock()
 
         self.summary = {
             'save_dir': self.controller.save_dir,
@@ -135,52 +137,54 @@ class Scanner(object):
         return x_steps, y_steps
     
     def multi_scan(self):
-        self.is_multi_scanning = True
-        self.current_pic_count = 0
-        self.update_total_pic_count()
-        self.summary['scan_dates'] = []
-        self.controller.selected_scan_number = 1
-        self.controller.interrupt_flag = False
+        with self.lock: # Ensure thread-safe access for the entire method
+            self.is_multi_scanning = True
+            self.current_pic_count = 0
+            self.update_total_pic_count()
+            self.summary['scan_dates'] = []
+            self.controller.selected_scan_number = 1
+            self.controller.interrupt_flag = False
 
-        if self.controller.save_dir.exists() and len(list(self.controller.save_dir.iterdir())) > 0:
-            if self.controller.do_overwrite:
-                utils.remove_folder(self.controller.save_dir)
-                os.makedirs(self.controller.save_dir)
-            else:
-                self.controller.save_dir = utils.make_unique_subdir(self.controller.save_dir.parent)
-        
-        if self.auto_f_stack:
-            self.fs_folder = self.controller.save_dir.joinpath("f_stacks")
-            if self.multi_exp:
-                self.fs_exp_folders = [self.fs_folder.joinpath(f"E{exp}") for exp in self.multi_exp]
-            os.makedirs(self.fs_folder)
-            if not mp.get_start_method(allow_none=True):
-                mp.set_start_method("spawn")
-            self.queue = mp.Queue()
-            error_logs = self.controller.save_dir.joinpath('error_logs.txt')
-            if error_logs.exists():
-                os.remove(error_logs)
-            arguments = (self.queue, error_logs, self.multi_exp, self.controller.remove_raw)
-            self.parallel_process = mp.Process(target=helicon_stack.parallel_stack, args=arguments)
-            self.parallel_process.start()
+            if self.controller.save_dir.exists() and len(list(self.controller.save_dir.iterdir())) > 0:
+                if self.controller.do_overwrite:
+                    utils.remove_folder(self.controller.save_dir)
+                    os.makedirs(self.controller.save_dir)
+                else:
+                    self.controller.save_dir = utils.make_unique_subdir(self.controller.save_dir.parent)
+            
+            if self.auto_f_stack:
+                self.fs_folder = self.controller.save_dir.joinpath("f_stacks")
+                if self.multi_exp:
+                    self.fs_exp_folders = [self.fs_folder.joinpath(f"E{exp}") for exp in self.multi_exp]
+                os.makedirs(self.fs_folder)
+                if not mp.get_start_method(allow_none=True):
+                    mp.set_start_method("spawn")
+                self.queue = mp.Queue()
+                error_logs = self.controller.save_dir.joinpath('error_logs.txt')
+                if error_logs.exists():
+                    os.remove(error_logs)
+                arguments = (self.queue, error_logs, self.multi_exp, self.controller.remove_raw)
+                self.parallel_process = mp.Process(target=helicon_stack.parallel_stack, args=arguments)
+                self.parallel_process.start()
 
-        for n in range(len(self.config.scans)):
-            if not self.is_multi_scanning:
-                break
-            scan_name = f"scan{n + 1}"
-            scan_dir = Path(self.controller.save_dir).joinpath(scan_name)
-            os.makedirs(scan_dir)
-            self.controller.selected_scan_number = n + 1
+            for n in range(len(self.config.scans)):
+                if not self.is_multi_scanning:
+                    break
+                scan_name = f"scan{n + 1}"
+                scan_dir = Path(self.controller.save_dir).joinpath(scan_name)
+                os.makedirs(scan_dir)
+                self.controller.selected_scan_number = n + 1
+                self.summary['scan_dates'].append(dt.datetime.now(tz=dt.timezone(dt.timedelta(hours=2))))
+                self.scan(scan_dir)
             self.summary['scan_dates'].append(dt.datetime.now(tz=dt.timezone(dt.timedelta(hours=2))))
-            self.scan(scan_dir)
-        self.summary['scan_dates'].append(dt.datetime.now(tz=dt.timezone(dt.timedelta(hours=2))))
-        self.make_scan_summary()
-        
-        if self.auto_f_stack:
-            self.queue.put('terminate')
-            self.parallel_process.join()
+            self.make_scan_summary()
+            
+            if self.auto_f_stack:
+                self.queue.put('terminate')
+                self.parallel_process.join()
 
-        self.is_multi_scanning = False
+            self.is_multi_scanning = False
+            print("Scanning complete.")
 
     def scan(self, scan_dir):
         selected_scan = self.controller.selected_scan()

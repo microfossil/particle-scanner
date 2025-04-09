@@ -7,6 +7,8 @@ from sashimi.stage import Stage
 from sashimi.configuration import Configuration
 from sashimi.utils import Keyboard
 from sashimi.user_interface import UserInterface
+from concurrent.futures import ThreadPoolExecutor
+
 class Controller(object):
     def __init__(
             self,
@@ -49,6 +51,12 @@ class Controller(object):
         self.start_scan_requested = False
         self.stop_scan_requested = False
         self.time_remaining = None
+        self.home_requested = False
+        self.scan_requested = False
+
+        # Thread pool executor
+        self.executor = ThreadPoolExecutor(max_workers=2)  # Adjust max_workers as needed
+        self.futures = []
 
         # instances
         self.stage = Stage(self, self.config.printer_ip, self.config.port)
@@ -129,14 +137,14 @@ class Controller(object):
         kb = self.keyboard
         # Scan
         if key == kb.SCAN:
-            print("begin scanning")
             self.scanner.is_multi_scanning = True
-            self.scanner.multi_scan()
+            scan_future = self.executor.submit(self.start_scan)
+            self.futures.append(("perform_scan", scan_future))  # Track the task
 
         # Home
         elif key == kb.HOME:
-            self.stage.move_home(self.config.home_position)
-            print("Stage: move home")
+            home_future = self.executor.submit(self.home_printer)
+            self.futures.append(("home_printer", home_future))  # Track the task
         elif key == kb.SET_HOME:
             self.config.home_position = self.stage.position
             print("Stage: set current position to home position")
@@ -157,42 +165,42 @@ class Controller(object):
 
         # Move stage
         elif key == kb.FORWARD:
-            self.stage.move_y(1000)
+            self.executor.submit(self.stage.move_y, 1000)
             print("Stage: move y 1mm")
         elif key == kb.BACK:
-            self.stage.move_y(-1000)
+            self.executor.submit(self.stage.move_y, -1000)
             print("Stage: move y -1mm")
         elif key == kb.LEFT:
-            self.stage.move_x(-1000)
+            self.executor.submit(self.stage.move_x, -1000)
             print("Stage: move x -1mm")
         elif key == kb.RIGHT:
-            self.stage.move_x(1000)
+            self.executor.submit(self.stage.move_x, 1000)
             print("Stage: move x 1mm")
 
         elif key == kb.X_FORWARD:
-            self.stage.move_y(10000)
+            self.executor.submit(self.stage.move_y, 10000)
             print("Stage: move y 10mm")
         elif key == kb.X_BACK:
-            self.stage.move_y(-10000)
+            self.executor.submit(self.stage.move_y, -10000)
             print("Stage: move y -10mm")
         elif key == kb.X_LEFT:
-            self.stage.move_x(-10000)
+            self.executor.submit(self.stage.move_x, -10000)
             print("Stage: move x -10mm")
         elif key == kb.X_RIGHT:
-            self.stage.move_x(10000)
+            self.executor.submit(self.stage.move_x, 10000)
             print("Stage: move 10mm")
 
         elif key == kb.UP:
-            self.stage.move_z(20)
+            self.executor.submit(self.stage.move_z, 20)
             print("Stage: move z 20um")
         elif key == kb.DOWN:
-            self.stage.move_z(-20)
+            self.executor.submit(self.stage.move_z, -20)
             print("Stage: move z -20um")
         elif key == kb.X_UP:
-            self.stage.move_z(200)
+            self.executor.submit(self.stage.move_z, 200)
             print("Stage: move z 200um")
         elif key == kb.X_DOWN:
-            self.stage.move_z(-200)
+            self.executor.submit(self.stage.move_z, -200)
             print("Stage: move z -200um")
 
         elif key == ord('r'):
@@ -283,24 +291,69 @@ class Controller(object):
             self.scanning_commands(key)
         else:
             self.menu_commands(key)
-        return True
+        return
+    
+    # Methods to be run in a thread
+    # --------------------------------------------------
+    def home_printer(self):
+        """Called in a thread to home the printer"""
+        print("\nHome requested")
+        self.stage.move_home(self.config.home_position)
+
+    def start_scan(self):
+        """Called in a thread to start a scan"""
+        print("\nScan requested")
+        self.scanner.multi_scan()
+    # --------------------------------------------------
+    
+    # Method to check the status of threads
+    # --------------------------------------------------
+    def check_futures(self):
+        """Check for results from methods computed in threads"""
+        completed_futures = []
+        for task_name, future in self.futures:
+            if future.done():
+                try:
+                    # Retrieve the result or handle exceptions
+                    future.result()  # This will raise any exception that occurred
+                    if self.interrupt_flag:
+                        print(f"Task '{task_name}' Interrupted.\n")
+                    else:
+                        print(f"Task '{task_name}' completed successfully.\n")
+                    if task_name == "initialize_printer":
+                        print("=========================================")
+                        print("        ParticleScanner is running\n")
+                except Exception as e:
+                    print(f"Task '{task_name}' failed with error: {e}")
+                completed_futures.append((task_name, future))  # Mark as completed
+
+        # Remove completed futures from the list
+        for completed in completed_futures:
+            self.futures.remove(completed)
+    # --------------------------------------------------
 
     def start(self):
         self.camera.start()
         self.camera.set_exposure(self.config.exposure_time)
+        # Submit initialization task to the executor
         print("\n=========================================")
-        print("          Printer initialization         \n")
-        self.stage.move_home(self.config.home_position)
+        print("          Printer initialization         ")
+        init_future = self.executor.submit(self.home_printer)
+        self.futures.append(("initialize_printer", init_future))  # Track the task
 
         # Control loop
         while not self.quit_requested:
-            # self.wait()
             img = self.camera.latest_image()
             if img is not None:
                 self.ui.render(img)
             self.check_for_command(self.frame_duration_ms)
 
+            # Check the status of submitted tasks
+            self.check_futures()
+
         # Clean up
         cv2.destroyAllWindows()
         self.camera.stop()
+        self.executor.shutdown(wait=True)
+        print("\n      - ParticleScanner stopped -\n")
         return self.interrupt_flag
