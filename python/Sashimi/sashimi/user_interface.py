@@ -10,6 +10,9 @@ class UserInterface:
         self.stage = controller.stage
         self.config = controller.config
         self.scanner = controller.scanner
+        self.orange = (50, 100, 255)
+        self.yellow = (100, 255, 255)
+        self.white = (255, 255, 255)
 
     def render(self, im: np.array):
         # Reduce size of image
@@ -25,19 +28,16 @@ class UserInterface:
         im = np.pad(im, [[0, bottom_edge_size], [left_edge_size, 0], [0, 0]])
 
         colors = [
-            (100, 255, 255),  # Keyboard commands color
-            (255, 255, 255),  # Text command color
-            (50, 100, 255),  # Section color
+            self.yellow, # Keyboard commands color
+            self.white,  # Text command color
+            self.orange, # Section color
         ]
 
         left_panel = self._get_text_left_panel()
         text_help = self._get_text_help()
 
-        # Draw text on the image
-        # self._draw_text(im, text_status, (50, 20), (230, 230, 230))
-        # self._draw_text(im, text_button, (10, 20), (120, 255, 255))
         self._draw_text_left_panel(im, left_panel, (10, 20), colors)
-        self._draw_text(im, text_help, (left_edge_size + 10, 20), (0, 255, 255))
+        self._draw_text(im, text_help, (left_edge_size + 10, 20), self.yellow)
 
         # Show the image
         cv2.imshow("im", im)
@@ -79,12 +79,12 @@ class UserInterface:
                 [front_left_text, ""           ],
                 [back_right_text, ""           ],
                 [back_left_text , ""           ],
-                ["add_zone_text", ""           ],
-                ["del_zone_text", ""           ],
+                [""             , ""           ],
+                [""             , ""           ],
                 [line_break     , ""           ],
                 ["COMMANDS"     , ""           ],
                 [scan_text      , scan_command ],
-                ["del_scans_text", ""           ],
+                [""             , ""           ],
                 [""             , ""           ],
                 [""             , ""           ],
                 ["quit"         , "esc"        ],
