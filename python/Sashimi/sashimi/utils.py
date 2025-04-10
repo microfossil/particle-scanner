@@ -2,7 +2,18 @@ import os
 import shutil
 import datetime as dt
 from pathlib import Path
+import tomllib
 
+def get_project_version(pyproject_path: str | Path = os.path.join(os.getcwd(), '..', 'pyproject.toml')) -> str:
+    """Extracts the version from pyproject.toml"""
+    pyproject_path = Path(pyproject_path)
+    if not pyproject_path.exists():
+        raise FileNotFoundError(f"{pyproject_path} {os.getcwd()} not found.")
+
+    with pyproject_path.open("rb") as f:
+        data = tomllib.load(f)
+
+    return data.get("project", {}).get("version", "Unknown")
 
 def remove_folder(path):
 	for file in os.listdir(path):
@@ -127,6 +138,7 @@ class Keyboard(object):
 		self.layout = layout
 		self.HOME = ord('H')
 		self.SET_HOME = ord('h')
+		self.AUTO_LEVELING = ord('l')
 		
 		self.FORWARD = ord('w')
 		self.BACK = ord('s')

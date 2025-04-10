@@ -1,4 +1,5 @@
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 import cv2
 import numpy as np
 from sashimi.camera import Camera
@@ -7,7 +8,7 @@ from sashimi.stage import Stage
 from sashimi.configuration import Configuration
 from sashimi.utils import Keyboard
 from sashimi.user_interface import UserInterface
-from concurrent.futures import ThreadPoolExecutor
+from python.Sashimi.sashimi.controller_states import State
 
 class Controller(object):
     def __init__(
@@ -51,8 +52,9 @@ class Controller(object):
         self.start_scan_requested = False
         self.stop_scan_requested = False
         self.time_remaining = None
-        self.home_requested = False
-        self.scan_requested = False
+
+        #Flags
+        self.state = State.IDLE
 
         # Thread pool executor
         self.executor = ThreadPoolExecutor(max_workers=2)  # Adjust max_workers as needed
@@ -138,13 +140,12 @@ class Controller(object):
         # Scan
         if key == kb.SCAN:
             self.scanner.is_multi_scanning = True
-            scan_future = self.executor.submit(self.start_scan)
-            self.futures.append(("perform_scan", scan_future))  # Track the task
+            self.start_scan()
 
         # Home
         elif key == kb.HOME:
-            home_future = self.executor.submit(self.home_printer)
-            self.futures.append(("home_printer", home_future))  # Track the task
+            self.home_printer()
+
         elif key == kb.SET_HOME:
             self.config.home_position = self.stage.position
             print("Stage: set current position to home position")
@@ -293,39 +294,61 @@ class Controller(object):
             self.menu_commands(key)
         return
     
+    # Decorator to run methods in a thread
+    @staticmethod
+    def send_to_thread(state):
+        def decorator(method):
+            def wrapper(self, *args, **kwargs):
+                self.state = state
+                future = self.executor.submit(method, self, *args, **kwargs)
+                self.futures.append((state, future))
+                return future
+            return wrapper
+        return decorator
+    
     # Methods to be run in a thread
     # --------------------------------------------------
+    @send_to_thread(State.INIT)
+    def init_printer(self):
+        """Called in a thread to home the printer"""
+        print("\n=========================================")
+        print("          Printer initialization         \n")
+        self.stage.move_home(self.config.home_position)
+
+    @send_to_thread(State.HOMING)
     def home_printer(self):
         """Called in a thread to home the printer"""
         print("\nHome requested")
         self.stage.move_home(self.config.home_position)
 
+    @send_to_thread(State.SCANNING)
     def start_scan(self):
         """Called in a thread to start a scan"""
         print("\nScan requested")
         self.scanner.multi_scan()
     # --------------------------------------------------
     
-    # Method to check the status of threads
+    # Check the status of threads and print result when done
     # --------------------------------------------------
     def check_futures(self):
         """Check for results from methods computed in threads"""
         completed_futures = []
-        for task_name, future in self.futures:
+        for state, future in self.futures:
             if future.done():
                 try:
                     # Retrieve the result or handle exceptions
                     future.result()  # This will raise any exception that occurred
                     if self.interrupt_flag:
-                        print(f"Task '{task_name}' Interrupted.\n")
+                        print(f"Task '{state.value}' Interrupted.\n")
                     else:
-                        print(f"Task '{task_name}' completed successfully.\n")
-                    if task_name == "initialize_printer":
+                        print(f"Task '{state.value}' completed successfully.\n")
+                    if state == State.INIT:
                         print("=========================================")
                         print("        ParticleScanner is running\n")
+                    self.state = State.IDLE
                 except Exception as e:
-                    print(f"Task '{task_name}' failed with error: {e}")
-                completed_futures.append((task_name, future))  # Mark as completed
+                    print(f"Task '{state.value}' failed with error: {e}")
+                completed_futures.append((state, future)) # Mark as completed
 
         # Remove completed futures from the list
         for completed in completed_futures:
@@ -335,11 +358,7 @@ class Controller(object):
     def start(self):
         self.camera.start()
         self.camera.set_exposure(self.config.exposure_time)
-        # Submit initialization task to the executor
-        print("\n=========================================")
-        print("          Printer initialization         ")
-        init_future = self.executor.submit(self.home_printer)
-        self.futures.append(("initialize_printer", init_future))  # Track the task
+        self.init_printer()
 
         # Control loop
         while not self.quit_requested:

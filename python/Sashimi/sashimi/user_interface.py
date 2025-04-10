@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+from python.Sashimi.sashimi.controller_states import State
+from sashimi.utils import get_project_version
 
 class UserInterface:
     """
@@ -10,9 +12,13 @@ class UserInterface:
         self.stage = controller.stage
         self.config = controller.config
         self.scanner = controller.scanner
-        self.orange = (50, 100, 255)
+        self.orange = (50, 150, 255)
         self.yellow = (100, 255, 255)
         self.white = (255, 255, 255)
+        self.red = (75, 75, 255)
+        self.green = (100, 255, 100)
+        self.left_panel_width = 300
+        self.bottom_edge_size = 30
 
     def render(self, im: np.array):
         # Reduce size of image
@@ -23,26 +29,55 @@ class UserInterface:
             im = np.repeat(im[:, :, self.controller.img_mode - 2][..., np.newaxis], 3, axis=-1)
 
         # Add black space to the left of the image for UI text
-        left_edge_size = 300
-        bottom_edge_size = 30
-        im = np.pad(im, [[0, bottom_edge_size], [left_edge_size, 0], [0, 0]])
 
-        colors = [
+        im = np.pad(im, [[0, self.bottom_edge_size], [self.left_panel_width, 0], [0, 0]])
+
+        # Get text to display in the UI
+        # -------------------------------------
+        left_panel_txt, left_panel_exit = self._get_left_panel_txt()
+        text_help = self._get_text_help()
+        # -------------------------------------
+
+        # Define colors for the UI
+        # -------------------------------------
+        left_panel_colors = [
             self.yellow, # Keyboard commands color
             self.white,  # Text command color
             self.orange, # Section color
         ]
+        if self.controller.state == State.IDLE:
+            state_color = [self.orange, self.green]
+        else:
+            state_color = [self.orange, self.red]
 
-        left_panel = self._get_text_left_panel()
-        text_help = self._get_text_help()
+        version_color = [self.orange, self.white]
+        # -------------------------------------
 
-        self._draw_text_left_panel(im, left_panel, (10, 20), colors)
-        self._draw_text(im, text_help, (left_edge_size + 10, 20), self.yellow)
+        # Display the UI
+        # -------------------------------------
+        self._draw_txt_left_panel(im, left_panel_txt, (10, 20), 50, left_panel_colors)
+        self._draw_txt_left_panel(im, left_panel_exit, (10, im.shape[0]-10), 50, left_panel_colors)
+        self._draw_text(im, text_help, (self.left_panel_width + 10, 20), self.yellow)
+        self._draw_txt_key_value(
+            im,
+            [["Printer state: ", self.controller.state.value]],
+            (self.left_panel_width + 10, im.shape[0]-10),
+            90,
+            state_color
+        )
+        self._draw_txt_key_value(
+            im,
+            [['Version:', get_project_version()]],
+            (im.shape[1]-110, im.shape[0]-10),
+            55,
+            version_color
+        )
+        # -------------------------------------
 
         # Show the image
         cv2.imshow("im", im)
 
-    def _get_text_left_panel(self):
+    def _get_left_panel_txt(self):
         kb = self.keyboard
         position_text_1 = f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}"
         position_text_2 = f"Home: {self.config.home_position}"
@@ -62,37 +97,33 @@ class UserInterface:
 
         if self.scanner.is_multi_scanning:
             scan_text = "Stop scanning"
-            left_panel_text = [
-                ["POSITION"     , ""           ],
-                [position_text_1, ""           ],
-                [position_text_2, ""           ],
-                [line_break     , ""           ],
-                ["CAMERA"       , ""           ],
-                [exposure_text  , ""           ],
-                [line_break     , ""           ],
-                ["STACK"        , ""           ],
-                [height_text    , ""           ],
-                [step_text      , ""           ],
-                [line_break     , ""           ],
-                ["SCAN"         , ""           ],
-                [zone_text      , ""           ],
-                [front_left_text, ""           ],
-                [back_right_text, ""           ],
-                [back_left_text , ""           ],
-                [""             , ""           ],
-                [""             , ""           ],
-                [line_break     , ""           ],
-                ["COMMANDS"     , ""           ],
-                [scan_text      , scan_command ],
-                [""             , ""           ],
-                [""             , ""           ],
-                [""             , ""           ],
-                ["quit"         , "esc"        ],
+            left_panel_txt = [
+                [ ""          , "POSITION"     ],
+                [ ""          , position_text_1],
+                [ ""          , position_text_2],
+                [ ""          , line_break     ],
+                [ ""          , "CAMERA"       ],
+                [ ""          , exposure_text  ],
+                [ ""          , line_break     ],
+                [ ""          , "STACK"        ],
+                [ ""          , height_text    ],
+                [ ""          , step_text      ],
+                [ ""          , line_break     ],
+                [ ""          , "SCAN"         ],
+                [ ""          , zone_text      ],
+                [ ""          , front_left_text],
+                [ ""          , back_right_text],
+                [ ""          , back_left_text ],
+                [ ""          , ""             ],
+                [ ""          , ""             ],
+                [ ""          , line_break     ],
+                [ ""          , "COMMANDS"     ],
+                [ scan_command, scan_text      ],
             ]
         else:
             position_command_1 = f"{chr(kb.FORWARD)} {chr(kb.BACK)} {chr(kb.LEFT)}"
             position_command_2 = f"{chr(kb.RIGHT)} {chr(kb.UP)} {chr(kb.DOWN)}"
-            exposure_command = f"{chr(kb.EXPOSURE_UP)} {chr(kb.EXPOSURE_DOWN)}"
+            exposure_command = f"{chr(kb.EXPOSURE_DOWN)} {chr(kb.EXPOSURE_UP)}"
             set_home_command = f"{chr(kb.SET_HOME)}"
             zone_command = f"{chr(kb.PREV_SCAN)} {chr(kb.NEXT_SCAN)}"
             add_zone_command = f"{chr(kb.ADD_ZONE)}"
@@ -102,34 +133,34 @@ class UserInterface:
             back_left_command = f"{chr(kb.SET_Z_COR)}"
             scan_command = f"{chr(kb.SCAN)}"
             del_scans_command = f"{chr(kb.DEL_ALL_ZONES)}"
-            left_panel_text = [
-                ["POSITION"     , position_command_1],
-                [position_text_1, position_command_2],
-                [position_text_2, set_home_command  ],
-                [line_break     , ""                ],
-                ["CAMERA"       , ""                ],
-                [exposure_text  , exposure_command  ],
-                [line_break     , ""                ],
-                ["STACK"        , ""                ],
-                [height_text    , "[ ]"             ],
-                [step_text      , "{ }"             ],
-                [line_break     , ""                ],
-                ["SCAN"         , ""                ],
-                [zone_text      , zone_command      ],
-                [front_left_text, front_left_command],
-                [back_right_text, back_right_command],
-                [back_left_text , back_left_command ],
-                [add_zone_text  , add_zone_command  ],
-                [del_zone_text  , del_zone_command  ],
-                [line_break     , ""                ],
-                ["COMMANDS"     , ""                ],
-                [scan_text      , scan_command      ],
-                [del_scans_text , del_scans_command ],
-                [""             , ""                ],
-                [""             , ""                ],
-                ["quit"         , "esc"             ],
+            left_panel_txt = [
+                [position_command_1, "POSITION"     ],
+                [position_command_2, position_text_1],
+                [set_home_command  , position_text_2],
+                [""                , line_break     ],
+                [""                , "CAMERA"       ],
+                [exposure_command  , exposure_text  ],
+                [""                , line_break     ],
+                [""                , "STACK"        ],
+                ["[ ]"             , height_text    ],
+                ["{ }"             , step_text      ],
+                [""                , line_break     ],
+                [""                , "SCAN"         ],
+                [zone_command      , zone_text      ],
+                [front_left_command, front_left_text],
+                [back_right_command, back_right_text],
+                [back_left_command , back_left_text ],
+                [add_zone_command  , add_zone_text  ],
+                [del_zone_command  , del_zone_text  ],
+                [""                , line_break     ],
+                [""                , "COMMANDS"     ],
+                [scan_command      , scan_text      ],
+                [del_scans_command , del_scans_text ],
             ]
-        return left_panel_text
+        left_panel_exit = [
+                ["quit"         , "esc"        ]
+                ]
+        return left_panel_txt, left_panel_exit
 
     def _get_text_help(self):
         if self.controller.show_help:
@@ -149,44 +180,61 @@ class UserInterface:
         else:
             return ["?: show help"]
 
-    def _draw_text_left_panel(self, im, my_list, start_pos, color):
+    def _draw_txt_left_panel(self, im, my_list, start_pos, space_between, color):
         for i, lst in enumerate(my_list):
-            text = lst[0]
-            command = lst[1]
+            command = lst[0]
+            text = lst[1]
             if (text.isupper() and text.isalpha()) or text.startswith("-"):
                 text_color = color[2]
             else:
                 text_color = color[1]
-            cv2.putText(
-                im,
-                command,
-                (start_pos[0], start_pos[1] + i * 20),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.4,
-                color[0],
-                1,
-                cv2.LINE_AA,
+            self.put_text(
+                im, 
+                command, 
+                (start_pos[0], start_pos[1] + i * 20), 
+                color[0]
             )
-            cv2.putText(
+            self.put_text(
                 im,
                 text,
-                (start_pos[0] + 40, start_pos[1] + i * 20),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.4,
-                text_color,
-                1,
-                cv2.LINE_AA,
+                (start_pos[0] + space_between, start_pos[1] + i * 20),
+                text_color
+            )
+
+    def _draw_txt_key_value(self, im, my_list, start_pos, space_between, color):
+        for i, lst in enumerate(my_list):
+            key = lst[0]
+            value = lst[1]
+            self.put_text(
+                im, 
+                key, 
+                (start_pos[0], start_pos[1] + i * 20), 
+                color[0]
+            )
+            self.put_text(
+                im, 
+                value, 
+                (start_pos[0] + space_between, start_pos[1] + i * 20), 
+                color[1]
             )
 
     def _draw_text(self, im, text_list, start_pos, color):
         for i, text in enumerate(text_list):
-            cv2.putText(
-                im,
-                text,
-                (start_pos[0], start_pos[1] + i * 20),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.4,
-                color,
-                1,
-                cv2.LINE_AA,
+            self.put_text(
+                im, 
+                text, 
+                (start_pos[0], start_pos[1] + i * 20), 
+                color
             )
+
+    def put_text(self, im, text, position, color):
+        cv2.putText(
+            im,
+            text,
+            position,
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.4,
+            color,
+            1,
+            cv2.LINE_AA,
+        )
