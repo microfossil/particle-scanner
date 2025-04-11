@@ -94,6 +94,22 @@ class UserInterface:
 
     def _get_left_panel_txt(self):
         kb = self.keyboard
+
+        position_command_1 = f"{chr(kb.FORWARD)} {chr(kb.BACK)} {chr(kb.LEFT)}"
+        position_command_2 = f"{chr(kb.RIGHT)} {chr(kb.UP)} {chr(kb.DOWN)}"
+        exposure_command = f"{chr(kb.EXPOSURE_DOWN)} {chr(kb.EXPOSURE_UP)}"
+        set_home_command = f"{chr(kb.SET_HOME)}"
+        zone_command = f"{chr(kb.PREV_SCAN)} {chr(kb.NEXT_SCAN)}"
+        add_zone_command = f"{chr(kb.ADD_ZONE)}"
+        del_zone_command = f"{chr(kb.DEL_ZONE)}"
+        front_left_command = f"{chr(kb.SCAN_FL)}"
+        back_right_command = f"{chr(kb.SCAN_BR)}"
+        back_left_command = f"{chr(kb.SET_Z_COR)}"
+        del_scans_command = f"{chr(kb.DEL_ALL_ZONES)}"
+        scan_command = f"{chr(kb.SCAN)}"
+        home_command = f"{chr(kb.HOME)}"
+        auto_level_command = f"{chr(kb.AUTO_LEVEL)}"
+
         position_text_1 = f"[X, Y, Z]: {[self.stage.x, self.stage.y, self.stage.z]}"
         position_text_2 = f"Home: {self.config.home_position}"
         exposure_text = f"Exposure: {self.config.exposure_time}us"
@@ -106,8 +122,9 @@ class UserInterface:
         scan_text = "Start scanning"
         add_zone_text = "Add new zone"
         del_zone_text = "Delete current zone"
-        del_scans_text = "Delete all scans"
-        scan_command = f"{chr(kb.SCAN)}"
+        del_scans_text = "Restore scans settings"
+        home_text = "Move to home position"
+        auto_level_text = "Auto level printer"
         line_break = "- - - - - - - - - - - -"
 
         if self.controller.state == State.SCAN:
@@ -131,23 +148,13 @@ class UserInterface:
                 [ ""          , back_left_text ],
                 [ ""          , ""             ],
                 [ ""          , ""             ],
+                [ ""          , ""             ],
                 [ ""          , line_break     ],
                 [ ""          , "COMMANDS"     ],
                 [ scan_command, scan_text      ],
             ]
         else:
-            position_command_1 = f"{chr(kb.FORWARD)} {chr(kb.BACK)} {chr(kb.LEFT)}"
-            position_command_2 = f"{chr(kb.RIGHT)} {chr(kb.UP)} {chr(kb.DOWN)}"
-            exposure_command = f"{chr(kb.EXPOSURE_DOWN)} {chr(kb.EXPOSURE_UP)}"
-            set_home_command = f"{chr(kb.SET_HOME)}"
-            zone_command = f"{chr(kb.PREV_SCAN)} {chr(kb.NEXT_SCAN)}"
-            add_zone_command = f"{chr(kb.ADD_ZONE)}"
-            del_zone_command = f"{chr(kb.DEL_ZONE)}"
-            front_left_command = f"{chr(kb.SCAN_FL)}"
-            back_right_command = f"{chr(kb.SCAN_BR)}"
-            back_left_command = f"{chr(kb.SET_Z_COR)}"
-            scan_command = f"{chr(kb.SCAN)}"
-            del_scans_command = f"{chr(kb.DEL_ALL_ZONES)}"
+
             left_panel_txt = [
                 [position_command_1, "POSITION"     ],
                 [position_command_2, position_text_1],
@@ -167,10 +174,12 @@ class UserInterface:
                 [back_left_command , back_left_text ],
                 [add_zone_command  , add_zone_text  ],
                 [del_zone_command  , del_zone_text  ],
+                [del_scans_command , del_scans_text ],
                 [""                , line_break     ],
                 [""                , "COMMANDS"     ],
                 [scan_command      , scan_text      ],
-                [del_scans_command , del_scans_text ],
+                [home_command      , home_text      ],
+                [auto_level_command, auto_level_text],
             ]
         left_panel_exit = [
                 ["quit"         , "esc"        ]
