@@ -87,44 +87,7 @@ class Controller(object):
         elif key == ord('4'):
             self.img_mode = 4
             print("Image: display red")
-
-        # Stack step size commands
-        elif key == ord('{'):
-            self.config.stack_step -= 20
-            if self.config.stack_step < 20:
-                self.config.stack_step = 20
-            self.scanner.update_stack_count()
-            self.config.save()
-        elif key == ord('}'):
-            self.config.stack_step += 20
-            if self.config.stack_step > 200:
-                self.config.stack_step = 200
-            self.scanner.update_stack_count()
-            self.config.save()
-        elif key == ord('['):
-            self.config.stack_height -= 100
-            if self.config.stack_height < 100:
-                self.config.stack_height = 100
-            self.scanner.update_stack_count()
-            self.config.save()
-        elif key == ord(']'):
-            self.config.stack_height += 100
-            if self.config.stack_height > 10000:
-                self.config.stack_height = 10000
-            self.scanner.update_stack_count()
-            self.config.save()
-
-        # Exposure
-        elif key == kb.EXPOSURE_UP:
-            self.config.exposure_time += 50
-            if self.config.exposure_time > 50000:
-                self.config.exposure_time = 50000
-            self.camera.set_exposure(self.config.exposure_time)
-        elif key == kb.EXPOSURE_DOWN:
-            self.config.exposure_time -= 50
-            if self.config.exposure_time < 100:
-                self.config.exposure_time = 100
-            self.camera.set_exposure(self.config.exposure_time)
+        
         # Help
         elif key == kb.HELP1 or key == kb.HELP2:
             self.show_help = ~self.show_help
@@ -195,6 +158,44 @@ class Controller(object):
         elif key == ord('r'):
             self.stage.poll()
             print("Stage: poll position")
+
+        # Stack step size commands
+        elif key == ord('{'):
+            self.config.stack_step -= 20
+            if self.config.stack_step < 20:
+                self.config.stack_step = 20
+            self.scanner.update_stack_count()
+            self.config.save()
+        elif key == ord('}'):
+            self.config.stack_step += 20
+            if self.config.stack_step > 200:
+                self.config.stack_step = 200
+            self.scanner.update_stack_count()
+            self.config.save()
+        elif key == ord('['):
+            self.config.stack_height -= 100
+            if self.config.stack_height < 100:
+                self.config.stack_height = 100
+            self.scanner.update_stack_count()
+            self.config.save()
+        elif key == ord(']'):
+            self.config.stack_height += 100
+            if self.config.stack_height > 10000:
+                self.config.stack_height = 10000
+            self.scanner.update_stack_count()
+            self.config.save()
+
+        # Exposure
+        elif key == kb.EXPOSURE_UP:
+            self.config.exposure_time += 50
+            if self.config.exposure_time > 50000:
+                self.config.exposure_time = 50000
+            self.camera.set_exposure(self.config.exposure_time)
+        elif key == kb.EXPOSURE_DOWN:
+            self.config.exposure_time -= 50
+            if self.config.exposure_time < 100:
+                self.config.exposure_time = 100
+            self.camera.set_exposure(self.config.exposure_time)
 
             # Scan scans edition
         elif key == kb.PREV_SCAN:  # Select previous scan zone
