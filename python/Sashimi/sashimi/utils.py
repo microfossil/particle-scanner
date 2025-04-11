@@ -138,7 +138,7 @@ class Keyboard(object):
 		self.layout = layout
 		self.HOME = ord('H')
 		self.SET_HOME = ord('h')
-		self.AUTO_LEVELING = ord('l')
+		self.AUTO_LEVEL = ord('L')
 		
 		self.FORWARD = ord('w')
 		self.BACK = ord('s')

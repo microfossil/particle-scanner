@@ -147,6 +147,9 @@ class Controller(object):
             self.config.home_position = self.stage.position
             print("Stage: set current position to home position")
 
+        elif key == kb.AUTO_LEVEL:
+            self.auto_level_printer()
+
         # elif key == kb.SAVE_TO_CFG1:
         #     self.config.save("config_1")
         # elif key == kb.SAVE_TO_CFG2:
@@ -316,6 +319,12 @@ class Controller(object):
         """Called in a thread to home the printer"""
         print("\nHome requested")
         self.stage.move_home(self.config.home_position)
+
+    @send_to_thread(State.AUTO_LEVEL)
+    def auto_level_printer(self):
+        """Called in a thread to perform auto leveling on printer"""
+        print("\nAuto leveling requested")
+        self.stage.auto_level()
 
     @send_to_thread(State.SCAN)
     def start_scan(self):

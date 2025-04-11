@@ -49,6 +49,14 @@ class Stage(object):
 
             self.check_position_reached(home_position[0], home_position[1], home_position[2])
 
+    def auto_level(self):
+        with self.lock:  # Ensure thread-safe access for the entire method
+            response = self.send_gcode("G29", timeout=600)
+            if response["result"] == "ok":
+                pass
+            else:
+                print("Error during auto leveling by sending G29 command.")
+
     def move_x(self, distance_um):
         with self.lock:  # Ensure thread-safe access
             self.goto_x(self.x + distance_um)
