@@ -3,13 +3,14 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name='sashimi'
-version='1.0.0'
-description='3D printer stacking software'
-requires-python=">=3.10"
-authors=[{name='Ross Marchant', email='ross.g.marchant@gmail.com'},
-         {name='Louis Lanoy', email='louis.lanoy@icloud.com'}]
-dependencies=[
+name = 'sashimi'
+version = '1.0.0'
+description = '3D printer stacking software'
+requires-python = ">=3.10"
+authors = [{name='Ross Marchant', email='ross.g.marchant@gmail.com'},
+           {name='Louis Lanoy', email='louis.lanoy@icloud.com'},
+           {name='Anthony Gramoullé', email='gramoulle@cerege.fr'}]
+dependencies = [
         'scikit-image',
         'numpy',
         'scipy',
