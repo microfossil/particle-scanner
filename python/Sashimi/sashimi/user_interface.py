@@ -93,6 +93,7 @@ class UserInterface:
         cv2.imshow("im", im)
 
     def _get_left_panel_txt(self):
+        """Get the text to display in the left panel of the UI"""
         kb = self.keyboard
 
         position_command_1 = f"{chr(kb.FORWARD)} {chr(kb.BACK)} {chr(kb.LEFT)}"
@@ -127,7 +128,31 @@ class UserInterface:
         auto_level_text = "Auto level printer"
         line_break = "- - - - - - - - - - - -"
 
-        if self.controller.state == State.SCAN:
+        # Left panel displayed when printer is initializing
+        if self.controller.state == State.INIT:
+            left_panel_txt = [
+                [ ""          , "POSITION"     ],
+                [ ""          , position_text_1],
+                [ ""          , position_text_2],
+                [ ""          , line_break     ],
+                [ ""          , "CAMERA"       ],
+                [ ""          , exposure_text  ],
+                [ ""          , line_break     ],
+                [ ""          , "STACK"        ],
+                [ ""          , height_text    ],
+                [ ""          , step_text      ],
+                [ ""          , line_break     ],
+                [ ""          , "SCAN"         ],
+                [ ""          , zone_text      ],
+                [ ""          , front_left_text],
+                [ ""          , back_right_text],
+                [ ""          , back_left_text ],
+                [ ""          , ""             ],
+                [ ""          , ""             ],
+                [ ""          , ""             ],
+            ]
+        # Left panel displayed when printer is scanning
+        elif self.controller.state == State.SCAN:
             scan_text = "Stop scanning"
             left_panel_txt = [
                 [ ""          , "POSITION"     ],
@@ -154,7 +179,6 @@ class UserInterface:
                 [ scan_command, scan_text      ],
             ]
         else:
-
             left_panel_txt = [
                 [position_command_1, "POSITION"     ],
                 [position_command_2, position_text_1],
