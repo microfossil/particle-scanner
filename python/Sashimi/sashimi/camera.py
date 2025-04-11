@@ -1,8 +1,9 @@
 import threading
 import os
+from pathlib import Path
 import cv2
 from pypylon import pylon
-from pathlib import Path
+from sashimi.controller_states import State
 
 # TODO: look into pylon.ImageFileFormat
 
@@ -41,7 +42,7 @@ class CaptureThread(threading.Thread):
                     self.image = cv2.rotate(self.converter.Convert(grab_result).Array, cv2.ROTATE_180)
                     self.exposure = grab_result.ChunkExposureTime.Value
                 # Check if quit
-                if self.controller.quit_requested:
+                if self.controller.state == State.QUIT:
                     grab_result.Release()
                     break
             grab_result.Release()

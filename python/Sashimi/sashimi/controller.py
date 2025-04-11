@@ -8,7 +8,7 @@ from sashimi.stage import Stage
 from sashimi.configuration import Configuration
 from sashimi.utils import Keyboard
 from sashimi.user_interface import UserInterface
-from python.Sashimi.sashimi.controller_states import State
+from sashimi.controller_states import State
 
 class Controller(object):
     def __init__(
@@ -45,8 +45,8 @@ class Controller(object):
         self.refresh_rate_Hz = 20
         self.frame_duration_ms = 1000 // self.refresh_rate_Hz
         self.selected_scan_number = 1
-        self.interrupt_flag = False
-        self.quit_requested = False
+        # self.interrupt_flag = False
+        # self.quit_requested = False
         self.show_help = False
         self.take_stack_requested = False
         self.start_scan_requested = False
@@ -130,16 +130,13 @@ class Controller(object):
 
         # Quit
         elif key == 27:
-            self.scanner.is_multi_scanning = False
-            self.interrupt_flag = True
             self.config.save()
-            self.quit_requested = True
+            self.state = State.QUIT
 
     def menu_commands(self, key):
         kb = self.keyboard
         # Scan
         if key == kb.SCAN:
-            self.scanner.is_multi_scanning = True
             self.start_scan()
 
         # Home
@@ -278,8 +275,7 @@ class Controller(object):
 
     def scanning_commands(self, key):
         if key == self.keyboard.SCAN:
-            self.scanner.is_multi_scanning = False
-            self.interrupt_flag = True
+            self.state = State.INTERRUPT
 
     def check_for_command(self, wait_time=50):
         key = cv2.waitKey(wait_time)
@@ -288,7 +284,7 @@ class Controller(object):
         # print(key)
 
         self.permanent_commands(key)
-        if self.scanner.is_multi_scanning:
+        if self.state == State.SCAN:
             self.scanning_commands(key)
         else:
             self.menu_commands(key)
@@ -315,13 +311,13 @@ class Controller(object):
         print("          Printer initialization         \n")
         self.stage.move_home(self.config.home_position)
 
-    @send_to_thread(State.HOMING)
+    @send_to_thread(State.HOME)
     def home_printer(self):
         """Called in a thread to home the printer"""
         print("\nHome requested")
         self.stage.move_home(self.config.home_position)
 
-    @send_to_thread(State.SCANNING)
+    @send_to_thread(State.SCAN)
     def start_scan(self):
         """Called in a thread to start a scan"""
         print("\nScan requested")
@@ -338,7 +334,7 @@ class Controller(object):
                 try:
                     # Retrieve the result or handle exceptions
                     future.result()  # This will raise any exception that occurred
-                    if self.interrupt_flag:
+                    if self.state == State.INTERRUPT:
                         print(f"Task '{state.value}' Interrupted.\n")
                     else:
                         print(f"Task '{state.value}' completed successfully.\n")
@@ -361,7 +357,7 @@ class Controller(object):
         self.init_printer()
 
         # Control loop
-        while not self.quit_requested:
+        while self.state != State.QUIT:
             img = self.camera.latest_image()
             if img is not None:
                 self.ui.render(img)
@@ -375,4 +371,4 @@ class Controller(object):
         self.camera.stop()
         self.executor.shutdown(wait=True)
         print("\n      - ParticleScanner stopped -\n")
-        return self.interrupt_flag
+        return

@@ -1,12 +1,14 @@
 import os
 import multiprocessing as mp
-import skimage.io as skio
-import numpy as np
+import threading
 import datetime as dt
 from shutil import rmtree
 from pathlib import Path
+import skimage.io as skio
+import numpy as np
 from sashimi import utils, helicon_stack
-import threading
+from sashimi.controller_states import State
+
 
 # TODO: make an ETA function
 
@@ -72,7 +74,6 @@ class Scanner(object):
         self.total_stacks = 0
         self.current_pic_count = 0
         self.total_pic_count = 0
-        self.is_multi_scanning = False
         self.parallel_process = None
         self.queue = None
         self.update_stack_count()
@@ -138,12 +139,10 @@ class Scanner(object):
     
     def multi_scan(self):
         with self.lock: # Ensure thread-safe access for the entire method
-            self.is_multi_scanning = True
             self.current_pic_count = 0
             self.update_total_pic_count()
             self.summary['scan_dates'] = []
             self.controller.selected_scan_number = 1
-            self.controller.interrupt_flag = False
 
             if self.controller.save_dir.exists() and len(list(self.controller.save_dir.iterdir())) > 0:
                 if self.controller.do_overwrite:
@@ -168,7 +167,7 @@ class Scanner(object):
                 self.parallel_process.start()
 
             for n in range(len(self.config.scans)):
-                if not self.is_multi_scanning:
+                if self.controller.state != State.SCAN:
                     break
                 scan_name = f"scan{n + 1}"
                 scan_dir = Path(self.controller.save_dir).joinpath(scan_name)
@@ -182,9 +181,6 @@ class Scanner(object):
             if self.auto_f_stack:
                 self.queue.put('terminate')
                 self.parallel_process.join()
-
-            self.is_multi_scanning = False
-            print("Scanning complete.")
 
     def scan(self, scan_dir):
         selected_scan = self.controller.selected_scan()
@@ -296,23 +292,16 @@ class Scanner(object):
                 self.controller.wait(display=False)
         print(f'desired exposure was not reached in {ms}ms')
         return img
-
-    # def show_image(self, img):
-    #     if img is None:
-    #         return
-    #     self.controller.display(img)
     
     def check_for_escape(self):
-        if self.is_multi_scanning and not self.controller.quit_requested:
+        if self.controller.state == State.SCAN:
             return False
-        self.is_multi_scanning = False
-        self.controller.interrupt_flag = True
         return True
 
     def make_scan_summary(self):
         summary_path = self.controller.save_dir.joinpath('summary.txt')
         with open(summary_path, mode='x') as summary:
-            if self.controller.interrupt_flag:
+            if self.controller.state == State.INTERRUPT:
                 summary.write('///////////THE SCANS WERE INTERRUPTED BEFORE FINISHING!!!///////////\n\n')
             summary.write('This is the summary of this multi-scan folder.\n'
                           'Here are some parameters :')
