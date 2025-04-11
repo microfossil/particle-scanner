@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
-from python.Sashimi.sashimi.controller_states import State
 from sashimi.utils import get_project_version
+from sashimi.controller_states import State
 
 class UserInterface:
     """
@@ -20,6 +20,10 @@ class UserInterface:
         self.left_panel_width = 300
         self.bottom_edge_size = 30
 
+        self.nb_dots = 0
+        self.loading_dots = ""
+        self.update_nb_dots = 0  # To control update frequenc
+
     def render(self, im: np.array):
         # Reduce size of image
         im = im[::4, ::4, :].astype(np.uint8)
@@ -31,6 +35,17 @@ class UserInterface:
         # Add black space to the left of the image for UI text
 
         im = np.pad(im, [[0, self.bottom_edge_size], [self.left_panel_width, 0], [0, 0]])
+
+        # Loading dot cycling computation
+        # -------------------------------------
+        if self.controller.state != State.IDLE:
+            if self.update_nb_dots % 10 == 0:  # Update every 10 frames
+                self.nb_dots = ((self.nb_dots + 1) % 4)  # Cycle through 0, 1, 2, 3
+                self.loading_dots = "." * self.nb_dots
+            self.update_nb_dots += 1
+        else:
+            self.loading_dots = ""
+        # -------------------------------------
 
         # Get text to display in the UI
         # -------------------------------------
@@ -60,7 +75,7 @@ class UserInterface:
         self._draw_text(im, text_help, (self.left_panel_width + 10, 20), self.yellow)
         self._draw_txt_key_value(
             im,
-            [["Printer state: ", self.controller.state.value]],
+            [["Printer state: ", self.controller.state.value + self.loading_dots]],
             (self.left_panel_width + 10, im.shape[0]-10),
             90,
             state_color
@@ -95,7 +110,7 @@ class UserInterface:
         scan_command = f"{chr(kb.SCAN)}"
         line_break = "- - - - - - - - - - - -"
 
-        if self.scanner.is_multi_scanning:
+        if self.controller.state == State.SCAN:
             scan_text = "Stop scanning"
             left_panel_txt = [
                 [ ""          , "POSITION"     ],
