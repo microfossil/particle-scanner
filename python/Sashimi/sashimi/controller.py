@@ -70,7 +70,8 @@ class Controller(object):
     def selected_scan(self):
         return self.config.scans[self.selected_scan_number - 1]
 
-    def permanent_commands(self, key):
+    def handle_global_commands(self, key):
+        """Handle commands that are always available, regardless of the printer state."""
         kb = self.keyboard
 
         # Image display modes
@@ -129,11 +130,12 @@ class Controller(object):
             self.show_help = ~self.show_help
 
         # Quit
-        elif key == 27:
+        elif key == kb.EXIT:
             self.config.save()
             self.state = State.QUIT
 
-    def menu_commands(self, key):
+    def handle_idle_commands(self, key):
+        """Handle commands when printer state is IDLE."""
         kb = self.keyboard
         # Scan
         if key == kb.SCAN:
@@ -149,20 +151,6 @@ class Controller(object):
 
         elif key == kb.AUTO_LEVEL:
             self.auto_level_printer()
-
-        # elif key == kb.SAVE_TO_CFG1:
-        #     self.config.save("config_1")
-        # elif key == kb.SAVE_TO_CFG2:
-        #     self.config.save("config_2")
-        # elif key == kb.SAVE_TO_CFG3:
-        #     self.config.save("config_3")
-        #
-        # elif key == kb.LOAD_CFG1:
-        #     self.config.load("config_1")
-        # elif key == kb.LOAD_CFG2:
-        #     self.config.load("config_2")
-        # elif key == kb.LOAD_CFG3:
-        #     self.config.load("config_3")
 
         # Move stage
         elif key == kb.FORWARD:
@@ -276,7 +264,8 @@ class Controller(object):
         elif key == ord('C'):
             self.scanner.find_floor()
 
-    def scanning_commands(self, key):
+    def handle_scanning_commands(self, key):
+        """Handle commands when printer state is SCAN."""
         if key == self.keyboard.SCAN:
             self.state = State.INTERRUPT
 
@@ -286,16 +275,17 @@ class Controller(object):
             return
         # print(key)
 
-        self.permanent_commands(key)
+        self.handle_global_commands(key)
         if self.state == State.SCAN:
-            self.scanning_commands(key)
+            self.handle_scanning_commands(key)
         else:
-            self.menu_commands(key)
+            self.handle_idle_commands(key)
         return
     
     # Decorator to run methods in a thread
     @staticmethod
     def send_to_thread(state):
+        """Decorator to run a method in a thread and update the state of the printer accordingly"""
         def decorator(method):
             def wrapper(self, *args, **kwargs):
                 self.state = state

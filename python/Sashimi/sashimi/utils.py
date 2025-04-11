@@ -187,6 +187,8 @@ class Keyboard(object):
 		self.LOAD_CFG2 = ord('9')  # NOT IMPLEMENTED YET
 		self.LOAD_CFG3 = ord('0')  # NOT IMPLEMENTED YET
 		
+		self.EXIT = ord('\x1b')
+		
 		if self.layout == 'AZERTY':
 			self.FORWARD = ord('z')
 			self.BACK = ord('s')
