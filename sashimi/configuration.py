@@ -1,6 +1,5 @@
 import json
 import os
-import sashimi
 
 
 class Configuration(object):
