@@ -18,7 +18,8 @@ dependencies = [
         'opencv-python',
         'pyserial',
         'click',
-        'pillow'
+        'pillow',
+        'requests'
     ]
 
 [project.optional-dependencies]
