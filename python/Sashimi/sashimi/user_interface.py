@@ -17,6 +17,7 @@ class UserInterface:
         self.white = (255, 255, 255)
         self.red = (75, 75, 255)
         self.green = (100, 255, 100)
+        self.cyan = (255, 255, 0)
         self.left_panel_width = 300
         self.bottom_edge_size = 30
 
@@ -72,7 +73,7 @@ class UserInterface:
         # -------------------------------------
         self._draw_txt_left_panel(im, left_panel_txt, (10, 20), 50, left_panel_colors)
         self._draw_txt_left_panel(im, left_panel_exit, (10, im.shape[0]-10), 50, left_panel_colors)
-        self._draw_text(im, text_help, (self.left_panel_width + 10, 20), self.yellow)
+        self._draw_text(im, text_help, (self.left_panel_width + 10, 20), self.cyan)
         self._draw_txt_key_value(
             im,
             [["Printer state: ", self.controller.state.value + self.loading_dots]],
