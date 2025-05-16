@@ -91,6 +91,7 @@ Prepare the adaptor for the light power cable. Screw the wires from the male JST
 
 
  Plug the adaptor into the 24V power supply to the adaptor. You can eventually plug the annular led light to it and turn on the power supply to make sure the lights come on.
+
 ![step_11-1](docs/images/ender-3-v3/build/step_11-1.jpg)
 ![step_11-2](docs/images/ender-3-v3/build/step_11-2.jpg)
 
@@ -173,8 +174,6 @@ see [options](options.md).
 - `--layout` sets the keyboard layout. Only QWERTY and AZERTY are supported. AZERTY is the default
 
 The printer will move the camera to the home location and the following window will be displayed:
-
-[**TO MODIFY**]
 
 ![startup](docs/images/ender-3-v3/startup_low.png)
 
