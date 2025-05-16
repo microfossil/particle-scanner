@@ -123,6 +123,9 @@ Unscrew the 3 screws holding the card and install the holder on top of it using 
 ![step_7-2](docs/images/ender-3-v3/build/step_7-2.jpg)
 ![step_7-3](docs/images/ender-3-v3/build/step_7-3.jpg)
 
+Make sure that the bottom of the ring light is not positioned lower than the print tip.
+
+![step_13-1](docs/images/ender-3-v3/build/step_13-1.jpg)
 
 ### 8. Assemble camera
 
@@ -130,7 +133,7 @@ Attach the camera to the camera holder using 3 x M3 20mm bolts and washers. **It
 
 ![step_8-1](docs/images/ender-3-v3/build/step_8-1.jpg) ![step_8-2](docs/images/ender-3-v3/build/step_8-2.jpg)
 
-Plug the USB3 cable into the camera. Using some cable ties or wire twists, join the camera USB cable and the lighting cable together for about 50cm. Using a rubber band or tape, secure the two cables tightly to the upper-right of the frame, so that the cables make an arc. This is to reduce pressure on the camera when it moves.
+Plug the USB3 cable into the camera. Using some cable ties or wire twists, join the camera USB cable and the lighting cable together for about 50cm. Using a rubber band or tape, secure the two cables tightly to the upper-right of the frame, so that the cables make an arc. Make sure to allow enough cable length so that they don’t put any strain on the devices or the mount when the print head moves.
 
 ![step_9-1](docs/images/ender-3-v3/build/step_9-1.jpg)
 ![step_12-1](docs/images/ender-3-v3/build/step_12-1.jpg)
