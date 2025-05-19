@@ -151,11 +151,25 @@ The software needs python 3.7 or later. The easiest way to install python is to 
 
 ### 2. Install Sashimi
 
+> ⚠️ **Preliminary:** You nee d to have Anaconda distribution installed to handle python environments.
+
 Download this repository either using git or as a zip file.
 
-Open a terminal inside the `python/Sashimi` directory of this repository.
+Open a terminal and create a conda environment:
+```shell
+conda create -n [env_name] python=3.12
+```
 
-Run `pip install -e .`. Using `-e` means this will install this software as a linked package inside your python installation. Whenever you update the software in this repository, the changes will automatically be available.
+Activate ths environment:
+```shell
+conda activate [env_name]
+```
+
+Sill in terminal, move inside the root directory of this repository and install the package:
+```shell
+pip install -e .
+``` 
+Using `-e` means this will install this software as a linked package inside your python installation. Whenever you update the software in this repository, the changes will automatically be available.
 
 ## Usage (Python)
 
@@ -167,7 +181,9 @@ Turn on the printer and lighting power.
 
 From a terminal in your python environment, run 
 
-`python -m sashimi.cli scan --dir DIRECTORY/TO/SAVE/IMAGES`
+```shell
+python -m sashimi.cli scan --dir DIRECTORY/TO/SAVE/IMAGES
+```
 
 Words preceded by `--` are options that change the behavior of sashimi. To know more about options, 
 see [options](options.md).
