@@ -56,13 +56,12 @@ Download the software here https://www.creality.com/pages/download-software and 
 ![Holder preview](docs/images/ender-3-v3/Holder_preview_low.gif)
 
 Print these parts (located in the components directory).
-Depending on you light model, use the right `LightingHolder_[model].stl` file.
 
-- 1 x CameraObjectiveHolder.stl
-- 3 x Holders.stl
-- 1 x LightingHolder.stl
+- 1 x *Camera_lens_holder.stl*
+- 3 x *Holders.stl*
+- 1 x *Light_holder_VL_LR2550W.stl*
 
-Launch the print usiing the Creality Print software downloaded previouly. 
+Launch the print using the Creality Print software downloaded previouly. 
 If the printer has been succesfully connected to the wifi network, you should be able to detect it 
 with your computer and launch the print remotely.
 
