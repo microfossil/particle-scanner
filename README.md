@@ -55,7 +55,7 @@ Download the software here https://www.creality.com/pages/download-software and 
 
 ![Holder preview](docs/images/ender-3-v3/Holder_preview_low.gif)
 
-Print these parts (located in the components directory).
+Print these parts (located in the parts directory).
 
 - 1 x *Camera_lens_holder.stl*
 - 3 x *Holders.stl*
