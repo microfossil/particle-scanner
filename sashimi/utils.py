@@ -4,7 +4,7 @@ import datetime as dt
 from pathlib import Path
 import tomllib
 
-def get_project_version(pyproject_path: str | Path = os.path.join(os.getcwd(), '..', 'pyproject.toml')) -> str:
+def get_project_version(pyproject_path: str | Path = os.path.join(os.getcwd(), 'pyproject.toml')) -> str:
     """Extracts the version from pyproject.toml"""
     pyproject_path = Path(pyproject_path)
     if not pyproject_path.exists():
