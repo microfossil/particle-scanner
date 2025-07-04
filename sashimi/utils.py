@@ -3,12 +3,30 @@ import shutil
 import datetime as dt
 from pathlib import Path
 import tomllib
+import importlib.util
 
-def get_project_version(pyproject_path: str | Path = os.path.join(os.getcwd(), 'pyproject.toml')) -> str:
+def get_project_version(pyproject_path: str | Path = None) -> str:
     """Extracts the version from pyproject.toml"""
-    pyproject_path = Path(pyproject_path)
+    if pyproject_path is None:
+        # Try to get the package root directory
+        try:
+            # Use __file__ if available (normal module execution)
+            package_root = Path(__file__).parent.parent
+        except NameError:
+            # Fallback: use importlib to find the sashimi package location
+            spec = importlib.util.find_spec('sashimi')
+            if spec and spec.origin:
+                package_root = Path(spec.origin).parent.parent
+            else:
+                # Last resort: assume package_root is current working directory
+                package_root = Path.cwd()
+
+        pyproject_path = os.path.join(package_root, 'pyproject.toml')
+    else:
+        pyproject_path = Path(pyproject_path)
+
     if not pyproject_path.exists():
-        raise FileNotFoundError(f"{pyproject_path} {os.getcwd()} not found.")
+        raise FileNotFoundError(f"{pyproject_path} not found.")
 
     with pyproject_path.open("rb") as f:
         data = tomllib.load(f)
@@ -65,13 +83,13 @@ def is_valid_path(_path):
 def is_valid_range(user_range):
 	mini = 1
 	maxi = 5000
-	
+
 	try:
 		user_range = [float(val) for val in user_range]
 	except (RuntimeError, TypeError):
 		print("ERROR: Inputs could not be converted to integers.")
 		return False
-	
+
 	if user_range[0] >= user_range[1]:
 		print("ERROR: Lower bound greater than higher bound.")
 		return False
@@ -91,7 +109,7 @@ def is_valid_step_nbr(user_step_nbr, valid_bounds):
 	except(RuntimeError, TypeError):
 		print("ERROR: Input must be an integer greater than 1.")
 		return False
-	
+
 	if user_step_nbr % 1 or user_step_nbr <= 1:
 		print("ERROR: Input must be an integer greater than 1.")
 		return False
@@ -139,46 +157,46 @@ class Keyboard(object):
 		self.HOME = ord('H')
 		self.SET_HOME = ord('h')
 		self.AUTO_LEVEL = ord('L')
-		
+
 		self.FORWARD = ord('w')
 		self.BACK = ord('s')
 		self.LEFT = ord('a')
 		self.RIGHT = ord('d')
 		self.UP = ord('q')
 		self.DOWN = ord('e')
-		
+
 		self.X_FORWARD = ord('W')
 		self.X_BACK = ord('S')
 		self.X_LEFT = ord('A')
 		self.X_RIGHT = ord('D')
 		self.X_UP = ord('Q')
 		self.X_DOWN = ord('E')
-		
+
 		self.EXPOSURE_UP = ord('t')
 		self.EXPOSURE_DOWN = ord('g')
-		
+
 		self.SCAN_FL = ord('j')
 		self.SCAN_BR = ord('i')
 		self.SET_Z_COR = ord('u')
-		
+
 		self.MOVE_SCAN_FL = ord('J')
 		self.MOVE_SCAN_BL = ord('U')
 		self.MOVE_SCAN_BR = ord('I')
 		self.MOVE_SCAN_FR = ord('K')
 		self.SCAN = ord('p')
-		
+
 		self.HELP1 = ord('?')
 		self.HELP2 = ord('/')
-		
+
 		self.PREV_SCAN = ord('z')
 		self.NEXT_SCAN = ord('x')
 		self.ADD_ZONE = ord('v')
 		self.DEL_ZONE = ord('B')
 		self.DEL_ALL_ZONES = ord('N')
-		
+
 		self.TAKE_STACK1 = ord('\n')
 		self.TAKE_STACK2 = ord('\r')
-		
+
 		self.SAVE_TO_CFG1 = ord('5')  # NOT IMPLEMENTED YET
 		self.SAVE_TO_CFG2 = ord('6')  # NOT IMPLEMENTED YET
 		self.SAVE_TO_CFG3 = ord('7')  # NOT IMPLEMENTED YET
@@ -186,9 +204,9 @@ class Keyboard(object):
 		self.LOAD_CFG1 = ord('8')  # NOT IMPLEMENTED YET
 		self.LOAD_CFG2 = ord('9')  # NOT IMPLEMENTED YET
 		self.LOAD_CFG3 = ord('0')  # NOT IMPLEMENTED YET
-		
+
 		self.EXIT = ord('\x1b')
-		
+
 		if self.layout == 'AZERTY':
 			self.FORWARD = ord('z')
 			self.BACK = ord('s')
@@ -196,7 +214,7 @@ class Keyboard(object):
 			self.RIGHT = ord('d')
 			self.UP = ord('a')
 			self.DOWN = ord('e')
-			
+
 			self.X_FORWARD = ord('Z')
 			self.X_BACK = ord('S')
 			self.X_LEFT = ord('Q')
