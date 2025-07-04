@@ -21,9 +21,10 @@ def get_project_version(pyproject_path: str | Path = None) -> str:
                 # Last resort: assume package_root is current working directory
                 package_root = Path.cwd()
 
-        pyproject_path = os.path.join(package_root, 'pyproject.toml')
-    else:
-        pyproject_path = Path(pyproject_path)
+        pyproject_path = package_root / 'pyproject.toml'
+
+    # Ensure pyproject_path is a Path object
+    pyproject_path = Path(pyproject_path)
 
     if not pyproject_path.exists():
         raise FileNotFoundError(f"{pyproject_path} not found.")
