@@ -19,8 +19,8 @@ def clip(n, mini=0, maxi=None):
     if maxi is None or n <= maxi:
         return n
     return n
-    
-    
+
+
 def measure_sharpness(img):
     img = img[::4, ::4, ...]
     sharpness = []
@@ -60,12 +60,11 @@ class Scanner(object):
         self.frame_duration_ms = self.controller.frame_duration_ms
         self.auto_f_stack = self.controller.auto_f_stack
         self.remove_raw = self.controller.remove_raw
-        self.scan_dir = self.controller.save_dir
         self.selected_scan = self.controller.selected_scan
         self.multi_exp = self.controller.multi_exp
         self.fs_folder = ''
         self.fs_exp_folders = ''
-        
+
         # parameters and variables
         self.X_STEP = 1700
         self.Y_STEP = 1700
@@ -104,7 +103,7 @@ class Scanner(object):
         if mini < 0:
             mini = 0
         return mini
-    
+
     def get_corrected_z(self, dx, dy):
         if self.controller.lowest_z:
             # 'Dumb-but-works' correction
@@ -115,7 +114,7 @@ class Scanner(object):
             z_correction = int(dz_dx * dx + dz_dy * dy)
             new_z = self.selected_scan()['FL'][2] + z_correction
         return clip(new_z - self.config.z_margin)
-        
+
     def update_stack_count(self):
         self.stack_count = self.config.stack_height // self.config.stack_step
 
@@ -124,19 +123,19 @@ class Scanner(object):
             pps = self.stack_count * len(self.multi_exp)
         else:
             pps = self.stack_count
-        
+
         total_stacks = 0
         for scan in self.config.scans:
             x_steps, y_steps = self.step_nbr_xy(scan)
             total_stacks += x_steps * y_steps
-        
+
         self.total_pic_count = pps * total_stacks
-    
+
     def step_nbr_xy(self, scan) -> (int, int):
         x_steps = 1 + (scan['BR'][0] - scan['FL'][0]) // self.X_STEP
         y_steps = 1 + (scan['BR'][1] - scan['FL'][1]) // self.Y_STEP
         return x_steps, y_steps
-    
+
     def multi_scan(self):
         with self.lock: # Ensure thread-safe access for the entire method
             self.current_pic_count = 0
@@ -144,13 +143,8 @@ class Scanner(object):
             self.summary['scan_dates'] = []
             self.controller.selected_scan_number = 1
 
-            if self.controller.save_dir.exists() and len(list(self.controller.save_dir.iterdir())) > 0:
-                if self.controller.do_overwrite:
-                    utils.remove_folder(self.controller.save_dir)
-                    os.makedirs(self.controller.save_dir)
-                else:
-                    self.controller.save_dir = utils.make_unique_subdir(self.controller.save_dir.parent)
-            
+            self.controller.save_dir = utils.make_unique_subdir(self.controller.save_dir)
+
             if self.auto_f_stack:
                 self.fs_folder = self.controller.save_dir.joinpath("f_stacks")
                 if self.multi_exp:
@@ -177,7 +171,7 @@ class Scanner(object):
                 self.scan(scan_dir)
             self.summary['scan_dates'].append(dt.datetime.now(tz=dt.timezone(dt.timedelta(hours=2))))
             self.make_scan_summary()
-            
+
             if self.auto_f_stack:
                 self.queue.put('terminate')
                 self.parallel_process.join()
@@ -192,15 +186,15 @@ class Scanner(object):
         except AssertionError:
             print("INVALID SCAN COORDINATES")
             return
-        
+
         os.makedirs(scan_dir, exist_ok=True)
-        
+
         self.stage.goto(fl)
         self.stage.check_position_reached(fl)
         # self.stage.wait_until_position(10000)
         x_steps, y_steps = self.step_nbr_xy(selected_scan)
         self.total_stacks = x_steps * y_steps
-        
+
         # Start scanning
         self.current_stack = 0
         for yi in range(y_steps):
@@ -210,7 +204,7 @@ class Scanner(object):
                 if self.check_for_escape():
                     print('escaping scan()')
                     return
-                
+
                 dx, dy = self.X_STEP * xi, self.Y_STEP * yi
                 du = [fl[0] + dx, fl[1] + dy, fl[2]]
                 self.stage.goto(du)
@@ -225,11 +219,11 @@ class Scanner(object):
         if self.multi_exp:
             for exp in self.multi_exp:
                 os.makedirs(xy_folder.joinpath(f"E{exp}"), exist_ok=True)
-        
+
         z_orig = self.stage.z
         self.stage.goto_z(self.get_corrected_z(dx, dy))
         # self.stage.wait_until_position(1000)
-        
+
         exp_values = self.multi_exp if self.multi_exp else (self.config.exposure_time,)
         for i in range(self.stack_count):
             for exp in exp_values:
@@ -241,7 +235,7 @@ class Scanner(object):
                 self.camera.set_exposure(exp)
                 img = self.wait_until_exposure(exp, 300)
                 # self.show_image(img)
-                
+
                 # save the picture
                 if self.multi_exp is not None:
                     save_path = xy_folder.joinpath(f"E{exp}")
@@ -251,17 +245,17 @@ class Scanner(object):
                                                f"Y{self.stage.y//10:05d}_"
                                                f"Z{self.stage.z//10:05d}.jpg")
                 skio.imsave(str(save_path), img[..., ::-1], check_contrast=False)
-            
+
             self.stage.move_z(self.config.stack_step)
             # self.stage.wait_until_position(100)
-        
+
         if self.auto_f_stack:
             self.queue.put((str(xy_folder), str(self.fs_folder)))
 
         self.camera.set_exposure(exp_values[0])
         self.stage.goto_z(z_orig)
         # self.stage.wait_until_position(50 * self.stack_count)
-        
+
     def find_floor(self):
         z_orig = self.stage.z
         self.stage.goto_z(100)
@@ -279,20 +273,20 @@ class Scanner(object):
         print(np.max(sharpness, axis=0))
         print(np.argmax(sharpness, axis=0) * 20 + 100)
         self.stage.goto_z(z_orig)
-    
+
     def wait_until_exposure(self, exp, ms):
         img = None
         for i in range(ms//self.frame_duration_ms):
             img, img_exp = self.camera.latest_image(with_exposure=True)
             if exp == img_exp:
-                
+
                 return img
             else:
                 self.controller.display(img)
                 self.controller.wait(display=False)
         print(f'desired exposure was not reached in {ms}ms')
         return img
-    
+
     def check_for_escape(self):
         if self.controller.state == State.SCAN:
             return False
@@ -321,7 +315,7 @@ class Scanner(object):
             dates = self.summary['scan_dates']
             deltas = [dates[n+1] - dates[n] for n in range(len(dates) - 1)]
             total_pics = 0
-            
+
             if self.multi_exp is None:
                 exp_count = 1
             else:
@@ -341,3 +335,4 @@ class Scanner(object):
             delta = dates[-1] - dates[0]
             h, m, s = s2hms(int(delta.total_seconds()))
             summary.write(f'Overall, the task ended at {dates[-1]} and lasted {h}h {m}min and {s}s.\n')
+
