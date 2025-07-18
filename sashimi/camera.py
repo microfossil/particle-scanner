@@ -85,7 +85,7 @@ class Camera(object):
                 self.save_camera_settings()
         self.capture_thread = CaptureThread(self.camera, self.converter, self.controller)
         self.capture_thread.start()
-    
+
     def save_camera_settings(self):
         n_map = self.camera.GetNodeMap()
         pylon.FeaturePersistence.Save(self.camera_settings_file_path, n_map)
@@ -97,7 +97,7 @@ class Camera(object):
         n_map.GetNode("ExposureMode").SetValue("Timed")
         pylon.FeaturePersistence.Load(self.camera_settings_file_path, n_map)
         print(f"Loading camera settings file '{self.camera_settings_file_path}'.")
-    
+
     def stop(self):
         if self.capture_thread is not None:
             self.capture_thread.join() # Wait for the thread to terminate before stopping the camera

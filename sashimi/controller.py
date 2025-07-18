@@ -87,7 +87,7 @@ class Controller(object):
         elif key == ord('4'):
             self.img_mode = 4
             print("Image: display red")
-        
+
         # Help
         elif key == kb.HELP1 or key == kb.HELP2:
             self.show_help = ~self.show_help
@@ -209,7 +209,7 @@ class Controller(object):
                                       'BR': [11000, 51000, 2000],
                                       'BL_Z': 2000,
                                       'Z_corrections': [0, 0]})
-        
+
         elif key == kb.DEL_ZONE:  # delete currently selected zone
             if len(self.config.scans) > 1:
                 if self.selected_scan_number == len(self.config.scans):
@@ -282,7 +282,7 @@ class Controller(object):
         else:
             self.handle_idle_commands(key)
         return
-    
+
     # Decorator to run methods in a thread
     @staticmethod
     def send_to_thread(state):
@@ -295,7 +295,7 @@ class Controller(object):
                 return future
             return wrapper
         return decorator
-    
+
     # Methods to be run in a thread
     # --------------------------------------------------
     @send_to_thread(State.INIT)
@@ -323,7 +323,7 @@ class Controller(object):
         print("\nScan requested")
         self.scanner.multi_scan()
     # --------------------------------------------------
-    
+
     # Check the status of threads and print result when done
     # --------------------------------------------------
     def check_futures(self):
