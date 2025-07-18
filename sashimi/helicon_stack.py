@@ -6,7 +6,7 @@ from glob import glob
 from PIL import Image
 from time import sleep
 from sashimi import utils
-
+import contextlib
 
 def get_helicon_focus():
     helicon_focus = r"C:\\Program Files\\Helicon Software\\Helicon Focus 7\\HeliconFocus.exe"
@@ -107,36 +107,44 @@ def stack_for_multiple_exp(scan_path: Path, f_stacks_path: Path, exp_values: lis
             ]
             print(command)
             subprocess.run(command, shell=True)
-            
+
 
 def parallel_stack(queue, error_logs, exposures, remove_raw=False):
-    with open(error_logs, mode='w', encoding='UTF-8') as file:
-        sys.stderr = sys.stdout = file
+    with open(error_logs, mode='w', encoding='UTF-8') as file, \
+        contextlib.redirect_stdout(file), \
+        contextlib.redirect_stderr(file):
+
         while True:
             if queue.empty():
                 sleep(0.5)
                 continue
-    
+
             msg = queue.get()
             print(msg)
             if msg == "terminate":
                 break
-                
+
             xy_folder = Path(msg[0])  # save_dir/scanX/X__Y__/   (...X__Y__Z__.jpg)    or (...E__/X__Y__Z__.jpg)
             output_folder = Path(msg[1])  # save_dir/f_stacks/   (...scanX/X__Y__.jpg) or (...E__/scanX/X__Y__.jpg)
             scan_name = xy_folder.parent.stem
             img_name = xy_folder.stem
-            
-            if exposures is None:
-                gen_stack(xy_folder, output_folder, scan_name, img_name)
-            else:
-                for exp in exposures:
-                    from_ = xy_folder.joinpath(f"E{exp}")
-                    to_ = xy_folder.joinpath(f"E{exp}")
-                    gen_stack(from_, to_, scan_name, img_name)
+
+            try:
+                if exposures is None:
+                    gen_stack(xy_folder, output_folder, scan_name, img_name)
+                else:
+                    for exp in exposures:
+                        from_ = xy_folder.joinpath(f"E{exp}")
+                        to_ = output_folder.joinpath(f"E{exp}")
+                        gen_stack(from_, to_, scan_name, img_name)
+            except Exception as e:
+                print(f"Erreur pendant le traitement de {xy_folder} : {e}")
 
             if remove_raw:
-                utils.remove_folder(xy_folder)
+                try:
+                    utils.remove_folder(xy_folder)
+                except Exception as e:
+                    print(f"Erreur lors de la suppression de {xy_folder} : {e}")
 
 
 def gen_stack(from_: Path, to_: Path, scan_name: str, img_name: str):
