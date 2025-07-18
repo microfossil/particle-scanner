@@ -50,7 +50,7 @@ class CaptureThread(threading.Thread):
 
 
 class Camera(object):
-    def __init__(self, controller, settings_dir, camera_settings_file="nodeFile.pfs"):
+    def __init__(self, controller, settings_dir, camera_settings_file="camera_settings.pfs"):
         self.image = None
         self.camera = None
         self.controller = controller

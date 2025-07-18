@@ -62,7 +62,7 @@ class Controller(object):
 
         # instances
         self.stage = Stage(self, self.config.printer_ip, self.config.port)
-        self.camera = Camera(self, self.config.camera_settings_dir, self.config.camera_settings_file)
+        self.camera = Camera(self, self.config.config_dir, self.config.camera_settings_file)
         self.scanner = Scanner(self)
         self.keyboard = Keyboard(self.layout)
         self.ui = UserInterface(self)
