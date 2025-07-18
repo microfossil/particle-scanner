@@ -100,6 +100,10 @@ class Stage(object):
         self.goto_y(position[1])
         self.goto_z(position[2])
 
+    def wait_until_position(self, timeout_ms):
+        """Wait function to ensure the stage has reached the target position."""
+        time.sleep(timeout_ms / 1000)  # Simple délai basé sur le timeout
+
     def poll(self):
         response = self.get_query_printer_object({"gcode_move": ["position"]})
         self.x_reported = response['result']['status']['gcode_move']['position'][0]

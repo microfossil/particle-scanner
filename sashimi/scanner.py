@@ -213,16 +213,16 @@ class Scanner(object):
                 self.take_stack(dx, dy, scan_dir)
 
     def take_stack(self, dx, dy, scan_dir):
-        # Create directory to save stack
+        z_orig = self.stage.z
+        self.stage.goto_z(self.get_corrected_z(dx, dy))
+        self.stage.wait_until_position(2000)  # Attendre que l'imprimante finisse de bouger en Z
+
+        # Maintenant capturer les positions XY et créer le dossier
         xy_folder = Path(scan_dir).joinpath(f"X{self.stage.x//10:05d}_Y{self.stage.y//10:05d}")
         os.makedirs(xy_folder, exist_ok=True)
         if self.multi_exp:
             for exp in self.multi_exp:
                 os.makedirs(xy_folder.joinpath(f"E{exp}"), exist_ok=True)
-
-        z_orig = self.stage.z
-        self.stage.goto_z(self.get_corrected_z(dx, dy))
-        # self.stage.wait_until_position(1000)
 
         exp_values = self.multi_exp if self.multi_exp else (self.config.exposure_time,)
         for i in range(self.stack_count):
@@ -247,7 +247,7 @@ class Scanner(object):
                 skio.imsave(str(save_path), img[..., ::-1], check_contrast=False)
 
             self.stage.move_z(self.config.stack_step)
-            # self.stage.wait_until_position(100)
+            self.stage.wait_until_position(1000)  # Attendre que l'imprimante finisse de bouger en Z
 
         if self.auto_f_stack:
             self.queue.put((str(xy_folder), str(self.fs_folder)))
