@@ -90,7 +90,7 @@ class Scanner(object):
             'XY_step (µm)': (self.X_STEP, self.Y_STEP),
             'stack_step (µm)': self.config.stack_step
         }
-        
+
     def lowest_corner(self) -> int:
         current_scan = self.selected_scan()
         fl = current_scan['FL']
@@ -335,4 +335,3 @@ class Scanner(object):
             delta = dates[-1] - dates[0]
             h, m, s = s2hms(int(delta.total_seconds()))
             summary.write(f'Overall, the task ended at {dates[-1]} and lasted {h}h {m}min and {s}s.\n')
-

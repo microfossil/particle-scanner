@@ -121,5 +121,3 @@ class Camera(object):
 
     def set_gain(self, value):
         self.camera.Gain.SetValue(value)
-
-
