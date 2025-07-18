@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = 'sashimi'
-version = '1.0.0'
+version = '1.0.1'
 description = '3D printer stacking software'
 requires-python = ">=3.10"
 authors = [{name='Ross Marchant', email='ross.g.marchant@gmail.com'},
