@@ -78,6 +78,7 @@ class Scanner(object):
         self.update_stack_count()
         self.update_total_pic_count()
         self.lock = threading.Lock()
+        self.scan_path = None
 
         self.summary = {
             'save_dir': self.controller.save_dir,
@@ -143,17 +144,17 @@ class Scanner(object):
             self.summary['scan_dates'] = []
             self.controller.selected_scan_number = 1
 
-            scan_path = utils.make_unique_subdir(self.controller.save_dir)
+            self.scan_path = utils.make_unique_subdir(self.controller.save_dir)
 
             if self.auto_f_stack:
-                self.fs_folder = scan_path.joinpath("f_stacks")
+                self.fs_folder = self.scan_path.joinpath("f_stacks")
                 if self.multi_exp:
                     self.fs_exp_folders = [self.fs_folder.joinpath(f"E{exp}") for exp in self.multi_exp]
                 os.makedirs(self.fs_folder)
                 if not mp.get_start_method(allow_none=True):
                     mp.set_start_method("spawn")
                 self.queue = mp.Queue()
-                error_logs = scan_path.joinpath('error_logs.txt')
+                error_logs = self.scan_path.joinpath('error_logs.txt')
                 if error_logs.exists():
                     os.remove(error_logs)
                 arguments = (self.queue, error_logs, self.multi_exp, self.controller.remove_raw)
@@ -164,7 +165,7 @@ class Scanner(object):
                 if self.controller.state != State.SCAN:
                     break
                 scan_name = f"scan{n + 1}"
-                scan_dir = Path(scan_path).joinpath(scan_name)
+                scan_dir = Path(self.scan_path).joinpath(scan_name)
                 os.makedirs(scan_dir)
                 self.controller.selected_scan_number = n + 1
                 self.summary['scan_dates'].append(dt.datetime.now(tz=dt.timezone(dt.timedelta(hours=2))))
@@ -293,7 +294,7 @@ class Scanner(object):
         return True
 
     def make_scan_summary(self):
-        summary_path = self.controller.save_dir.joinpath('summary.txt')
+        summary_path = Path(self.scan_path).joinpath('summary.txt')
         with open(summary_path, mode='x') as summary:
             if self.controller.state == State.INTERRUPT:
                 summary.write('///////////THE SCANS WERE INTERRUPTED BEFORE FINISHING!!!///////////\n\n')
