@@ -9,7 +9,7 @@ It can be used manually by running 'python get_cam_settings.py'
 in the shell to save this setting file manually though.
 """
 
-def save_camera_settings(camera, node_file="nodeFile.pfs"):
+def save_camera_settings(camera, node_file="camera_settings.pfs"):
     n_map = camera.GetNodeMap()
     pylon.FeaturePersistence.Save(node_file, n_map)
 
